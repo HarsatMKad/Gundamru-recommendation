@@ -3,19 +3,19 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
   TargetContextType,
-  UserRecommendation,
-} from './entities/user-recommendation.entity';
+  Recommendation,
+} from './entities/recommendations.entity';
 
 @Injectable()
-export class UserRecommendationsService {
+export class RecommendationsService {
   constructor(
-    @InjectRepository(UserRecommendation)
-    private readonly recommendationsRepository: Repository<UserRecommendation>,
+    @InjectRepository(Recommendation)
+    private readonly recommendationsRepository: Repository<Recommendation>,
   ) {}
 
-  async getForUser(userId: number): Promise<UserRecommendation> {
+  async getForUser(userId: number): Promise<Recommendation> {
     const recs = await this.recommendationsRepository.findOne({
-      where: { userId },
+      where: { user_id: userId },
     });
 
     if (!recs) {
@@ -30,11 +30,11 @@ export class UserRecommendationsService {
     userId: number,
     targetContext: TargetContextType,
     skus: { sku: number; score: number }[],
-  ): Promise<UserRecommendation> {
-    const recommendation = new UserRecommendation();
-    recommendation.userId = userId;
-    recommendation.targetContext = targetContext;
-    recommendation.recommended_skus = skus;
+  ): Promise<Recommendation> {
+    const recommendation = new Recommendation();
+    recommendation.user_id = userId;
+    recommendation.target_context = targetContext;
+    recommendation.recommendde_skus = skus;
     return this.recommendationsRepository.save(recommendation);
   }
 

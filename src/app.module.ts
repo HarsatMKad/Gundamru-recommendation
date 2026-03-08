@@ -5,7 +5,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductsModule } from './products/products.module';
 import { UsersModule } from './users/users.module';
 import { UserEventsModule } from './user-events/user-events.module';
-import { UserRecommendationsModule } from './user-recommendations/user-recommendations.module';
+import { RecommendationsModule } from './recommendations/recommendations.module';
+import { RecommendationSettingsModule } from './recommendation-settings/recommendation-settings.module';
 
 @Module({
   imports: [
@@ -22,7 +23,8 @@ import { UserRecommendationsModule } from './user-recommendations/user-recommend
     ProductsModule,
     UsersModule,
     UserEventsModule,
-    UserRecommendationsModule,
+    RecommendationsModule,
+    RecommendationSettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

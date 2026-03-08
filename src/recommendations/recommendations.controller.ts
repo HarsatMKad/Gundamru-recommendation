@@ -1,0 +1,17 @@
+import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
+import { RecommendationsService } from './recommendations.service';
+import { Recommendation } from './entities/recommendations.entity';
+
+@Controller('user-recommendations')
+export class RecommendationsController {
+  constructor(
+    private readonly userRecommendationsService: RecommendationsService,
+  ) {}
+
+  @Get(':userId')
+  async getRecommendations(
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<Recommendation> {
+    return this.userRecommendationsService.getForUser(userId);
+  }
+}

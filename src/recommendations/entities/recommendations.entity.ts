@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, Column } from 'typeorm';
+import { Entity, PrimaryColumn, Column, Index } from 'typeorm';
 
 export interface RecommendationItem {
   sku: number;
@@ -11,23 +11,24 @@ export enum TargetContextType {
 }
 
 @Entity('user_recommendations')
-export class UserRecommendation {
+@Index(['user_id', 'target_context'], { unique: true })
+export class Recommendation {
   @PrimaryColumn()
-  userId: number;
+  user_id: number;
 
   @Column({
     type: 'jsonb',
     default: () => "'[]'",
   })
-  recommended_skus: RecommendationItem[];
+  recommendde_skus: RecommendationItem[];
 
   @Column({
     type: 'enum',
     enum: TargetContextType,
     default: TargetContextType.HOME,
   })
-  targetContext: TargetContextType;
+  target_context: TargetContextType;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  generatedAt: Date;
+  generated_at: Date;
 }
