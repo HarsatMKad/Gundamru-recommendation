@@ -9,9 +9,9 @@ export class RecommendationsController {
   ) {}
 
   @Get(':userId')
-  async getRecommendations(
+  async getRecommendationsForUser(
     @Param('userId', ParseIntPipe) userId: number,
-  ): Promise<Recommendation> {
+  ): Promise<Recommendation[]> {
     return this.userRecommendationsService.getForUser(userId);
   }
 }

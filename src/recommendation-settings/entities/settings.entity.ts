@@ -1,10 +1,16 @@
-import { Entity, PrimaryColumn, Column } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('recommender_settings')
 export class RecommenderSetting {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ unique: true, nullable: false })
   target_context: string;
 
   @Column({ type: 'jsonb' })
   methods: { strategy: string; weight: number }[];
+
+  @Column({ default: true, nullable: false })
+  isActive: boolean;
 }

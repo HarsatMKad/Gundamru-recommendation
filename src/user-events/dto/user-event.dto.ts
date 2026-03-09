@@ -1,7 +1,7 @@
 import {
   IsNotEmpty,
   IsNumber,
-  IsIn,
+  IsEnum,
   IsOptional,
   IsDateString,
 } from 'class-validator';
@@ -16,7 +16,7 @@ export class UserEventDto {
   @IsNotEmpty()
   product_id: number;
 
-  @IsIn([UserEventType.VIEW, UserEventType.ADD_TO_CART, UserEventType.PURCHASE])
+  @IsEnum(UserEventType)
   @IsNotEmpty()
   event_type: UserEventType;
 

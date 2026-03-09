@@ -1,5 +1,17 @@
-import { Controller, Get, Body, Post, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Body,
+  Post,
+  Param,
+  UsePipes,
+  ValidationPipe,
+  Delete,
+  Patch,
+} from '@nestjs/common';
 import { RecommendationSettingsService } from './recommendation-settings.service';
+import { CreateRecommenderSettingDto } from './dto/create-recommendation-settings.dto';
+import { UpdateRecommenderSettingDto } from './dto/update-recommendation-settings.dto';
 
 @Controller('recommendation-settings')
 export class RecommendationSettingsController {
@@ -12,14 +24,28 @@ export class RecommendationSettingsController {
     return this.recommendationSettingsService.findAll();
   }
 
-  @Post(':context')
-  update(
+  @Post()
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  async create(@Body() createDto: CreateRecommenderSettingDto) {
+    return await this.recommendationSettingsService.createSettings(createDto);
+  }
+
+  @Patch(':context')
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  async update(
     @Param('context') context: string,
-    @Body() body: { methods: { name: string; weight: number }[] },
+    @Body() updateDto: UpdateRecommenderSettingDto,
   ) {
-    return this.recommendationSettingsService.updateSettings(
+    return await this.recommendationSettingsService.updateSettings(
       context,
-      body.methods,
+      updateDto,
+    );
+  }
+
+  @Delete(':context')
+  async delete(@Param('context') context: string) {
+    return await this.recommendationSettingsService.deleteSettingsByContext(
+      context,
     );
   }
 }

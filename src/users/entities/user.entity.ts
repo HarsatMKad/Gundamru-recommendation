@@ -13,6 +13,6 @@ export class User {
   @Column({ unique: true, length: 50 })
   username: string;
 
-  @Column('text', { default: UserRole.CUSTOMER }) // Используем ENUM для ролей
+  @Column('text', { default: UserRole.CUSTOMER })
   roles: UserRole;
 }

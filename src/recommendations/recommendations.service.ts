@@ -1,10 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  TargetContextType,
-  Recommendation,
-} from './entities/recommendations.entity';
+import { Recommendation } from './entities/recommendations.entity';
 
 @Injectable()
 export class RecommendationsService {
@@ -13,32 +10,17 @@ export class RecommendationsService {
     private readonly recommendationsRepository: Repository<Recommendation>,
   ) {}
 
-  async getForUser(userId: number): Promise<Recommendation> {
-    const recs = await this.recommendationsRepository.findOne({
+  async getForUser(userId: number): Promise<Recommendation[]> {
+    const recs = await this.recommendationsRepository.find({
       where: { user_id: userId },
+      relations: ['setting'],
     });
 
-    if (!recs) {
+    if (!recs || recs.length === 0) {
       throw new NotFoundException(
         `Recommendations for user ${userId} not found.`,
       );
     }
     return recs;
-  }
-
-  async saveOrUpdate(
-    userId: number,
-    targetContext: TargetContextType,
-    skus: { sku: number; score: number }[],
-  ): Promise<Recommendation> {
-    const recommendation = new Recommendation();
-    recommendation.user_id = userId;
-    recommendation.target_context = targetContext;
-    recommendation.recommendde_skus = skus;
-    return this.recommendationsRepository.save(recommendation);
-  }
-
-  async deleteStaleRecommendations(userId: number): Promise<void> {
-    await this.recommendationsRepository.delete(userId);
   }
 }

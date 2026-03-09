@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { UserEventsModule } from './user-events/user-events.module';
 import { RecommendationsModule } from './recommendations/recommendations.module';
 import { RecommendationSettingsModule } from './recommendation-settings/recommendation-settings.module';
+import { RecommenderSystemModule } from './recommender-system/recommender-system.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { RecommendationSettingsModule } from './recommendation-settings/recommen
     UserEventsModule,
     RecommendationsModule,
     RecommendationSettingsModule,
+    RecommenderSystemModule,
   ],
   controllers: [AppController],
   providers: [AppService],
