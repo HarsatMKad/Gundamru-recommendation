@@ -1,16 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import { StrategyFactory } from './strategy-factory.service';
+import { StrategyMetadata } from './interface/strategy.interface';
 
 @Injectable()
 export class StrategyMetaService {
-  constructor(private readonly factory: StrategyFactory) {}
+  private readonly strategiesMetadata: StrategyMetadata[] = [
+    {
+      name: 'popular',
+      description:
+        'Popular Filtering Recommendations based on overall popularity.',
+    },
+    {
+      name: 'collab',
+      description:
+        'Collaborative Filtering Recommendations based on user similarities.',
+    },
+  ];
 
-  getAvailableStrategies() {
-    const instances = this.factory.getAllStrategy();
+  getAllStrategies(): StrategyMetadata[] {
+    return this.strategiesMetadata;
+  }
 
-    return instances.map((strategy) => ({
-      name: strategy.name,
-      description: strategy.description,
-    }));
+  getStrategy(name: string): StrategyMetadata | undefined {
+    return this.strategiesMetadata.find((s) => s.name === name);
   }
 }

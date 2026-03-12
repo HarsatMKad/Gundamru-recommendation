@@ -8,6 +8,6 @@ export class RecommenderSystemController {
 
   @Get('strategies')
   getStrategies() {
-    return this.metaService.getAvailableStrategies();
+    return this.metaService.getAllStrategies();
   }
 }

@@ -2,14 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Recommendation } from 'src/recommendations/entities/recommendations.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { RecommendationItem } from 'src/recommendations/entities/recommendations.entity';
-
-export interface RecommendationInput {
-  user_id: number;
-  recommended_skus: RecommendationItem[];
-  setting_id: number;
-  generated_at?: Date;
-}
+import { RecommendationInput } from './interface/recommendation.interface';
 
 @Injectable()
 export class BatchWriter {

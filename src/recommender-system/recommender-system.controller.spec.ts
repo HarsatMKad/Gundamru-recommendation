@@ -9,7 +9,9 @@ describe('RecommenderSystemController', () => {
       controllers: [RecommenderSystemController],
     }).compile();
 
-    controller = module.get<RecommenderSystemController>(RecommenderSystemController);
+    controller = module.get<RecommenderSystemController>(
+      RecommenderSystemController,
+    );
   });
 
   it('should be defined', () => {

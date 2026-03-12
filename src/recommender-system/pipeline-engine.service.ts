@@ -1,35 +1,33 @@
 import { Injectable } from '@nestjs/common';
-import { StrategyFactory } from './strategy-factory.service';
-import { RecommendationSettingsService } from 'src/recommendation-settings/recommendation-settings.service';
 import { Logger } from '@nestjs/common';
+import {
+  RecommendationConfig,
+  RecommendationItem as RecItem,
+} from './interface/recommendation.interface';
 
 @Injectable()
 export class PipelineEngine {
   private readonly logger = new Logger(PipelineEngine.name);
-  constructor(
-    private readonly factory: StrategyFactory,
-    private readonly settingsService: RecommendationSettingsService,
-  ) {}
 
-  async runForContext(userId: number, context: string) {
-    const config = await this.settingsService.getByContext(context);
+  processed(
+    config: RecommendationConfig,
+    userId: number,
+    strategyData: Record<string, Record<number, RecItem[]>>,
+  ): RecItem[] {
+    if (!config.isActive) {
+      this.logger.warn(
+        `Конфигурация для контекста ${config?.target_context} отключена или не найдена.`,
+      );
+      return [];
+    }
+
     const scores = new Map<number, number>();
 
-    if (!config) {
-      this.logger.warn(`Конфигурация для контекста ${context} не найдена.`);
-      return [];
-    }
-
-    if (!config.isActive) {
-      this.logger.warn(`Конфигурация для контекста ${context} отключена.`);
-      return [];
-    }
-
     for (const method of config.methods) {
-      const strategy = this.factory.getStrategy(method.strategy);
-      const strategyResult = await strategy.generate(userId, context);
+      const strategyMap = strategyData[method.strategy];
+      const results = strategyMap?.[userId] || [];
 
-      for (const item of strategyResult) {
+      for (const item of results) {
         const current = scores.get(item.sku) || 0;
         scores.set(item.sku, current + item.score * method.weight);
       }
