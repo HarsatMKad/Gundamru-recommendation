@@ -2,7 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserEvent, UserEventType } from '../entities/user-event.entity';
+import { UserEvent } from '../entities/user-event.entity';
+import { EventTypesService } from 'src/event-types/event-types.service';
 
 @Injectable()
 export class CleanupService {
@@ -11,35 +12,31 @@ export class CleanupService {
   constructor(
     @InjectRepository(UserEvent)
     private eventsRepository: Repository<UserEvent>,
+    private readonly eventTypeService: EventTypesService,
   ) {}
 
   @Cron('0 3 * * *') // запуск каждый день в 3 часа ночи
   async handleCleanup() {
     this.logger.log('Начат процесс очистки старых данных UserEvents.');
 
-    const viewDeleteResult = await this.eventsRepository
-      .createQueryBuilder()
-      .delete()
-      .from(UserEvent)
-      .where('event_type != :purchase', { purchase: UserEventType.PURCHASE })
-      .andWhere("timestamp < NOW() - INTERVAL '30 days'")
-      .execute();
+    const eventTypes = await this.eventTypeService.findAll();
 
-    this.logger.log(
-      `Удалено ${viewDeleteResult.affected} записей просмотра/клика (до 30 дней).`,
-    );
+    for (const type of eventTypes) {
+      const cutOffDate = new Date();
+      cutOffDate.setDate(cutOffDate.getDate() - type.retention_days);
 
-    const purchaseDeleteResult = await this.eventsRepository
-      .createQueryBuilder()
-      .delete()
-      .from(UserEvent)
-      .where('event_type = :purchase', { purchase: UserEventType.PURCHASE })
-      .andWhere("timestamp < NOW() - INTERVAL '1 year'")
-      .execute();
+      const deleteResult = await this.eventsRepository
+        .createQueryBuilder()
+        .delete()
+        .from(UserEvent)
+        .where('event_type_id = :typeId', { typeId: type.id })
+        .andWhere('timestamp < :cutOffDate', { cutOffDate })
+        .execute();
 
-    this.logger.log(
-      `Удалено ${purchaseDeleteResult.affected} записей покупок (до 1 года).`,
-    );
+      this.logger.log(
+        `Удалено ${deleteResult.affected} записей типа: ${type.name}.`,
+      );
+    }
 
     this.logger.log('Процесс очистки завершен.');
   }

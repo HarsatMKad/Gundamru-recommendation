@@ -25,9 +25,8 @@ export class PipelineEngine {
 
     for (const method of config.methods) {
       const strategyMap = strategyData[method.strategy];
-      const results = strategyMap?.[userId] || [];
-
-      for (const item of results) {
+      const strategyResults = strategyMap?.[userId] || [];
+      for (const item of strategyResults) {
         const current = scores.get(item.sku) || 0;
         scores.set(item.sku, current + item.score * method.weight);
       }

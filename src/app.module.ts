@@ -8,6 +8,7 @@ import { UserEventsModule } from './user-events/user-events.module';
 import { RecommendationsModule } from './recommendations/recommendations.module';
 import { RecommendationSettingsModule } from './recommendation-settings/recommendation-settings.module';
 import { RecommenderSystemModule } from './recommender-system/recommender-system.module';
+import { EventTypesModule } from './event-types/event-types.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { RecommenderSystemModule } from './recommender-system/recommender-system
     RecommendationsModule,
     RecommendationSettingsModule,
     RecommenderSystemModule,
+    EventTypesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

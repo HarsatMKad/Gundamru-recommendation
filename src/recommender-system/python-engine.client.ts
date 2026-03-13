@@ -5,7 +5,8 @@ import { z } from 'zod';
 
 @Injectable()
 export class PythonEngineClient {
-  private readonly baseUrl = 'http://localhost:8000';
+  private readonly baseUrl =
+    process.env.PYTHON_ENGINE_URL || 'http://localhost:8000';
 
   private recItemSchema = z.object({
     sku: z.number(),
@@ -16,33 +17,7 @@ export class PythonEngineClient {
     results: z.record(z.string(), z.array(this.recItemSchema)),
   });
 
-  // заглушка
-  fetchAllStrategyResults(
-    strategies: string[],
-    userIds: number[],
-  ): Record<string, Record<number, RecItem[]>> {
-    console.log('🔧 Используется заглушка PythonClient');
-
-    const result: Record<string, Record<number, RecItem[]>> = {};
-
-    for (const strategy of strategies) {
-      result[strategy] = {};
-
-      for (const userId of userIds) {
-        const items: RecItem[] = [1, 2, 3, 4, 5].map((index) => ({
-          sku: index,
-          score: 1 / index,
-        }));
-
-        result[strategy][userId] = items;
-      }
-    }
-
-    return result;
-  }
-
-  // тестовый вариант
-  async fetchAllStrategyResults2(
+  async fetchAllStrategyResults(
     strategies: string[],
     userIds: number[],
   ): Promise<Record<string, Record<number, RecItem[]>>> {

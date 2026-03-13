@@ -9,7 +9,7 @@ export class UserEventsController {
 
   @Post('log')
   log(@Body() userEventDto: UserEventDto): Promise<UserEvent> {
-    return this.userEventService.logEvent(userEventDto);
+    return this.userEventService.create(userEventDto);
   }
 
   @Get()

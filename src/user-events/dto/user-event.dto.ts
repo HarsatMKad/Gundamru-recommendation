@@ -1,11 +1,10 @@
 import {
   IsNotEmpty,
   IsNumber,
-  IsEnum,
   IsOptional,
   IsDateString,
+  IsString,
 } from 'class-validator';
-import { UserEventType } from '../entities/user-event.entity';
 
 export class UserEventDto {
   @IsNumber()
@@ -16,9 +15,9 @@ export class UserEventDto {
   @IsNotEmpty()
   product_id: number;
 
-  @IsEnum(UserEventType)
+  @IsString()
   @IsNotEmpty()
-  event_type: UserEventType;
+  event_type_name: string;
 
   @IsOptional()
   @IsDateString()

@@ -1,10 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
-
-export enum UserEventType {
-  VIEW = 'view',
-  ADD_TO_CART = 'add_to_cart',
-  PURCHASE = 'purchase',
-}
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  Index,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
+import { EventType } from 'src/event-types/entities/event-types.entity';
 
 @Entity('user_events')
 @Index(['user_id', 'product_id', 'timestamp'])
@@ -18,13 +20,13 @@ export class UserEvent {
   @Column()
   product_id: number;
 
+  @Column()
+  event_type_id: number;
+
+  @ManyToOne(() => EventType)
+  @JoinColumn({ name: 'event_type_id' })
+  eventType: EventType;
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   timestamp: Date;
-
-  @Column({
-    type: 'enum',
-    enum: UserEventType,
-    default: UserEventType.VIEW,
-  })
-  event_type: UserEventType;
 }

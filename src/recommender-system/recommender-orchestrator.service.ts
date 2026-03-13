@@ -4,7 +4,7 @@ import { BatchWriter } from './batch-writer.service';
 import { Logger } from '@nestjs/common';
 import { RecommendationInput } from './interface/recommendation.interface';
 import { RecommendationSettingsService } from 'src/recommendation-settings/recommendation-settings.service';
-import { CronExpression } from '@nestjs/schedule';
+//import { CronExpression } from '@nestjs/schedule';
 import { PythonEngineClient } from './python-engine.client';
 import { PipelineEngine } from './pipeline-engine.service';
 import { UserIdsProvider } from './user-ids.provider';
@@ -45,6 +45,7 @@ export class RecommenderOrchestrator {
     );
 
     const batchData: RecommendationInput[] = [];
+
     for (const config of activeConfigs) {
       for (const userId of validUserIds) {
         const recForUser = this.pipelineEngine.processed(
