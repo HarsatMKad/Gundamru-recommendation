@@ -13,11 +13,14 @@ import { RecommenderSystemController } from './recommender-system.controller';
 import { StrategyMetaService } from './strategy-meta.service';
 import { UserIdsProvider } from './user-ids.provider';
 import { PythonEngineClient } from './python-engine.client';
+import { FallbackRecommendation } from 'src/fallback-recommendation/entities/fallback-recommendation.entity';
+import { RecommenderOrchestratorFallback } from './recommender-orchestrator-fallback.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Recommendation,
+      FallbackRecommendation,
       Product,
       RecommenderSetting,
       UserEvent,
@@ -28,12 +31,13 @@ import { PythonEngineClient } from './python-engine.client';
     PipelineEngine,
     BatchWriter,
     RecommenderOrchestrator,
+    RecommenderOrchestratorFallback,
     StrategyMetaService,
     RecommendationSettingsService,
     UserIdsProvider,
     PythonEngineClient,
   ],
-  exports: [RecommenderOrchestrator],
+  exports: [RecommenderOrchestrator, RecommenderOrchestratorFallback],
   controllers: [RecommenderSystemController],
 })
 export class RecommenderSystemModule {}

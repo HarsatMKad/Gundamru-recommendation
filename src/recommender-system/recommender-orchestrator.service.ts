@@ -35,29 +35,28 @@ export class RecommenderOrchestrator {
       this.logger.log('Очистка неактивных рекомендаций завершена.');
     }
 
-    const uniqueStrategies = Array.from(
-      new Set(activeConfigs.flatMap((c) => c.methods.map((m) => m.strategy))),
+    const personalConfigs = activeConfigs.filter((c) => !c.is_default);
+
+    const personalStrategies = Array.from(
+      new Set(personalConfigs.flatMap((c) => c.methods.map((m) => m.strategy))),
     );
 
-    const strategyData = await this.pythonClient.fetchAllStrategyResults(
-      uniqueStrategies,
+    const personalData = await this.pythonClient.fetchPersonalStrategyResults(
+      personalStrategies,
       validUserIds,
     );
 
     const batchData: RecommendationInput[] = [];
-
-    for (const config of activeConfigs) {
+    for (const config of activeConfigs.filter((c) => !c.is_default)) {
       for (const userId of validUserIds) {
-        const recForUser = this.pipelineEngine.processed(
-          config,
-          userId,
-          strategyData,
-        );
-
         batchData.push({
           user_id: userId,
           setting_id: config.id,
-          recommended_skus: recForUser,
+          recommended_skus: this.pipelineEngine.processed(
+            config,
+            userId,
+            personalData,
+          ),
           generated_at: new Date(),
         });
       }

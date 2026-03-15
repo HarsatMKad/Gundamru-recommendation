@@ -17,7 +17,7 @@ export class PythonEngineClient {
     results: z.record(z.string(), z.array(this.recItemSchema)),
   });
 
-  async fetchAllStrategyResults(
+  async fetchPersonalStrategyResults(
     strategies: string[],
     userIds: number[],
   ): Promise<Record<string, Record<number, RecItem[]>>> {
@@ -52,6 +52,37 @@ export class PythonEngineClient {
         return acc;
       },
       {} as Record<string, Record<number, RecItem[]>>,
+    );
+  }
+
+  async fetchGlobalStrategyResults(
+    strategies: string[],
+  ): Promise<Record<string, RecItem[]>> {
+    const requests = strategies.map(async (strategy) => {
+      try {
+        const response = await axios.post(
+          `${this.baseUrl}/calculate-strategy-global/${strategy}`,
+        );
+
+        const validatedData = z.array(this.recItemSchema).parse(response.data);
+
+        return { strategy, data: validatedData };
+      } catch (error) {
+        console.error(
+          `Ошибка при глобальном расчете стратегии ${strategy}: ${error}`,
+        );
+        return { strategy, data: [] };
+      }
+    });
+
+    const results = await Promise.all(requests);
+
+    return results.reduce(
+      (acc, current) => {
+        acc[current.strategy] = current.data;
+        return acc;
+      },
+      {} as Record<string, RecItem[]>,
     );
   }
 }

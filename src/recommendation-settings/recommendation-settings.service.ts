@@ -4,7 +4,11 @@ import { Repository } from 'typeorm';
 import { RecommenderSetting } from './entities/settings.entity';
 import { UpdateRecommenderSettingDto } from './dto/update-recommendation-settings.dto';
 import { CreateRecommenderSettingDto } from './dto/create-recommendation-settings.dto';
-import { NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 
 @Injectable()
 export class RecommendationSettingsService {
@@ -40,6 +44,15 @@ export class RecommendationSettingsService {
       throw new NotFoundException(`Setting for context ${context} not found`);
     }
 
+    const isDefaultCheck = updateDto.is_default ?? setting.is_default;
+    const fallbackCheck = updateDto.fallback_rec_id ?? setting.fallback_rec_id;
+
+    if (isDefaultCheck === true && fallbackCheck != null) {
+      throw new BadRequestException(
+        'Стандартная настройка не может иметь fallback рекомендации',
+      );
+    }
+
     Object.assign(setting, updateDto);
     return await this.settingsRepo.save(setting);
   }
@@ -53,6 +66,16 @@ export class RecommendationSettingsService {
     }
 
     const newSettings = this.settingsRepo.create(createDto);
+
+    if (
+      newSettings.is_default === true &&
+      newSettings.fallback_rec_id != null
+    ) {
+      throw new BadRequestException(
+        'Стандартная настройка не может иметь fallback рекомендации',
+      );
+    }
+
     return await this.settingsRepo.save(newSettings);
   }
 

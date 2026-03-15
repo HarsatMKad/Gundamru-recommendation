@@ -31,4 +31,12 @@ export class CreateRecommenderSettingDto {
   @IsBoolean()
   @IsOptional()
   isActive: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  fallback_rec_id?: number;
+
+  @IsBoolean()
+  @IsOptional()
+  is_default?: boolean;
 }

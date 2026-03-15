@@ -9,6 +9,7 @@ import { RecommendationsModule } from './recommendations/recommendations.module'
 import { RecommendationSettingsModule } from './recommendation-settings/recommendation-settings.module';
 import { RecommenderSystemModule } from './recommender-system/recommender-system.module';
 import { EventTypesModule } from './event-types/event-types.module';
+import { FallbackRecommendationModule } from './fallback-recommendation/fallback-recommendation.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { EventTypesModule } from './event-types/event-types.module';
     RecommendationSettingsModule,
     RecommenderSystemModule,
     EventTypesModule,
+    FallbackRecommendationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

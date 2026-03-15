@@ -8,6 +8,7 @@ import {
 @Injectable()
 export class PipelineEngine {
   private readonly logger = new Logger(PipelineEngine.name);
+  private recLength = 5; // Размер списка рекомендаций
 
   processed(
     config: RecommendationConfig,
@@ -22,7 +23,6 @@ export class PipelineEngine {
     }
 
     const scores = new Map<number, number>();
-
     for (const method of config.methods) {
       const strategyMap = strategyData[method.strategy];
       const strategyResults = strategyMap?.[userId] || [];
@@ -35,6 +35,26 @@ export class PipelineEngine {
     return Array.from(scores.entries())
       .map(([sku, score]) => ({ sku, score }))
       .sort((a, b) => b.score - a.score)
-      .slice(0, 5); // топ 5 товаров
+      .slice(0, this.recLength);
+  }
+
+  processedGlobal(
+    config: RecommendationConfig,
+    globalStrategyData: Record<string, RecItem[]>,
+  ): RecItem[] {
+    const scores = new Map<number, number>();
+
+    for (const method of config.methods) {
+      const strategyResults = globalStrategyData[method.strategy] || [];
+      for (const item of strategyResults) {
+        const current = scores.get(item.sku) || 0;
+        scores.set(item.sku, current + item.score * method.weight);
+      }
+    }
+
+    return Array.from(scores.entries())
+      .map(([sku, score]) => ({ sku, score }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, this.recLength);
   }
 }

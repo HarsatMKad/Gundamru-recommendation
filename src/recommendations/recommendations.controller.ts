@@ -4,14 +4,12 @@ import { Recommendation } from './entities/recommendations.entity';
 
 @Controller('user-recommendations')
 export class RecommendationsController {
-  constructor(
-    private readonly userRecommendationsService: RecommendationsService,
-  ) {}
+  constructor(private readonly service: RecommendationsService) {}
 
   @Get(':userId')
   async getRecommendationsForUser(
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<Recommendation[]> {
-    return this.userRecommendationsService.getForUser(userId);
+    return this.service.getForUser(userId);
   }
 }
