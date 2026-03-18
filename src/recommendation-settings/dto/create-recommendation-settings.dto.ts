@@ -6,12 +6,17 @@ import {
   IsNumber,
   IsBoolean,
   IsOptional,
+  ValidateIf,
+  Validate,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { StrategyScope } from 'src/common/config/strategies.config';
+import { IsStrategyForScope } from 'src/common/validators/is-strategy-for-scope.validator';
 
 export class StrategyWeightDto {
   @IsString()
   @IsNotEmpty()
+  @Validate(IsStrategyForScope, [StrategyScope.PERSONAL], { each: true })
   strategy: string;
 
   @IsNumber()
@@ -26,17 +31,20 @@ export class CreateRecommenderSettingDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => StrategyWeightDto)
-  methods: StrategyWeightDto[];
+  personal_methods: StrategyWeightDto[];
 
   @IsBoolean()
   @IsOptional()
-  isActive: boolean;
+  isActive?: boolean;
 
+  @ValidateIf((o: CreateRecommenderSettingDto) => !!o.fallback_weight)
+  @IsString()
   @IsOptional()
+  @Validate(IsStrategyForScope, [StrategyScope.GLOBAL])
+  fallback_strategy?: string;
+
+  @ValidateIf((o: CreateRecommenderSettingDto) => !!o.fallback_strategy)
   @IsNumber()
-  fallback_rec_id?: number;
-
-  @IsBoolean()
   @IsOptional()
-  is_default?: boolean;
+  fallback_weight?: number;
 }

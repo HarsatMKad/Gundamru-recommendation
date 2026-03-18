@@ -5,11 +5,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductsModule } from './products/products.module';
 import { UsersModule } from './users/users.module';
 import { UserEventsModule } from './user-events/user-events.module';
-import { RecommendationsModule } from './recommendations/recommendations.module';
+import { RecommendationsModule } from './recommendation/recommendations.module';
 import { RecommendationSettingsModule } from './recommendation-settings/recommendation-settings.module';
 import { RecommenderSystemModule } from './recommender-system/recommender-system.module';
 import { EventTypesModule } from './event-types/event-types.module';
-import { FallbackRecommendationModule } from './fallback-recommendation/fallback-recommendation.module';
 
 @Module({
   imports: [
@@ -30,7 +29,6 @@ import { FallbackRecommendationModule } from './fallback-recommendation/fallback
     RecommendationSettingsModule,
     RecommenderSystemModule,
     EventTypesModule,
-    FallbackRecommendationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

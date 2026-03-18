@@ -7,11 +7,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { RecommenderSetting } from 'src/recommendation-settings/entities/settings.entity';
-
-export interface RecommendationItem {
-  sku: number;
-  score: number;
-}
+import { RecommendationItem } from 'src/common/interface/recommendation.interface';
 
 @Entity('user_recommendations')
 @Index(['user_id', 'setting_id'], { unique: true })

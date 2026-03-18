@@ -3,12 +3,14 @@ import { Logger } from '@nestjs/common';
 import {
   RecommendationConfig,
   RecommendationItem as RecItem,
-} from './interface/recommendation.interface';
+} from '../common/interface/recommendation.interface';
+import { RECOMMENDATION_CONST } from 'src/common/util/const-handler.util';
+import { WARN_REC_SYSTEM } from 'src/common/util/err-handler.util';
 
 @Injectable()
 export class PipelineEngine {
   private readonly logger = new Logger(PipelineEngine.name);
-  private recLength = 5; // Размер списка рекомендаций
+  private recLength = RECOMMENDATION_CONST.RECOMMENDATION_LENGTH;
 
   processed(
     config: RecommendationConfig,
@@ -17,13 +19,13 @@ export class PipelineEngine {
   ): RecItem[] {
     if (!config.isActive) {
       this.logger.warn(
-        `Конфигурация для контекста ${config?.target_context} отключена или не найдена.`,
+        `${WARN_REC_SYSTEM.CONFIG_NOT_FOUND} for context: ${config?.target_context}.`,
       );
       return [];
     }
 
     const scores = new Map<number, number>();
-    for (const method of config.methods) {
+    for (const method of config.personal_methods) {
       const strategyMap = strategyData[method.strategy];
       const strategyResults = strategyMap?.[userId] || [];
       for (const item of strategyResults) {
@@ -39,21 +41,17 @@ export class PipelineEngine {
   }
 
   processedGlobal(
-    config: RecommendationConfig,
+    strategy: string,
+    weight: number,
     globalStrategyData: Record<string, RecItem[]>,
   ): RecItem[] {
-    const scores = new Map<number, number>();
+    const results = globalStrategyData[strategy] || [];
 
-    for (const method of config.methods) {
-      const strategyResults = globalStrategyData[method.strategy] || [];
-      for (const item of strategyResults) {
-        const current = scores.get(item.sku) || 0;
-        scores.set(item.sku, current + item.score * method.weight);
-      }
-    }
-
-    return Array.from(scores.entries())
-      .map(([sku, score]) => ({ sku, score }))
+    return results
+      .map((item) => ({
+        sku: item.sku,
+        score: item.score * weight,
+      }))
       .sort((a, b) => b.score - a.score)
       .slice(0, this.recLength);
   }

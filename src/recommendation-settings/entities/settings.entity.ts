@@ -1,13 +1,5 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-  JoinColumn,
-  BeforeInsert,
-  BeforeUpdate,
-} from 'typeorm';
-import { FallbackRecommendation } from 'src/fallback-recommendation/entities/fallback-recommendation.entity';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { RecommendationItem } from 'src/common/interface/recommendation.interface';
 
 @Entity('recommender_settings')
 export class RecommenderSetting {
@@ -18,28 +10,20 @@ export class RecommenderSetting {
   target_context: string;
 
   @Column({ type: 'jsonb' })
-  methods: { strategy: string; weight: number }[];
+  personal_methods: { strategy: string; weight: number }[];
 
   @Column({ default: true, nullable: false })
   isActive: boolean;
 
-  @Column({ default: false })
-  is_default: boolean;
-
   @Column({ nullable: true })
-  fallback_rec_id?: number;
+  fallback_strategy?: string;
 
-  @ManyToOne(() => FallbackRecommendation, { nullable: true })
-  @JoinColumn({ name: 'fallback_rec_id' })
-  fallbackRec?: FallbackRecommendation;
+  @Column({ type: 'float', nullable: true })
+  fallback_weight?: number;
 
-  @BeforeInsert()
-  @BeforeUpdate()
-  validateDefaultAndFallback() {
-    if (this.is_default && this.fallback_rec_id) {
-      throw new Error(
-        'Стандартная настройка не может иметь fallback рекомендации',
-      );
-    }
-  }
+  @Column({ type: 'jsonb', nullable: true })
+  fallback_skus?: RecommendationItem[];
+
+  @Column({ type: 'timestamp', nullable: true })
+  fallback_updated_at?: Date;
 }

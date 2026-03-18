@@ -1,10 +1,18 @@
 import axios from 'axios';
 import { Injectable } from '@nestjs/common';
-import { RecommendationItem as RecItem } from './interface/recommendation.interface';
+import { RecommendationItem } from '../common/interface/recommendation.interface';
+import {
+  AVAILABLE_STRATEGIES,
+  StrategyScope,
+} from 'src/common/config/strategies.config';
 import { z } from 'zod';
+import { Logger } from '@nestjs/common';
+import { WARN_REC_SYSTEM } from 'src/common/util/err-handler.util';
+import { CALCULATION_ERROR } from 'src/common/util/err-handler.util';
 
 @Injectable()
 export class PythonEngineClient {
+  private readonly logger = new Logger(PythonEngineClient.name);
   private readonly baseUrl =
     process.env.PYTHON_ENGINE_URL || 'http://localhost:8000';
 
@@ -20,11 +28,22 @@ export class PythonEngineClient {
   async fetchPersonalStrategyResults(
     strategies: string[],
     userIds: number[],
-  ): Promise<Record<string, Record<number, RecItem[]>>> {
-    const requests = strategies.map(async (strategy) => {
+  ): Promise<Record<string, Record<number, RecommendationItem[]>>> {
+    const requests = strategies.map(async (strategyName) => {
+      const strategyDef = AVAILABLE_STRATEGIES.find(
+        (s) => s.name === strategyName,
+      );
+
+      if (!strategyDef || strategyDef.scope !== StrategyScope.PERSONAL) {
+        this.logger.warn(
+          `${WARN_REC_SYSTEM.NOT_STRATEGY_OR_SCOPE} for strategy: ${strategyName}`,
+        );
+        return { strategy: strategyName, data: {} };
+      }
+
       try {
         const response = await axios.post(
-          `${this.baseUrl}/calculate-strategy/${strategy}`,
+          `${this.baseUrl}${strategyDef.calculate_endpoint}`,
           {
             user_ids: userIds,
           },
@@ -32,15 +51,17 @@ export class PythonEngineClient {
 
         const validatedData = this.PythonResponseSchema.parse(response.data);
 
-        const normalizedResults: Record<number, RecItem[]> = {};
+        const normalizedResults: Record<number, RecommendationItem[]> = {};
         for (const [userId, items] of Object.entries(validatedData.results)) {
           normalizedResults[Number(userId)] = items;
         }
 
-        return { strategy, data: normalizedResults };
+        return { strategy: strategyName, data: normalizedResults };
       } catch (error) {
-        console.error(`Ошибка при расчете стратегии ${strategy}: ${error}`);
-        return { strategy, data: {} };
+        console.error(
+          `${CALCULATION_ERROR} with strategy: ${strategyName}: ${error}`,
+        );
+        return { strategy: strategyName, data: {} };
       }
     });
 
@@ -51,27 +72,38 @@ export class PythonEngineClient {
         acc[current.strategy] = current.data;
         return acc;
       },
-      {} as Record<string, Record<number, RecItem[]>>,
+      {} as Record<string, Record<number, RecommendationItem[]>>,
     );
   }
 
   async fetchGlobalStrategyResults(
     strategies: string[],
-  ): Promise<Record<string, RecItem[]>> {
-    const requests = strategies.map(async (strategy) => {
+  ): Promise<Record<string, RecommendationItem[]>> {
+    const requests = strategies.map(async (strategyName) => {
+      const strategyDef = AVAILABLE_STRATEGIES.find(
+        (s) => s.name === strategyName,
+      );
+
+      if (!strategyDef || strategyDef.scope !== StrategyScope.GLOBAL) {
+        this.logger.warn(
+          `${WARN_REC_SYSTEM.NOT_STRATEGY_OR_SCOPE} for strategy: ${strategyName}`,
+        );
+        return { strategy: strategyName, data: [] };
+      }
+
       try {
         const response = await axios.post(
-          `${this.baseUrl}/calculate-strategy-global/${strategy}`,
+          `${this.baseUrl}${strategyDef.calculate_endpoint}`,
         );
 
         const validatedData = z.array(this.recItemSchema).parse(response.data);
 
-        return { strategy, data: validatedData };
+        return { strategy: strategyName, data: validatedData };
       } catch (error) {
         console.error(
-          `Ошибка при глобальном расчете стратегии ${strategy}: ${error}`,
+          `${CALCULATION_ERROR} with global strategy: ${strategyName}: ${error}`,
         );
-        return { strategy, data: [] };
+        return { strategy: strategyName, data: [] };
       }
     });
 
@@ -82,7 +114,7 @@ export class PythonEngineClient {
         acc[current.strategy] = current.data;
         return acc;
       },
-      {} as Record<string, RecItem[]>,
+      {} as Record<string, RecommendationItem[]>,
     );
   }
 }

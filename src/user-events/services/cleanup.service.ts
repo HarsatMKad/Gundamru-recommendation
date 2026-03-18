@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEvent } from '../entities/user-event.entity';
 import { EventTypesService } from 'src/event-types/event-types.service';
+import { LOG_HANDLER } from 'src/common/util/log-handler.util';
 
 @Injectable()
 export class CleanupService {
@@ -17,11 +18,11 @@ export class CleanupService {
 
   @Cron('0 3 * * *') // запуск каждый день в 3 часа ночи
   async handleCleanup() {
-    this.logger.log('Начат процесс очистки старых данных UserEvents.');
+    this.logger.log(LOG_HANDLER.CLEANUP_START);
 
     const eventTypes = await this.eventTypeService.findAll();
 
-    for (const type of eventTypes) {
+    for (const type of eventTypes.data) {
       const cutOffDate = new Date();
       cutOffDate.setDate(cutOffDate.getDate() - type.retention_days);
 
@@ -34,10 +35,10 @@ export class CleanupService {
         .execute();
 
       this.logger.log(
-        `Удалено ${deleteResult.affected} записей типа: ${type.name}.`,
+        `${LOG_HANDLER.DELETED_RECODS}: ${deleteResult.affected}; types: ${type.name}.`,
       );
     }
 
-    this.logger.log('Процесс очистки завершен.');
+    this.logger.log(LOG_HANDLER.CLEANUP_STOP);
   }
 }

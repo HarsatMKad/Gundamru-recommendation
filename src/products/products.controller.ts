@@ -11,6 +11,7 @@ import {
 import { ProductsService } from './products.service';
 import { ProductDto } from './dto/product.dto';
 import { Product } from './entities/product.entity';
+import { PARAMS } from 'src/common/util/endpoint-handler.util';
 
 @Controller('products')
 export class ProductsController {
@@ -26,21 +27,21 @@ export class ProductsController {
     return this.productsService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number): Promise<Product> {
+  @Get(`:${PARAMS.ID}`)
+  findOne(@Param(PARAMS.ID, ParseIntPipe) id: number): Promise<Product> {
     return this.productsService.findOne(id);
   }
 
-  @Patch(':id')
+  @Patch(`:${PARAMS.ID}`)
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param(PARAMS.ID, ParseIntPipe) id: number,
     @Body() ProductDto: ProductDto,
   ): Promise<Product> {
     return this.productsService.update(id, ProductDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
+  @Delete(`:${PARAMS.ID}`)
+  remove(@Param(PARAMS.ID, ParseIntPipe) id: number): Promise<void> {
     return this.productsService.remove(id);
   }
 }

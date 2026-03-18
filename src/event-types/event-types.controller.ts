@@ -6,10 +6,13 @@ import {
   Delete,
   Body,
   Param,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { EventTypesService } from './event-types.service';
 import { CreateEventTypeDto } from './dto/create_event-type.dto';
 import { UpdateEventTypeDto } from './dto/update_event-type.dto';
+import { PARAMS } from 'src/common/util/endpoint-handler.util';
 
 @Controller('event-types')
 export class EventTypesController {
@@ -25,13 +28,14 @@ export class EventTypesController {
     return this.service.create(dto);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: number, @Body() dto: UpdateEventTypeDto) {
+  @Patch(`:${PARAMS.ID}`)
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  update(@Param(PARAMS.ID) id: number, @Body() dto: UpdateEventTypeDto) {
     return this.service.update(id, dto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: number) {
+  @Delete(`:${PARAMS.ID}`)
+  remove(@Param(PARAMS.ID) id: number) {
     return this.service.remove(id);
   }
 }

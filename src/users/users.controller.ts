@@ -11,6 +11,7 @@ import {
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { UserDto } from './dto/user.dto';
+import { PARAMS } from 'src/common/util/endpoint-handler.util';
 
 @Controller('users')
 export class UsersController {
@@ -26,21 +27,21 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number): Promise<User> {
+  @Get(`:${PARAMS.ID}`)
+  findOne(@Param(PARAMS.ID, ParseIntPipe) id: number): Promise<User> {
     return this.usersService.findOne(id);
   }
 
-  @Patch(':id')
+  @Patch(`:${PARAMS.ID}`)
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param(PARAMS.ID, ParseIntPipe) id: number,
     @Body() userDto: UserDto,
   ): Promise<User> {
     return this.usersService.update(id, userDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
+  @Delete(`:${PARAMS.ID}`)
+  remove(@Param(PARAMS.ID, ParseIntPipe) id: number): Promise<void> {
     return this.usersService.remove(id);
   }
 }

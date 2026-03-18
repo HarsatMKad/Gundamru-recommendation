@@ -11,7 +11,7 @@ export interface RecommendationMethod {
 export interface RecommendationConfig {
   id: number;
   target_context?: string;
-  methods: RecommendationMethod[];
+  personal_methods: RecommendationMethod[];
   isActive: boolean;
 }
 

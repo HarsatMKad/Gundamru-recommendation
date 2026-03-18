@@ -1,14 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RecommenderSetting } from './entities/settings.entity';
 import { UpdateRecommenderSettingDto } from './dto/update-recommendation-settings.dto';
 import { CreateRecommenderSettingDto } from './dto/create-recommendation-settings.dto';
+import { RecommendationItem } from 'src/common/interface/recommendation.interface';
+import { NotFoundException, ConflictException } from '@nestjs/common';
+import { ERR_REC_SETTINGS } from 'src/common/util/err-handler.util';
+import { REST_MESSAGES } from 'src/common/util/rest-message-handler.util';
 import {
-  NotFoundException,
-  ConflictException,
-  BadRequestException,
-} from '@nestjs/common';
+  AVAILABLE_STRATEGIES,
+  StrategyScope,
+} from 'src/common/config/strategies.config';
 
 @Injectable()
 export class RecommendationSettingsService {
@@ -17,19 +20,31 @@ export class RecommendationSettingsService {
     private settingsRepo: Repository<RecommenderSetting>,
   ) {}
 
-  private getDescription(name: string): string {
-    switch (name) {
-      case 'collab':
-        return 'Рекомендации на основе схожести пользователей.';
-      case 'popular':
-        return 'Рекомендации на основе общей популярности товаров.';
-      default:
-        return 'Неизвестная стратегия.';
-    }
+  async findAll() {
+    const items = await this.settingsRepo.find();
+    return {
+      code: HttpStatus.OK,
+      message: REST_MESSAGES.SUCCESS,
+      data: items,
+    };
   }
 
-  async findAll() {
-    return await this.settingsRepo.find();
+  async getById(id: number) {
+    const setting = await this.settingsRepo.findOne({
+      where: { id },
+    });
+
+    if (!setting) {
+      throw new NotFoundException(
+        `${ERR_REC_SETTINGS.SETTINGS_NOT_FOUND} for id: ${id}`,
+      );
+    }
+
+    return {
+      code: HttpStatus.OK,
+      message: REST_MESSAGES.SUCCESS,
+      data: setting,
+    };
   }
 
   async updateSettings(
@@ -41,80 +56,74 @@ export class RecommendationSettingsService {
     });
 
     if (!setting) {
-      throw new NotFoundException(`Setting for context ${context} not found`);
-    }
-
-    const isDefaultCheck = updateDto.is_default ?? setting.is_default;
-    const fallbackCheck = updateDto.fallback_rec_id ?? setting.fallback_rec_id;
-
-    if (isDefaultCheck === true && fallbackCheck != null) {
-      throw new BadRequestException(
-        'Стандартная настройка не может иметь fallback рекомендации',
+      throw new NotFoundException(
+        `${ERR_REC_SETTINGS.SETTINGS_NOT_FOUND}. For context: ${context}`,
       );
     }
 
     Object.assign(setting, updateDto);
-    return await this.settingsRepo.save(setting);
+    const updated = await this.settingsRepo.save(setting);
+
+    return {
+      code: HttpStatus.OK,
+      message: REST_MESSAGES.UPDATED,
+      data: updated,
+    };
   }
 
   async createSettings(createDto: CreateRecommenderSettingDto) {
-    const existing = await this.getByContext(createDto.target_context);
+    const existing = await this.settingsRepo.findOne({
+      where: { target_context: createDto.target_context },
+    });
     if (existing) {
-      throw new ConflictException(
-        `Settings for context "${createDto.target_context}" already exist`,
-      );
+      throw new ConflictException(ERR_REC_SETTINGS.SETTINGS_EXIST);
     }
 
     const newSettings = this.settingsRepo.create(createDto);
+    const saved = await this.settingsRepo.save(newSettings);
 
-    if (
-      newSettings.is_default === true &&
-      newSettings.fallback_rec_id != null
-    ) {
-      throw new BadRequestException(
-        'Стандартная настройка не может иметь fallback рекомендации',
-      );
-    }
-
-    return await this.settingsRepo.save(newSettings);
+    return {
+      code: HttpStatus.CREATED,
+      message: REST_MESSAGES.CREATED,
+      data: saved,
+    };
   }
 
-  async getByContext(context: string) {
-    return await this.settingsRepo.findOne({
-      where: { target_context: context },
-    });
-  }
-
-  async getById(id: number) {
-    return await this.settingsRepo.findOne({
-      where: { id },
-    });
-  }
-
-  async getInactiveSettingIds(): Promise<number[]> {
+  async getInactiveSettingIds() {
     const inactiveSettings = await this.settingsRepo.find({
       where: { isActive: false },
       select: ['id'],
     });
-    return inactiveSettings.map((s) => s.id);
+    const ids = inactiveSettings.map((s) => s.id);
+
+    return {
+      code: HttpStatus.OK,
+      message: REST_MESSAGES.SUCCESS,
+      data: ids,
+    };
   }
 
-  async deleteSettingsByContext(context: string) {
+  async softDeleteSettingsByContext(context: string) {
     const existing = await this.settingsRepo.findOne({
       where: { target_context: context },
     });
 
     if (!existing) {
-      throw new NotFoundException(
-        `Settings for context "${context}" not found`,
-      );
+      throw new NotFoundException(ERR_REC_SETTINGS.SETTINGS_NOT_FOUND);
     }
 
     await this.settingsRepo.delete({ target_context: context });
 
+    existing.isActive = false;
+    await this.settingsRepo.save(existing);
+
     return {
-      message: `Settings for context "${context}" successfully deleted`,
-      deleted: true,
+      code: HttpStatus.OK,
+      message: REST_MESSAGES.DEACTIVATED,
+      data: {
+        deactivated: true,
+        context: context,
+      },
     };
   }
 
@@ -124,20 +133,76 @@ export class RecommendationSettingsService {
     });
 
     if (!existing) {
-      throw new NotFoundException(`Settings for id "${id}" not found`);
+      throw new NotFoundException(ERR_REC_SETTINGS.SETTINGS_NOT_FOUND);
     }
 
     await this.settingsRepo.delete({ id });
 
     return {
-      message: `Settings for id "${id}" successfully deleted`,
-      deleted: true,
+      code: HttpStatus.OK,
+      message: REST_MESSAGES.DELETED,
+      data: {
+        deleted: true,
+      },
     };
   }
 
-  async getActiveConfigs(): Promise<RecommenderSetting[]> {
-    return this.settingsRepo.find({
+  async updateFallback(
+    id: number,
+    data: { fallback_skus: RecommendationItem[]; fallback_updated_at: Date },
+  ) {
+    const setting = await this.settingsRepo.findOne({
+      where: { id },
+    });
+
+    if (!setting) {
+      throw new NotFoundException(
+        `${ERR_REC_SETTINGS.SETTINGS_NOT_FOUND} ID: ${id}`,
+      );
+    }
+
+    await this.settingsRepo.update(id, {
+      fallback_skus: data.fallback_skus,
+      fallback_updated_at: data.fallback_updated_at,
+    });
+
+    const updated = await this.settingsRepo.findOne({
+      where: { id },
+    });
+
+    return {
+      code: HttpStatus.OK,
+      message: REST_MESSAGES.SUCCESS,
+      data: updated,
+    };
+  }
+
+  async getActiveConfigs() {
+    const activeConfigs = await this.settingsRepo.find({
       where: { isActive: true },
     });
+
+    return {
+      code: HttpStatus.OK,
+      message: REST_MESSAGES.SUCCESS,
+      data: activeConfigs,
+    };
+  }
+
+  getStrategies(scope?: StrategyScope) {
+    if (scope) {
+      const validScopes = Object.values(StrategyScope);
+      if (!validScopes.includes(scope)) {
+        throw new BadRequestException(
+          `${ERR_REC_SETTINGS.INVALID_SCOPE}: ${scope}. Available scopes: ${validScopes.join(', ')}`,
+        );
+      }
+    }
+
+    return {
+      code: HttpStatus.OK,
+      message: REST_MESSAGES.SUCCESS,
+      data: AVAILABLE_STRATEGIES,
+    };
   }
 }

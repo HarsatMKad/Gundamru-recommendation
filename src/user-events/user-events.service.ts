@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEvent } from './entities/user-event.entity';
 import { UserEventDto } from './dto/user-event.dto';
 import { EventTypesService } from 'src/event-types/event-types.service';
+import { REST_MESSAGES } from 'src/common/util/rest-message-handler.util';
+import { ERR_USER_EVENTS } from 'src/common/util/err-handler.util';
 
 @Injectable()
 export class UserEventService {
@@ -13,14 +15,14 @@ export class UserEventService {
     private readonly eventTypesService: EventTypesService,
   ) {}
 
-  async create(dto: UserEventDto): Promise<UserEvent> {
+  async create(dto: UserEventDto) {
     const eventType = await this.eventTypesService.findByName(
       dto.event_type_name,
     );
 
     if (!eventType) {
       throw new NotFoundException(
-        `Тип события ${dto.event_type_name} не найден`,
+        `${ERR_USER_EVENTS.TYPE_NOT_FOUND} with type name: ${dto.event_type_name}`,
       );
     }
 
@@ -31,12 +33,22 @@ export class UserEventService {
       timestamp: dto.timestamp || new Date(),
     });
 
-    return this.eventsRepository.save(event);
+    const savedEvent = await this.eventsRepository.save(event);
+
+    return {
+      code: HttpStatus.CREATED,
+      message: REST_MESSAGES.LOG_CREATED,
+      data: savedEvent,
+    };
   }
 
-  findAll() {
-    return this.eventsRepository.find({
-      take: 50,
-    });
+  findAll(limit: number = 50) {
+    const events = this.eventsRepository.find({ take: limit });
+
+    return {
+      code: HttpStatus.OK,
+      message: REST_MESSAGES.SUCCESS,
+      data: events,
+    };
   }
 }

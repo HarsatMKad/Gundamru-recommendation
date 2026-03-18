@@ -4,33 +4,103 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateEventTypeDto } from './dto/create_event-type.dto';
 import { UpdateEventTypeDto } from './dto/update_event-type.dto';
+import { NotFoundException, ConflictException } from '@nestjs/common';
+import { ERR_EVENT_TYPE } from 'src/common/util/err-handler.util';
+import { REST_MESSAGES } from 'src/common/util/rest-message-handler.util';
+import { HttpStatus } from '@nestjs/common';
 
 @Injectable()
 export class EventTypesService {
   constructor(
     @InjectRepository(EventType)
-    private readonly repo: Repository<EventType>,
+    private readonly repoEventTypes: Repository<EventType>,
   ) {}
 
   async findAll() {
-    return await this.repo.find();
+    const items = await this.repoEventTypes.find();
+    return {
+      code: HttpStatus.OK,
+      message: REST_MESSAGES.SUCCESS,
+      data: items,
+    };
   }
 
-  async findByName(name: string) {
-    return await this.repo.findOneBy({ name });
+  async findById(id: number) {
+    const item = await this.repoEventTypes.findOneBy({ id });
+
+    if (!item) {
+      throw new NotFoundException(
+        `${ERR_EVENT_TYPE.EVENT_TYPE_NOT_FOUND}: ${id}`,
+      );
+    }
+
+    return {
+      code: HttpStatus.OK,
+      message: REST_MESSAGES.SUCCESS,
+      data: item,
+    };
   }
 
   async create(dto: CreateEventTypeDto) {
-    const newType = this.repo.create(dto);
-    return await this.repo.save(newType);
+    const existing = await this.repoEventTypes.findOneBy({ name: dto.name });
+
+    if (existing) {
+      throw new ConflictException(
+        `${ERR_EVENT_TYPE.EVENT_TYPE_EXISTED}: ${dto.name}`,
+      );
+    }
+
+    const newType = this.repoEventTypes.create(dto);
+    const saved = await this.repoEventTypes.save(newType);
+
+    return {
+      code: HttpStatus.CREATED,
+      message: REST_MESSAGES.SUCCESS,
+      data: saved,
+    };
   }
 
   async update(id: number, dto: UpdateEventTypeDto) {
-    await this.repo.update(id, dto);
-    return await this.repo.findOneBy({ id });
+    const existing = await this.repoEventTypes.findOneBy({ id });
+
+    if (!existing) {
+      throw new NotFoundException(
+        `${ERR_EVENT_TYPE.EVENT_TYPE_NOT_FOUND}: ${id}`,
+      );
+    }
+
+    await this.repoEventTypes.update(id, dto);
+    const updated = await this.repoEventTypes.findOneBy({ id });
+
+    return {
+      code: HttpStatus.OK,
+      message: REST_MESSAGES.UPDATED,
+      data: updated,
+    };
   }
 
   async remove(id: number) {
-    return await this.repo.delete(id);
+    const existing = await this.repoEventTypes.findOne({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(
+        `${ERR_EVENT_TYPE.EVENT_TYPE_NOT_FOUND}: ${id}`,
+      );
+    }
+
+    await this.repoEventTypes.delete({ id });
+    return {
+      code: HttpStatus.OK,
+      message: REST_MESSAGES.SUCCESS,
+      data: {
+        deleted: true,
+      },
+    };
+  }
+
+  async findByName(name: string) {
+    return await this.repoEventTypes.findOneBy({ name });
   }
 }
