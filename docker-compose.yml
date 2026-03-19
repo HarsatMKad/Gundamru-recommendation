@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: rec_system_db
+    restart: always
+    environment:
+      POSTGRES_USER: harsat
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: gundamru-recommendation
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks:
+      - app-network
+
+  app:
+    build: ./api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      PYTHON_ENGINE_URL: http://rec-engine:8000
+    depends_on:
+      - db
+      - rec-engine
+    networks:
+      - app-network
+
+  rec-engine:
+    build: ./recommendation-engine
+    container_name: rec-engine
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://harsat:admin@db:5432/gundamru-recommendation
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
