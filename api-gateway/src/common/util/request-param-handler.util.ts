@@ -17,3 +17,7 @@ export const PARAMS = {
   USERID: 'userId',
   SCOPE: 'scope',
 };
+
+export const HEADERS_HANDLER = {
+  apiKeyHeader: 'x-api-key',
+};

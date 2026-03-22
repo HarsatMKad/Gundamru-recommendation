@@ -20,3 +20,4 @@ export const WARN_REC_SYSTEM = {
 };
 
 export const CALCULATION_ERROR = 'Calculation error';
+export const API_KEY_VALID_ERROR = 'API Key validation failed';

@@ -4,7 +4,6 @@ import { BatchWriter } from './batch-writer.service';
 import { Logger } from '@nestjs/common';
 import { RecommendationInput } from '../common/interface/recommendation.interface';
 import { RecommendationSettingsService } from 'src/recommendation-settings/recommendation-settings.service';
-//import { CronExpression } from '@nestjs/schedule';
 import { PythonEngineClient } from './python-engine.client';
 import { PipelineEngine } from './pipeline-engine.service';
 import { UserIdsProvider } from './user-ids.provider';
@@ -25,8 +24,10 @@ export class RecommenderOrchestrator {
     private readonly pipelineEngine: PipelineEngine,
   ) {}
 
-  //@Cron(CronExpression.EVERY_DAY_AT_3AM)
-  @Cron('0 */2 * * * *') // каждые 2 минуты
+  // запуск каждый день в 4 часа ночи по московскому времени
+  @Cron('0 */1 * * * *', {
+    timeZone: 'Europe/Moscow',
+  })
   async handleCron() {
     this.logger.log(LOG_HANDLER.REC_GENERATION_START);
     const validUserIds = await this.userIdsProvider.getValidUserIds();

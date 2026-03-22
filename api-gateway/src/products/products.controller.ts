@@ -11,7 +11,7 @@ import {
 import { ProductsService } from './products.service';
 import { ProductDto } from './dto/product.dto';
 import { Product } from './entities/product.entity';
-import { PARAMS } from 'src/common/util/endpoint-handler.util';
+import { PARAMS } from 'src/common/util/request-param-handler.util';
 
 @Controller('products')
 export class ProductsController {

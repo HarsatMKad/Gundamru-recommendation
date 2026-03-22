@@ -12,7 +12,7 @@ import {
 import { EventTypesService } from './event-types.service';
 import { CreateEventTypeDto } from './dto/create_event-type.dto';
 import { UpdateEventTypeDto } from './dto/update_event-type.dto';
-import { PARAMS } from 'src/common/util/endpoint-handler.util';
+import { PARAMS } from 'src/common/util/request-param-handler.util';
 
 @Controller('event-types')
 export class EventTypesController {

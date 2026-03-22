@@ -1,8 +1,8 @@
 import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { RecommendationService } from './recommendations.service';
 import { RecQueryDto } from './dto/query-recommendation.dto';
-import { RECOMMENDATION_ENDPOINTS } from 'src/common/util/endpoint-handler.util';
-import { PARAMS } from 'src/common/util/endpoint-handler.util';
+import { RECOMMENDATION_ENDPOINTS } from 'src/common/util/request-param-handler.util';
+import { PARAMS } from 'src/common/util/request-param-handler.util';
 
 @Controller('recommendation')
 export class RecommendationController {

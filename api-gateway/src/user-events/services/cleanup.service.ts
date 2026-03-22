@@ -16,7 +16,10 @@ export class CleanupService {
     private readonly eventTypeService: EventTypesService,
   ) {}
 
-  @Cron('0 3 * * *') // запуск каждый день в 3 часа ночи
+  // запуск каждый день в 3 часа ночи по московскому времени
+  @Cron(process.env.CRON_CLEANUP_TIME || '0 3 * * *', {
+    timeZone: 'Europe/Moscow',
+  })
   async handleCleanup() {
     this.logger.log(LOG_HANDLER.CLEANUP_START);
 

@@ -11,7 +11,7 @@ import {
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { UserDto } from './dto/user.dto';
-import { PARAMS } from 'src/common/util/endpoint-handler.util';
+import { PARAMS } from 'src/common/util/request-param-handler.util';
 
 @Controller('users')
 export class UsersController {

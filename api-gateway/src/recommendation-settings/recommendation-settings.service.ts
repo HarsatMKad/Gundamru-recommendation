@@ -20,7 +20,7 @@ export class RecommendationSettingsService {
     private settingsRepo: Repository<RecommenderSetting>,
   ) {}
 
-  async findAll() {
+  async getAll() {
     const items = await this.settingsRepo.find();
     return {
       code: HttpStatus.OK,
@@ -37,6 +37,24 @@ export class RecommendationSettingsService {
     if (!setting) {
       throw new NotFoundException(
         `${ERR_REC_SETTINGS.SETTINGS_NOT_FOUND} for id: ${id}`,
+      );
+    }
+
+    return {
+      code: HttpStatus.OK,
+      message: REST_MESSAGES.SUCCESS,
+      data: setting,
+    };
+  }
+
+  async getByContext(context: string) {
+    const setting = await this.settingsRepo.findOne({
+      where: { target_context: context },
+    });
+
+    if (!setting) {
+      throw new NotFoundException(
+        `${ERR_REC_SETTINGS.SETTINGS_NOT_FOUND} for context: ${context}`,
       );
     }
 

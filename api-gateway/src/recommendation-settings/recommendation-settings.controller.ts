@@ -17,7 +17,7 @@ import { StrategyScope } from 'src/common/config/strategies.config';
 import {
   REC_SETTINGS_ENDPOINTS,
   PARAMS,
-} from 'src/common/util/endpoint-handler.util';
+} from 'src/common/util/request-param-handler.util';
 
 @Controller('recommendation-settings')
 export class RecommendationSettingsController {
@@ -26,13 +26,10 @@ export class RecommendationSettingsController {
   ) {}
 
   @Get()
-  getAll() {
-    return this.recSettingsService.findAll();
-  }
-
-  @Get(`:${PARAMS.ID}`)
-  getById(@Param(PARAMS.ID) id: number) {
-    return this.recSettingsService.getById(id);
+  find(@Query('id') id?: number, @Query('context') context?: string) {
+    if (id) return this.recSettingsService.getById(id);
+    if (context) return this.recSettingsService.getByContext(context);
+    return this.recSettingsService.getAll();
   }
 
   @Get(REC_SETTINGS_ENDPOINTS.STRATEGIES)

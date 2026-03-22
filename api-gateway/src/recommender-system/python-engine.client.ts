@@ -9,12 +9,20 @@ import { z } from 'zod';
 import { Logger } from '@nestjs/common';
 import { WARN_REC_SYSTEM } from 'src/common/util/err-handler.util';
 import { CALCULATION_ERROR } from 'src/common/util/err-handler.util';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class PythonEngineClient {
-  private readonly logger = new Logger(PythonEngineClient.name);
-  private readonly baseUrl =
-    process.env.PYTHON_ENGINE_URL || 'http://localhost:8000';
+  private readonly pythonUrl: string;
+  private readonly logger: Logger;
+
+  constructor(private configService: ConfigService) {
+    this.pythonUrl = this.configService.get<string>(
+      'PYTHON_SERVICE_URL',
+      'http://localhost:8000',
+    );
+    this.logger = new Logger(PythonEngineClient.name);
+  }
 
   private recItemSchema = z.object({
     sku: z.number(),
@@ -43,7 +51,7 @@ export class PythonEngineClient {
 
       try {
         const response = await axios.post(
-          `${this.baseUrl}${strategyDef.calculate_endpoint}`,
+          `${this.pythonUrl}${strategyDef.calculate_endpoint}`,
           {
             user_ids: userIds,
           },
@@ -93,7 +101,7 @@ export class PythonEngineClient {
 
       try {
         const response = await axios.post(
-          `${this.baseUrl}${strategyDef.calculate_endpoint}`,
+          `${this.pythonUrl}${strategyDef.calculate_endpoint}`,
         );
 
         const validatedData = z.array(this.recItemSchema).parse(response.data);
