@@ -16,7 +16,7 @@ export class UserEventService {
   ) {}
 
   async create(dto: UserEventDto) {
-    const eventType = await this.eventTypesService.getById(dto.user_id);
+    const eventType = (await this.eventTypesService.findById(dto.user_id)).data;
 
     if (!eventType) {
       throw new NotFoundException(

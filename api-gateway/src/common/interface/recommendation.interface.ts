@@ -26,3 +26,10 @@ export interface RecommendationInput {
   setting_id: number;
   generated_at?: Date;
 }
+
+export type PythonPersonalResults = Record<
+  string,
+  Record<number, RecommendationItem[]>
+>;
+
+export type PythonGlobalResults = Record<string, RecommendationItem[]>;

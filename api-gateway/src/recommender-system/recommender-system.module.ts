@@ -13,6 +13,7 @@ import { UserIdsProvider } from './user-ids.provider';
 import { PythonEngineClient } from './python-engine.client';
 import { RecommenderSystemController } from './recommender-system.controller';
 import { RecommenderSystemService } from './recommender-system.service';
+import { RecommendationsModule } from 'src/recommendation/recommendations.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { RecommenderSystemService } from './recommender-system.service';
       UserEvent,
     ]),
     UsersModule,
+    RecommendationsModule,
   ],
   providers: [
     PipelineEngine,

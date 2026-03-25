@@ -160,4 +160,15 @@ export class RecommendationService {
       message: REST_STATUS.SUCCESS,
     };
   }
+
+  async getInactiveRecommendationSettingIds(): Promise<number[]> {
+    const inactiveRecommendationIds = await this.recRepo
+      .createQueryBuilder('rec')
+      .leftJoinAndSelect('rec.setting', 'setting')
+      .select('DISTINCT rec.setting_id')
+      .where('setting.isActive = false')
+      .getRawMany()
+      .then((results) => results.map((row: Recommendation) => row.setting_id));
+    return inactiveRecommendationIds;
+  }
 }

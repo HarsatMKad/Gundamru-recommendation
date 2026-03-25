@@ -99,12 +99,4 @@ export class EventTypesService {
       },
     };
   }
-
-  async getByName(name: string) {
-    return await this.repoEventTypes.findOneBy({ name });
-  }
-
-  async getById(id: number) {
-    return await this.repoEventTypes.findOneBy({ id });
-  }
 }

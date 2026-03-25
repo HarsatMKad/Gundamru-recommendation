@@ -107,20 +107,6 @@ export class RecommendationSettingsService {
     };
   }
 
-  async getInactiveSettingIds() {
-    const inactiveSettings = await this.settingsRepo.find({
-      where: { isActive: false },
-      select: ['id'],
-    });
-    const ids = inactiveSettings.map((s) => s.id);
-
-    return {
-      code: HttpStatus.OK,
-      message: REST_STATUS.SUCCESS,
-      data: ids,
-    };
-  }
-
   async softDeleteSettingsByContext(context: string) {
     const existing = await this.settingsRepo.findOne({
       where: { target_context: context },
@@ -216,7 +202,6 @@ export class RecommendationSettingsService {
         );
       }
     }
-
     return {
       code: HttpStatus.OK,
       message: REST_STATUS.SUCCESS,

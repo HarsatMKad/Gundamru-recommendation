@@ -26,7 +26,7 @@ export class RecommenderSystemService {
     status: string;
     message: string;
   } {
-    this.logger.log(`generationg key: ${this.isGenerating}`);
+    this.logger.log(`orchestr key: ${this.isGenerating}`);
     if (this.isGenerating) {
       this.logger.warn(WARN_REC_SYSTEM.TRIGER_ALREADY_RUNNING);
       return {
@@ -38,12 +38,10 @@ export class RecommenderSystemService {
 
     this.isGenerating = true;
     this.logger.log(LOG_HANDLER.GENERATION_MANUAL_INITIALIZED);
-
     try {
       void this.recommenderOrchestrator.handleCron().finally(() => {
         this.isGenerating = false;
         this.logger.log(LOG_HANDLER.GENERATION_MANUAL_COMPLITE);
-        this.logger.log(`${LOG_HANDLER.STATUS_RESET}: ${this.isGenerating}`);
       });
       return {
         code: HttpStatus.OK,

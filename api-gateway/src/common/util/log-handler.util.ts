@@ -10,5 +10,5 @@ export const LOG_HANDLER = {
   REC_NO_SAVED: 'No recommendation records were saved',
   GENERATION_MANUAL_INITIALIZED: 'Manual trigger generation: started',
   GENERATION_MANUAL_COMPLITE: 'Manual trigger generation: completed',
-  STATUS_RESET: 'Status reset',
+  FALLBACK_UPDATE_COMPLETE: 'Fallback update complete',
 };

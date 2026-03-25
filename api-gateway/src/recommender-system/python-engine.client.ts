@@ -10,6 +10,10 @@ import { Logger } from '@nestjs/common';
 import { WARN_REC_SYSTEM } from 'src/common/util/err-handler.util';
 import { CALCULATION_ERROR } from 'src/common/util/err-handler.util';
 import { ConfigService } from '@nestjs/config';
+import {
+  PythonPersonalResults,
+  PythonGlobalResults,
+} from '../common/interface/recommendation.interface';
 
 @Injectable()
 export class PythonEngineClient {
@@ -36,7 +40,7 @@ export class PythonEngineClient {
   async fetchPersonalStrategyResults(
     strategies: string[],
     userIds: number[],
-  ): Promise<Record<string, Record<number, RecommendationItem[]>>> {
+  ): Promise<PythonPersonalResults> {
     const requests = strategies.map(async (strategyName) => {
       const strategyDef = AVAILABLE_STRATEGIES.find(
         (s) => s.name === strategyName,
@@ -86,7 +90,7 @@ export class PythonEngineClient {
 
   async fetchGlobalStrategyResults(
     strategies: string[],
-  ): Promise<Record<string, RecommendationItem[]>> {
+  ): Promise<PythonGlobalResults> {
     const requests = strategies.map(async (strategyName) => {
       const strategyDef = AVAILABLE_STRATEGIES.find(
         (s) => s.name === strategyName,
