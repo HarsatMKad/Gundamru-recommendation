@@ -12,7 +12,10 @@ import {
   RECOMMENDATION_CONST,
   RECOMMENDATION_MODS,
 } from 'src/common/util/const-handler.util';
-import { REST_MESSAGES } from 'src/common/util/rest-message-handler.util';
+import {
+  REST_MESSAGES,
+  REST_STATUS,
+} from 'src/common/util/rest-message-handler.util';
 
 @Injectable()
 export class RecommendationService {
@@ -154,7 +157,7 @@ export class RecommendationService {
         limit,
         minScore,
       },
-      message: REST_MESSAGES.SUCCESS,
+      message: REST_STATUS.SUCCESS,
     };
   }
 }

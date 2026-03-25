@@ -6,7 +6,7 @@ import { CreateEventTypeDto } from './dto/create_event-type.dto';
 import { UpdateEventTypeDto } from './dto/update_event-type.dto';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { ERR_EVENT_TYPE } from 'src/common/util/err-handler.util';
-import { REST_MESSAGES } from 'src/common/util/rest-message-handler.util';
+import { REST_STATUS } from 'src/common/util/rest-message-handler.util';
 import { HttpStatus } from '@nestjs/common';
 
 @Injectable()
@@ -20,7 +20,7 @@ export class EventTypesService {
     const items = await this.repoEventTypes.find();
     return {
       code: HttpStatus.OK,
-      message: REST_MESSAGES.SUCCESS,
+      message: REST_STATUS.SUCCESS,
       data: items,
     };
   }
@@ -36,7 +36,7 @@ export class EventTypesService {
 
     return {
       code: HttpStatus.OK,
-      message: REST_MESSAGES.SUCCESS,
+      message: REST_STATUS.SUCCESS,
       data: item,
     };
   }
@@ -55,7 +55,7 @@ export class EventTypesService {
 
     return {
       code: HttpStatus.CREATED,
-      message: REST_MESSAGES.SUCCESS,
+      message: REST_STATUS.SUCCESS,
       data: saved,
     };
   }
@@ -74,7 +74,7 @@ export class EventTypesService {
 
     return {
       code: HttpStatus.OK,
-      message: REST_MESSAGES.UPDATED,
+      message: REST_STATUS.UPDATED,
       data: updated,
     };
   }
@@ -93,14 +93,18 @@ export class EventTypesService {
     await this.repoEventTypes.delete({ id });
     return {
       code: HttpStatus.OK,
-      message: REST_MESSAGES.SUCCESS,
+      message: REST_STATUS.SUCCESS,
       data: {
         deleted: true,
       },
     };
   }
 
-  async findByName(name: string) {
+  async getByName(name: string) {
     return await this.repoEventTypes.findOneBy({ name });
+  }
+
+  async getById(id: number) {
+    return await this.repoEventTypes.findOneBy({ id });
   }
 }

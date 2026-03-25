@@ -11,6 +11,8 @@ import { RecommendationSettingsService } from 'src/recommendation-settings/recom
 import { UsersModule } from 'src/users/users.module';
 import { UserIdsProvider } from './user-ids.provider';
 import { PythonEngineClient } from './python-engine.client';
+import { RecommenderSystemController } from './recommender-system.controller';
+import { RecommenderSystemService } from './recommender-system.service';
 
 @Module({
   imports: [
@@ -29,7 +31,9 @@ import { PythonEngineClient } from './python-engine.client';
     RecommendationSettingsService,
     UserIdsProvider,
     PythonEngineClient,
+    RecommenderSystemService,
   ],
   exports: [RecommenderOrchestrator],
+  controllers: [RecommenderSystemController],
 })
 export class RecommenderSystemModule {}

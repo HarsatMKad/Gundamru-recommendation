@@ -1,5 +1,6 @@
 export const RECOMMENDATION_ENDPOINTS = {
   GET_FALLBACK: 'fallback',
+  GENERATE: 'generate',
 };
 
 export const REC_SETTINGS_ENDPOINTS = {

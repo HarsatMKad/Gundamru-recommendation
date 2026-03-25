@@ -7,7 +7,7 @@ import { CreateRecommenderSettingDto } from './dto/create-recommendation-setting
 import { RecommendationItem } from 'src/common/interface/recommendation.interface';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { ERR_REC_SETTINGS } from 'src/common/util/err-handler.util';
-import { REST_MESSAGES } from 'src/common/util/rest-message-handler.util';
+import { REST_STATUS } from 'src/common/util/rest-message-handler.util';
 import {
   AVAILABLE_STRATEGIES,
   StrategyScope,
@@ -24,7 +24,7 @@ export class RecommendationSettingsService {
     const items = await this.settingsRepo.find();
     return {
       code: HttpStatus.OK,
-      message: REST_MESSAGES.SUCCESS,
+      message: REST_STATUS.SUCCESS,
       data: items,
     };
   }
@@ -42,7 +42,7 @@ export class RecommendationSettingsService {
 
     return {
       code: HttpStatus.OK,
-      message: REST_MESSAGES.SUCCESS,
+      message: REST_STATUS.SUCCESS,
       data: setting,
     };
   }
@@ -60,7 +60,7 @@ export class RecommendationSettingsService {
 
     return {
       code: HttpStatus.OK,
-      message: REST_MESSAGES.SUCCESS,
+      message: REST_STATUS.SUCCESS,
       data: setting,
     };
   }
@@ -84,7 +84,7 @@ export class RecommendationSettingsService {
 
     return {
       code: HttpStatus.OK,
-      message: REST_MESSAGES.UPDATED,
+      message: REST_STATUS.UPDATED,
       data: updated,
     };
   }
@@ -102,7 +102,7 @@ export class RecommendationSettingsService {
 
     return {
       code: HttpStatus.CREATED,
-      message: REST_MESSAGES.CREATED,
+      message: REST_STATUS.CREATED,
       data: saved,
     };
   }
@@ -116,7 +116,7 @@ export class RecommendationSettingsService {
 
     return {
       code: HttpStatus.OK,
-      message: REST_MESSAGES.SUCCESS,
+      message: REST_STATUS.SUCCESS,
       data: ids,
     };
   }
@@ -137,7 +137,7 @@ export class RecommendationSettingsService {
 
     return {
       code: HttpStatus.OK,
-      message: REST_MESSAGES.DEACTIVATED,
+      message: REST_STATUS.DEACTIVATED,
       data: {
         deactivated: true,
         context: context,
@@ -158,7 +158,7 @@ export class RecommendationSettingsService {
 
     return {
       code: HttpStatus.OK,
-      message: REST_MESSAGES.DELETED,
+      message: REST_STATUS.DELETED,
       data: {
         deleted: true,
       },
@@ -190,7 +190,7 @@ export class RecommendationSettingsService {
 
     return {
       code: HttpStatus.OK,
-      message: REST_MESSAGES.SUCCESS,
+      message: REST_STATUS.SUCCESS,
       data: updated,
     };
   }
@@ -202,7 +202,7 @@ export class RecommendationSettingsService {
 
     return {
       code: HttpStatus.OK,
-      message: REST_MESSAGES.SUCCESS,
+      message: REST_STATUS.SUCCESS,
       data: activeConfigs,
     };
   }
@@ -219,7 +219,7 @@ export class RecommendationSettingsService {
 
     return {
       code: HttpStatus.OK,
-      message: REST_MESSAGES.SUCCESS,
+      message: REST_STATUS.SUCCESS,
       data: AVAILABLE_STRATEGIES,
     };
   }

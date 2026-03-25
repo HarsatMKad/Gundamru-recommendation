@@ -3,7 +3,6 @@ import {
   IsNumber,
   IsOptional,
   IsDateString,
-  IsString,
 } from 'class-validator';
 
 export class UserEventDto {
@@ -15,9 +14,9 @@ export class UserEventDto {
   @IsNotEmpty()
   product_id: number;
 
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
-  event_type_name: string;
+  event_type_id: number;
 
   @IsOptional()
   @IsDateString()

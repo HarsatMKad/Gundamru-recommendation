@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { UserEvent } from './entities/user-event.entity';
 import { UserEventDto } from './dto/user-event.dto';
 import { EventTypesService } from 'src/event-types/event-types.service';
-import { REST_MESSAGES } from 'src/common/util/rest-message-handler.util';
+import { REST_STATUS } from 'src/common/util/rest-message-handler.util';
 import { ERR_USER_EVENTS } from 'src/common/util/err-handler.util';
 
 @Injectable()
@@ -16,13 +16,11 @@ export class UserEventService {
   ) {}
 
   async create(dto: UserEventDto) {
-    const eventType = await this.eventTypesService.findByName(
-      dto.event_type_name,
-    );
+    const eventType = await this.eventTypesService.getById(dto.user_id);
 
     if (!eventType) {
       throw new NotFoundException(
-        `${ERR_USER_EVENTS.TYPE_NOT_FOUND} with type name: ${dto.event_type_name}`,
+        `${ERR_USER_EVENTS.TYPE_NOT_FOUND} with id: ${dto.user_id}`,
       );
     }
 
@@ -37,7 +35,7 @@ export class UserEventService {
 
     return {
       code: HttpStatus.CREATED,
-      message: REST_MESSAGES.LOG_CREATED,
+      message: REST_STATUS.LOG_CREATED,
       data: savedEvent,
     };
   }
@@ -47,7 +45,7 @@ export class UserEventService {
 
     return {
       code: HttpStatus.OK,
-      message: REST_MESSAGES.SUCCESS,
+      message: REST_STATUS.SUCCESS,
       data: events,
     };
   }

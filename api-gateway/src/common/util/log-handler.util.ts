@@ -8,4 +8,7 @@ export const LOG_HANDLER = {
   CLEANING_REC_COMPLETE: 'Cleaning of inactive recommendations is complete',
   REC_SAVED: 'Recommendations were saved',
   REC_NO_SAVED: 'No recommendation records were saved',
+  GENERATION_MANUAL_INITIALIZED: 'Manual trigger generation: started',
+  GENERATION_MANUAL_COMPLITE: 'Manual trigger generation: completed',
+  STATUS_RESET: 'Status reset',
 };

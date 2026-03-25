@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
 import { BatchWriter } from './batch-writer.service';
 import { Logger } from '@nestjs/common';
 import { RecommendationInput } from '../common/interface/recommendation.interface';
@@ -11,6 +10,10 @@ import { AVAILABLE_STRATEGIES } from 'src/common/config/strategies.config';
 import { StrategyScope } from 'src/common/config/strategies.config';
 import { LOG_HANDLER } from 'src/common/util/log-handler.util';
 import { WARN_REC_SYSTEM } from 'src/common/util/err-handler.util';
+import { ConfigService } from '@nestjs/config';
+import { SchedulerRegistry } from '@nestjs/schedule';
+import { CronJob } from 'cron';
+import { log } from 'console';
 
 @Injectable()
 export class RecommenderOrchestrator {
@@ -22,12 +25,29 @@ export class RecommenderOrchestrator {
     private readonly settingsService: RecommendationSettingsService,
     private readonly pythonClient: PythonEngineClient,
     private readonly pipelineEngine: PipelineEngine,
+    private configService: ConfigService,
+    private schedulerRegistry: SchedulerRegistry,
   ) {}
 
-  // запуск каждый день в 4 часа ночи по московскому времени
-  @Cron('0 */1 * * * *', {
-    timeZone: 'Europe/Moscow',
-  })
+  onModuleInit() {
+    const cronTime =
+      this.configService.get<string>('CRON_GENERATION_TIME') || '0 4 * * *';
+
+    log(cronTime);
+
+    // запуск каждый день по расписанию в CRON_GENERATION_TIME
+    const job = new CronJob(
+      cronTime,
+      () => this.handleCron(),
+      null,
+      false,
+      'Europe/Moscow',
+    );
+
+    this.schedulerRegistry.addCronJob('generation_job', job);
+    job.start();
+  }
+
   async handleCron() {
     this.logger.log(LOG_HANDLER.REC_GENERATION_START);
     const validUserIds = await this.userIdsProvider.getValidUserIds();
