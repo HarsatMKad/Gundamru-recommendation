@@ -1,9 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
-
-export enum UserRole {
-  CUSTOMER = 'customer',
-  ADMIN = 'admin',
-}
+import { UserRole } from 'src/common/interface/recommendation.interface';
 
 @Entity('users')
 export class User {
@@ -13,6 +9,11 @@ export class User {
   @Column({ unique: true, length: 50 })
   username: string;
 
-  @Column('text', { default: UserRole.CUSTOMER })
-  roles: UserRole;
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    array: true,
+    default: [UserRole.CUSTOMER],
+  })
+  roles: UserRole[];
 }

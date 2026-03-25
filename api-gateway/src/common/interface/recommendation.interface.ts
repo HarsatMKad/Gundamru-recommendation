@@ -33,3 +33,9 @@ export type PythonPersonalResults = Record<
 >;
 
 export type PythonGlobalResults = Record<string, RecommendationItem[]>;
+
+export enum UserRole {
+  CUSTOMER = 'customer',
+  ADMIN = 'admin',
+  MANAGER = 'manager',
+}

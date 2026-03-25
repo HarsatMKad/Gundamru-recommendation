@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User, UserRole } from './entities/user.entity';
+import { User } from './entities/user.entity';
 import { UserDto } from './dto/user.dto';
+import { UserRole } from 'src/common/interface/recommendation.interface';
 
 @Injectable()
 export class UsersService {
@@ -14,13 +15,13 @@ export class UsersService {
   async create(userDto: UserDto): Promise<User> {
     const newUser = this.usersRepository.create({
       ...userDto,
-      roles: userDto.roles || UserRole.CUSTOMER,
+      roles: userDto.roles || [UserRole.CUSTOMER],
     });
     return this.usersRepository.save(newUser);
   }
 
-  async findAll(): Promise<User[]> {
-    return this.usersRepository.find();
+  async findByRole(role: UserRole) {
+    return await this.usersRepository.findBy({ roles: role });
   }
 
   async findOne(id: number): Promise<User> {

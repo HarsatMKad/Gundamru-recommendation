@@ -1,10 +1,10 @@
 import { IsEnum, IsOptional } from 'class-validator';
-import { UserRole } from '../entities/user.entity';
+import { UserRole } from 'src/common/interface/recommendation.interface';
 
 export class UserDto {
   id: number;
   username: string;
-  @IsEnum(UserRole)
   @IsOptional()
-  roles?: UserRole = UserRole.CUSTOMER;
+  @IsEnum(UserRole, { each: true })
+  roles?: UserRole[] = [UserRole.CUSTOMER];
 }
