@@ -26,7 +26,7 @@ export class RecommendationSettingsController {
   ) {}
 
   @Get()
-  find(@Query('id') id?: number, @Query('context') context?: string) {
+  find(@Query('id') id?: string, @Query('context') context?: string) {
     if (id) return this.recSettingsService.getById(id);
     if (context) return this.recSettingsService.getByContext(context);
     return this.recSettingsService.getAll();

@@ -29,7 +29,7 @@ export class RecommendationService {
 
   /** 1. Только пользовательские */
   async getPurePersonal(
-    userId: number,
+    userId: string,
     context: string,
     minScore?: number,
   ): Promise<RecommendationItem[]> {
@@ -106,7 +106,7 @@ export class RecommendationService {
   }
 
   async getRecommendations(
-    userId: number,
+    userId: string,
     context: string,
     mode: string,
     limit: number = RECOMMENDATION_CONST.RECOMMENDATION_LENGTH,
@@ -161,7 +161,7 @@ export class RecommendationService {
     };
   }
 
-  async getInactiveRecommendationSettingIds(): Promise<number[]> {
+  async getInactiveRecommendationSettingIds(): Promise<string[]> {
     const inactiveRecommendationIds = await this.recRepo
       .createQueryBuilder('rec')
       .leftJoinAndSelect('rec.setting', 'setting')
@@ -170,5 +170,17 @@ export class RecommendationService {
       .getRawMany()
       .then((results) => results.map((row: Recommendation) => row.setting_id));
     return inactiveRecommendationIds;
+  }
+
+  async getAllRecommendations(userId?: string) {
+    if (userId) {
+      return await this.recRepo.findBy({ user_id: userId });
+    } else {
+      return await this.recRepo.find();
+    }
+  }
+
+  async getAll() {
+    return this.recRepo.find({ take: 100 });
   }
 }

@@ -9,17 +9,17 @@ import {
 import { RecommenderSetting } from 'src/recommendation-settings/entities/settings.entity';
 import { RecommendationItem } from 'src/common/interface/recommendation.interface';
 
-@Entity('user_recommendations')
+@Entity('user_recommendation')
 @Index(['user_id', 'setting_id'], { unique: true })
 export class Recommendation {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Column()
-  user_id: number;
+  @Column('uuid')
+  user_id: string;
 
-  @Column()
-  setting_id: number;
+  @Column('uuid')
+  setting_id: string;
 
   @ManyToOne(() => RecommenderSetting)
   @JoinColumn({ name: 'setting_id' })

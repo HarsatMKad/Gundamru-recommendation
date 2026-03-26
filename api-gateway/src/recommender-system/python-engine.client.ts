@@ -29,7 +29,7 @@ export class PythonEngineClient {
   }
 
   private recItemSchema = z.object({
-    sku: z.number(),
+    sku: z.string(),
     score: z.number(),
   });
 
@@ -39,7 +39,7 @@ export class PythonEngineClient {
 
   async fetchPersonalStrategyResults(
     strategies: string[],
-    userIds: number[],
+    userIds: string[],
   ): Promise<PythonPersonalResults> {
     const requests = strategies.map(async (strategyName) => {
       const strategyDef = AVAILABLE_STRATEGIES.find(
@@ -54,18 +54,22 @@ export class PythonEngineClient {
       }
 
       try {
+        this.logger.log(
+          `запрос рассчета метода ${strategyName} отправлен в python сервис`,
+        );
         const response = await axios.post(
           `${this.pythonUrl}${strategyDef.calculate_endpoint}`,
           {
             user_ids: userIds,
           },
         );
+        this.logger.log('запрос выполнен');
 
         const validatedData = this.PythonResponseSchema.parse(response.data);
 
         const normalizedResults: Record<number, RecommendationItem[]> = {};
         for (const [userId, items] of Object.entries(validatedData.results)) {
-          normalizedResults[Number(userId)] = items;
+          normalizedResults[userId] = items;
         }
 
         return { strategy: strategyName, data: normalizedResults };
@@ -104,9 +108,13 @@ export class PythonEngineClient {
       }
 
       try {
+        this.logger.log(
+          `запрос рассчета метода ${strategyName} отправлен в python сервис`,
+        );
         const response = await axios.post(
           `${this.pythonUrl}${strategyDef.calculate_endpoint}`,
         );
+        this.logger.log('запрос выполнен');
 
         const validatedData = z.array(this.recItemSchema).parse(response.data);
 

@@ -3,4 +3,4 @@ from services.data_provider import get_user_events_data
 
 async def calculate() -> dict:
     df = get_user_events_data()
-    return calculate_popular_global(df)
+    return calculate_popular_global(df, 10)

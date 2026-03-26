@@ -67,7 +67,7 @@ export class RecommenderOrchestrator {
     this.logger.log(LOG_HANDLER.REC_GENERATION_STOP);
   }
 
-  private async cleanupInactiveSettings(ids: number[]) {
+  private async cleanupInactiveSettings(ids: string[]) {
     if (ids.length === 0) return;
     this.logger.log(`${LOG_HANDLER.DISABLED_SETTINGS_FOUND}: ${ids.length}`);
     await this.writer.deleteRecommendationsBySettingIds(ids);
@@ -107,7 +107,7 @@ export class RecommenderOrchestrator {
   }
 
   private async generateAndSaveRecommendations(
-    userIds: number[],
+    userIds: string[],
     configs: RecommenderSetting[],
   ) {
     const personalConfigs = configs.filter(
@@ -144,7 +144,7 @@ export class RecommenderOrchestrator {
 
   private async savePersonalRecs(
     configs: RecommenderSetting[],
-    userIds: number[],
+    userIds: string[],
     personalData: PythonPersonalResults,
   ): Promise<void> {
     const batchData: RecommendationInput[] = [];
@@ -166,7 +166,7 @@ export class RecommenderOrchestrator {
 
     if (batchData.length > 0) {
       await this.writer.saveBatch(batchData);
-      this.logger.log(`${LOG_HANDLER.REC_SAVED}: ${batchData.length}`);
+      this.logger.log(`${LOG_HANDLER.REC_SAVED}. Count: ${batchData.length}`);
     } else {
       this.logger.log(LOG_HANDLER.REC_NO_SAVED);
     }

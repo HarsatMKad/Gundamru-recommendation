@@ -1,4 +1,4 @@
-def calculate_popular_global(df):
+def calculate_popular_global(df, rec_length: int):
     if df.empty:
         return []
     
@@ -12,7 +12,7 @@ def calculate_popular_global(df):
     if max_score > 0:
         popular_items['score'] = popular_items['score'] / max_score
     
-    # Сортируем и берем топ-100 (или сколько нужно)
-    result = popular_items.sort_values('score', ascending=False).head(100)
+    # Сортируем и берем топ (или сколько нужно)
+    result = popular_items.sort_values('score', ascending=False).head(rec_length)
     
     return result.to_dict(orient='records')

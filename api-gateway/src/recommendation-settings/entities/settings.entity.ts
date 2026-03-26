@@ -1,10 +1,10 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 import { RecommendationItem } from 'src/common/interface/recommendation.interface';
 
-@Entity('recommender_settings')
+@Entity('recommender_setting')
 export class RecommenderSetting {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ unique: true, nullable: false })
   target_context: string;

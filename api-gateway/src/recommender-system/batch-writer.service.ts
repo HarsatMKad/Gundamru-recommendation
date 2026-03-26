@@ -21,7 +21,7 @@ export class BatchWriter {
       .execute();
   }
 
-  async deleteRecommendationsBySettingIds(settingIds: number[]) {
+  async deleteRecommendationsBySettingIds(settingIds: string[]) {
     await this.recRepo
       .createQueryBuilder()
       .delete()

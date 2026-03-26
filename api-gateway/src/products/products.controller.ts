@@ -28,20 +28,20 @@ export class ProductsController {
   }
 
   @Get(`:${PARAMS.ID}`)
-  findOne(@Param(PARAMS.ID, ParseIntPipe) id: number): Promise<Product> {
+  findOne(@Param(PARAMS.ID, ParseIntPipe) id: string): Promise<Product> {
     return this.productsService.findOne(id);
   }
 
   @Patch(`:${PARAMS.ID}`)
   update(
-    @Param(PARAMS.ID, ParseIntPipe) id: number,
+    @Param(PARAMS.ID, ParseIntPipe) id: string,
     @Body() ProductDto: ProductDto,
   ): Promise<Product> {
     return this.productsService.update(id, ProductDto);
   }
 
   @Delete(`:${PARAMS.ID}`)
-  remove(@Param(PARAMS.ID, ParseIntPipe) id: number): Promise<void> {
+  remove(@Param(PARAMS.ID, ParseIntPipe) id: string): Promise<void> {
     return this.productsService.remove(id);
   }
 }

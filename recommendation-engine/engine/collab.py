@@ -1,17 +1,19 @@
 import pandas as pd
 import numpy as np
 
-def calculate_recommendations(user_ids, df_events):
+def calculate_recommendations(user_ids, df_events, rec_length: int):
     if df_events.empty:
         return {str(uid): [] for uid in user_ids}
 
     # 1. Создаем матрицу "Пользователь-Товар"
     pivot = df_events.pivot_table(
         index='user_id', 
-        columns='product_id', 
+        columns='product_id',
         values='rating', 
         aggfunc='sum'
     ).fillna(0)
+
+    pivot.index = pivot.index.astype(str) 
 
     # 2. Вычисляем корреляцию между товарами (насколько товары похожи)
     # Используем корреляцию Пирсона для простоты
@@ -20,7 +22,7 @@ def calculate_recommendations(user_ids, df_events):
     results = {}
 
     for uid in user_ids:
-        if uid not in pivot.index:
+        if uid not in pivot.index.tolist():
             results[str(uid)] = []
             continue
 
@@ -42,11 +44,11 @@ def calculate_recommendations(user_ids, df_events):
         # Убираем уже купленные товары из рекомендаций
         recommendations = recommendations.drop(bought_items, errors='ignore')
         
-        # Сортируем и берем топ-5
-        top_recs = recommendations.groupby(level=0).mean().sort_values(ascending=False).head(5)
+        # Сортируем и берем топ
+        top_recs = recommendations.groupby(level=0).mean().sort_values(ascending=False).head(rec_length)
         
         results[str(uid)] = [
-            {"sku": int(pid), "score": float(score)} 
+            {"sku": pid, "score": float(score)} 
             for pid, score in top_recs.items() if not np.isnan(score)
         ]
 

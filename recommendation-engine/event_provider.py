@@ -32,9 +32,11 @@ class EventDataProvider:
                     ue.user_id, 
                     ue.product_id, 
                     et.weight as rating
-                FROM user_events ue
-                INNER JOIN event_types et ON ue.event_type_id = et.id
+                FROM user_event ue
+                INNER JOIN event_type et ON ue.event_type_id = et.id
+                INNER JOIN product p ON ue.product_id = p.id
                 WHERE et.is_active = true
+                AND p.is_published = true
             """)
 
             df = pd.read_sql(query, conn)

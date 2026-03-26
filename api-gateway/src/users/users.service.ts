@@ -21,10 +21,17 @@ export class UsersService {
   }
 
   async findByRole(role: UserRole) {
-    return await this.usersRepository.findBy({ roles: role });
+    return await this.usersRepository
+      .createQueryBuilder('user')
+      .where('user.roles @> :role', { role: [role] })
+      .getMany();
   }
 
-  async findOne(id: number): Promise<User> {
+  async findAll() {
+    return await this.usersRepository.find();
+  }
+
+  async findOne(id: string): Promise<User> {
     const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
@@ -32,13 +39,13 @@ export class UsersService {
     return user;
   }
 
-  async update(id: number, userDto: UserDto): Promise<User> {
+  async update(id: string, userDto: UserDto): Promise<User> {
     await this.usersRepository.update(id, userDto);
     return this.findOne(id);
   }
 
-  async remove(id: number): Promise<void> {
-    const result = await this.usersRepository.delete(id);
+  async remove(id: string): Promise<void> {
+    const result = await this.usersRepository.delete({ id });
     if (result.affected === 0) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }

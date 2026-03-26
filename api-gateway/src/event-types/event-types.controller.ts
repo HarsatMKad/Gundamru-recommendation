@@ -30,12 +30,12 @@ export class EventTypesController {
 
   @Patch(`:${PARAMS.ID}`)
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  update(@Param(PARAMS.ID) id: number, @Body() dto: UpdateEventTypeDto) {
+  update(@Param(PARAMS.ID) id: string, @Body() dto: UpdateEventTypeDto) {
     return this.service.update(id, dto);
   }
 
   @Delete(`:${PARAMS.ID}`)
-  remove(@Param(PARAMS.ID) id: number) {
+  remove(@Param(PARAMS.ID) id: string) {
     return this.service.remove(id);
   }
 }

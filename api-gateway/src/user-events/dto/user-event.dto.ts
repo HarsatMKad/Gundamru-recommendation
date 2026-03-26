@@ -1,22 +1,22 @@
 import {
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsDateString,
+  IsString,
 } from 'class-validator';
 
 export class UserEventDto {
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  user_id: number;
+  user_id: string;
 
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  product_id: number;
+  product_id: string;
 
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  event_type_id: number;
+  event_type_id: string;
 
   @IsOptional()
   @IsDateString()

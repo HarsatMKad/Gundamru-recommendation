@@ -14,8 +14,8 @@ export class PipelineEngine {
 
   processed(
     config: RecommendationConfig,
-    userId: number,
-    strategyData: Record<string, Record<number, RecItem[]>>,
+    userId: string,
+    strategyData: Record<string, Record<string, RecItem[]>>,
   ): RecItem[] {
     if (!config.isActive) {
       this.logger.warn(
@@ -24,7 +24,7 @@ export class PipelineEngine {
       return [];
     }
 
-    const scores = new Map<number, number>();
+    const scores = new Map<string, number>();
     for (const method of config.personal_methods) {
       const strategyMap = strategyData[method.strategy];
       const strategyResults = strategyMap?.[userId] || [];

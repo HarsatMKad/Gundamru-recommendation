@@ -29,7 +29,7 @@ export class RecommendationSettingsService {
     };
   }
 
-  async getById(id: number) {
+  async getById(id: string) {
     const setting = await this.settingsRepo.findOne({
       where: { id },
     });
@@ -131,7 +131,7 @@ export class RecommendationSettingsService {
     };
   }
 
-  async deleteSettingsById(id: number) {
+  async deleteSettingsById(id: string) {
     const existing = await this.settingsRepo.findOne({
       where: { id },
     });
@@ -152,7 +152,7 @@ export class RecommendationSettingsService {
   }
 
   async updateFallback(
-    id: number,
+    id: string,
     data: { fallback_skus: RecommendationItem[]; fallback_updated_at: Date },
   ) {
     const setting = await this.settingsRepo.findOne({

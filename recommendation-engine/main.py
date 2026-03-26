@@ -7,9 +7,7 @@ app = FastAPI()
 async def calculate_strategy(strategy_name: str, payload: dict):
     if strategy_name not in STRATEGIES:
         raise HTTPException(status_code=404, detail="Strategy not found")
-    
     user_ids = payload.get("user_ids", [])
-
     try:
         result = await STRATEGIES[strategy_name](user_ids)
         return {"results": result}
@@ -21,7 +19,6 @@ async def calculate_strategy(strategy_name: str, payload: dict):
 async def calculate_strategy_global(strategy_name: str):
     if strategy_name not in STRATEGIES_GLOBAL:
         raise HTTPException(status_code=404, detail="Global strategy not found")
-    
     try:
         result = await STRATEGIES_GLOBAL[strategy_name]()
         return result

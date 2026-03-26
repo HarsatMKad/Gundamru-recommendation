@@ -25,7 +25,7 @@ export class EventTypesService {
     };
   }
 
-  async findById(id: number) {
+  async findById(id: string) {
     const item = await this.repoEventTypes.findOneBy({ id });
 
     if (!item) {
@@ -60,7 +60,7 @@ export class EventTypesService {
     };
   }
 
-  async update(id: number, dto: UpdateEventTypeDto) {
+  async update(id: string, dto: UpdateEventTypeDto) {
     const existing = await this.repoEventTypes.findOneBy({ id });
 
     if (!existing) {
@@ -79,7 +79,7 @@ export class EventTypesService {
     };
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const existing = await this.repoEventTypes.findOne({
       where: { id },
     });

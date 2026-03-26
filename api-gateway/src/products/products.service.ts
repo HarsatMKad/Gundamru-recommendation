@@ -20,7 +20,7 @@ export class ProductsService {
     return this.productsRepository.find();
   }
 
-  async findOne(id: number): Promise<Product> {
+  async findOne(id: string): Promise<Product> {
     const product = await this.productsRepository.findOne({ where: { id } });
     if (!product) {
       throw new NotFoundException(`Product with ID ${id} not found`);
@@ -28,13 +28,13 @@ export class ProductsService {
     return product;
   }
 
-  async update(id: number, productDto: ProductDto): Promise<Product> {
+  async update(id: string, productDto: ProductDto): Promise<Product> {
     await this.productsRepository.update(id, productDto);
     return this.findOne(id);
   }
 
-  async remove(id: number): Promise<void> {
-    const result = await this.productsRepository.delete(id);
+  async remove(id: string): Promise<void> {
+    const result = await this.productsRepository.delete({ id });
     if (result.affected === 0) {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }

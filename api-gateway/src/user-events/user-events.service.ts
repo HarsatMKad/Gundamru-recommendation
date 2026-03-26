@@ -16,7 +16,8 @@ export class UserEventService {
   ) {}
 
   async create(dto: UserEventDto) {
-    const eventType = (await this.eventTypesService.findById(dto.user_id)).data;
+    const eventType = (await this.eventTypesService.findById(dto.event_type_id))
+      .data;
 
     if (!eventType) {
       throw new NotFoundException(
@@ -40,8 +41,8 @@ export class UserEventService {
     };
   }
 
-  findAll(limit: number = 50) {
-    const events = this.eventsRepository.find({ take: limit });
+  async findAll(limit: number = 50) {
+    const events = await this.eventsRepository.find({ take: limit });
 
     return {
       code: HttpStatus.OK,

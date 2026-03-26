@@ -1,4 +1,4 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { RecommendationService } from './recommendations.service';
 import { RecQueryDto } from './dto/query-recommendation.dto';
 import { RECOMMENDATION_ENDPOINTS } from 'src/common/util/request-param-handler.util';
@@ -17,7 +17,7 @@ export class RecommendationController {
   getRecommendations(
     @Param(PARAMS.CONTEXT) context: string, // Где
     @Param(PARAMS.MODE) mode: string, // Как
-    @Param(PARAMS.USERID, ParseIntPipe) userId: number, // Кому
+    @Param(PARAMS.USERID) userId: string, // Кому
     @Query() query: RecQueryDto,
   ) {
     return this.service.getRecommendations(
@@ -27,5 +27,15 @@ export class RecommendationController {
       query.limit,
       query.minScore,
     );
+  }
+
+  @Get(`/all/:${PARAMS.USERID}`)
+  getAllRecommendations(@Param(PARAMS.USERID) userId?: string) {
+    return this.service.getAllRecommendations(userId);
+  }
+
+  @Get(`/all`)
+  getAll() {
+    return this.service.getAll();
   }
 }

@@ -6,7 +6,7 @@ import { UserRole } from 'src/common/interface/recommendation.interface';
 export class UserIdsProvider {
   constructor(private readonly usersService: UsersService) {}
 
-  async getValidUserIds(): Promise<number[]> {
+  async getValidUserIds(): Promise<string[]> {
     const users = await this.usersService.findByRole(UserRole.CUSTOMER);
     return users.map((u) => u.id);
   }

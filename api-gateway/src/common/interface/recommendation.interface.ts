@@ -1,5 +1,5 @@
 export interface RecommendationItem {
-  sku: number;
+  sku: string;
   score: number;
 }
 
@@ -9,7 +9,7 @@ export interface RecommendationMethod {
 }
 
 export interface RecommendationConfig {
-  id: number;
+  id: string;
   target_context?: string;
   personal_methods: RecommendationMethod[];
   isActive: boolean;
@@ -21,9 +21,9 @@ export type StrategyDataMap = Record<
 >;
 
 export interface RecommendationInput {
-  user_id: number;
+  user_id: string;
   recommended_skus: RecommendationItem[];
-  setting_id: number;
+  setting_id: string;
   generated_at?: Date;
 }
 

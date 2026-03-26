@@ -8,20 +8,20 @@ import {
 } from 'typeorm';
 import { EventType } from 'src/event-types/entities/event-types.entity';
 
-@Entity('user_events')
+@Entity('user_event')
 @Index(['user_id', 'product_id', 'timestamp'])
 export class UserEvent {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Column()
-  user_id: number;
+  @Column('uuid')
+  user_id: string;
 
-  @Column()
-  product_id: number;
+  @Column('uuid')
+  product_id: string;
 
-  @Column()
-  event_type_id: number;
+  @Column('uuid')
+  event_type_id: string;
 
   @ManyToOne(() => EventType)
   @JoinColumn({ name: 'event_type_id' })
