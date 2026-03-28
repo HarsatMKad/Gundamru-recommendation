@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { Recommendation } from 'src/recommendation/entities/recommendations.entity';
+import { Recommendation } from 'src/database/entities/recommendations.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { RecommendationInput } from '../common/interface/recommendation.interface';
+import { IRecommendationInput } from '../common/interface/recommendation.interface';
 
 @Injectable()
 export class BatchWriter {
@@ -11,7 +11,7 @@ export class BatchWriter {
     private recRepo: Repository<Recommendation>,
   ) {}
 
-  async saveBatch(data: RecommendationInput[]) {
+  async saveBatch(data: IRecommendationInput[]) {
     return await this.recRepo
       .createQueryBuilder()
       .insert()

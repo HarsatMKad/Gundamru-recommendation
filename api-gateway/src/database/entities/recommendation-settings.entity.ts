@@ -1,8 +1,8 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
-import { RecommendationItem } from 'src/common/interface/recommendation.interface';
+import { IRecommendationItem } from 'src/common/interface/recommendation.interface';
 
 @Entity('recommender_setting')
-export class RecommenderSetting {
+export class RecommendationSetting {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -22,7 +22,7 @@ export class RecommenderSetting {
   fallback_weight?: number;
 
   @Column({ type: 'jsonb', nullable: true })
-  fallback_skus?: RecommendationItem[];
+  fallback_skus?: IRecommendationItem[];
 
   @Column({ type: 'timestamp', nullable: true })
   fallback_updated_at?: Date;

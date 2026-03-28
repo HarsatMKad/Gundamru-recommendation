@@ -11,13 +11,9 @@ import {
   Query,
 } from '@nestjs/common';
 import { RecommendationSettingsService } from './recommendation-settings.service';
-import { CreateRecommenderSettingDto } from './dto/create-recommendation-settings.dto';
-import { UpdateRecommenderSettingDto } from './dto/update-recommendation-settings.dto';
-import { StrategyScope } from 'src/common/interface/strategies.interface';
-import {
-  REC_SETTINGS_ENDPOINTS,
-  PARAMS,
-} from 'src/common/util/request-param-handler.util';
+import { CreateRecommendationSettingDto } from './dto/create-recommendation-settings.dto';
+import { UpdateRecommendationSettingDto } from './dto/update-recommendation-settings.dto';
+import { StrategyScope } from 'src/common/enum/StrategyScope.enum';
 
 @Controller('recommendation-settings')
 export class RecommendationSettingsController {
@@ -26,34 +22,34 @@ export class RecommendationSettingsController {
   ) {}
 
   @Get()
-  find(@Query('id') id?: string, @Query('context') context?: string) {
+  find(@Query(':id') id?: string, @Query('context') context?: string) {
     if (id) return this.recSettingsService.getById(id);
     if (context) return this.recSettingsService.getByContext(context);
     return this.recSettingsService.getAll();
   }
 
-  @Get(REC_SETTINGS_ENDPOINTS.STRATEGIES)
-  getStrategies(@Query(PARAMS.SCOPE) scope?: StrategyScope) {
+  @Get('strategies')
+  getStrategies(@Query('scope') scope?: StrategyScope) {
     return this.recSettingsService.getStrategies(scope);
   }
 
   @Post()
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  async create(@Body() createDto: CreateRecommenderSettingDto) {
+  async create(@Body() createDto: CreateRecommendationSettingDto) {
     return await this.recSettingsService.createSettings(createDto);
   }
 
-  @Patch(`:${PARAMS.CONTEXT}`)
+  @Patch(`:context`)
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async update(
-    @Param(PARAMS.CONTEXT) context: string,
-    @Body() updateDto: UpdateRecommenderSettingDto,
+    @Param('context') context: string,
+    @Body() updateDto: UpdateRecommendationSettingDto,
   ) {
     return await this.recSettingsService.updateSettings(context, updateDto);
   }
 
-  @Delete(`:${PARAMS.CONTEXT}`)
-  async delete(@Param(PARAMS.CONTEXT) context: string) {
+  @Delete(':context')
+  async delete(@Param('context') context: string) {
     return await this.recSettingsService.softDeleteSettingsByContext(context);
   }
 }

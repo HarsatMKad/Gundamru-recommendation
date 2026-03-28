@@ -3,10 +3,8 @@ import {
   ValidatorConstraintInterface,
   ValidationArguments,
 } from 'class-validator';
-import {
-  AVAILABLE_STRATEGIES,
-  StrategyScope,
-} from '../interface/strategies.interface';
+import { AVAILABLE_STRATEGIES } from '../const/ConstHandler.const';
+import { StrategyScope } from '../enum/StrategyScope.enum';
 
 @ValidatorConstraint({ name: 'isStrategyForScope', async: false })
 export class IsStrategyForScope implements ValidatorConstraintInterface {

@@ -1,49 +1,38 @@
-import { RecommenderSetting } from 'src/recommendation-settings/entities/settings.entity';
-import { UserEvent } from 'src/user-events/entities/user-event.entity';
-import { User } from 'src/users/entities/user.entity';
+import { RecommendationSetting } from 'src/database/entities/recommendation-settings.entity';
+import { UserEvent } from 'src/database/entities/user-event.entity';
+import { User } from 'src/database/entities/user.entity';
 
-export interface RecommendationItem {
+export interface IRecommendationItem {
   sku: string;
   score: number;
 }
 
-export interface RecommendationMethod {
+export interface IRecommendationMethod {
   strategy: string;
   weight: number;
 }
 
-export interface RecommendationConfig {
+export interface IRecommendationConfig {
   id: string;
   target_context?: string;
-  personal_methods: RecommendationMethod[];
+  personal_methods: IRecommendationMethod[];
   isActive: boolean;
 }
 
-export type StrategyDataMap = Record<
-  string,
-  Record<number, RecommendationItem[]>
->;
-
-export interface RecommendationInput {
+export interface IRecommendationInput {
   user_id: string;
-  recommended_skus: RecommendationItem[];
+  recommended_skus: IRecommendationItem[];
   setting_id: string;
   generated_at?: Date;
 }
 
-export enum UserRole {
-  CUSTOMER = 'customer',
-  ADMIN = 'admin',
-  MANAGER = 'manager',
-}
-
-export interface RecommendationData {
+export interface IRecommendationData {
   users: User[];
   userEvents: UserEvent[];
 }
 
-export interface ValidationData {
+export interface IValidationData {
   validUserIds: string[];
-  activeConfigs: RecommenderSetting[];
+  activeConfigs: RecommendationSetting[];
   inactiveRecIds: string[];
 }

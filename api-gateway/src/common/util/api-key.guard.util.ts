@@ -6,16 +6,15 @@ import {
   Global,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { HEADERS_HANDLER } from 'src/common/util/request-param-handler.util';
-import { API_KEY_VALID_ERROR } from 'src/common/util/err-handler.util';
+import { API_KEY_VALID_ERROR } from '../enum/ErrHandler.enum';
+import { API_KEY_HEADER } from '../const/ConstHandler.const';
 
 @Global()
 @Injectable()
 export class ApiKeyGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
-    const apiKey = request.headers[HEADERS_HANDLER.apiKeyHeader];
-
+    const apiKey = request.headers[API_KEY_HEADER];
     const expectedKey = process.env.INTERNAL_API_KEY;
 
     if (!expectedKey || apiKey !== expectedKey) {

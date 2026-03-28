@@ -1,6 +1,6 @@
 import { IsInt, Min, IsOptional, IsNumber } from 'class-validator';
 import { Type } from 'class-transformer';
-import { RECOMMENDATION_LENTGH } from 'src/common/util/const-handler.util';
+import { RECOMMENDATION_LENTGH } from 'src/common/const/ConstHandler.const';
 
 export class RecQueryDto {
   @IsInt()

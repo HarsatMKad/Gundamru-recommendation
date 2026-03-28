@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Logger } from '@nestjs/common';
 import {
-  RecommendationConfig,
-  RecommendationItem as RecItem,
+  IRecommendationConfig,
+  IRecommendationItem as RecItem,
 } from '../common/interface/recommendation.interface';
-import { RECOMMENDATION_LENTGH } from 'src/common/util/const-handler.util';
-import { WARN_REC_SYSTEM } from 'src/common/util/err-handler.util';
+import { RECOMMENDATION_LENTGH } from 'src/common/const/ConstHandler.const';
+import { EWarnRecSystem } from 'src/common/enum/WarnHandler.enum';
 
 @Injectable()
 export class PipelineEngine {
@@ -13,13 +13,13 @@ export class PipelineEngine {
   private recLength = RECOMMENDATION_LENTGH;
 
   processed(
-    config: RecommendationConfig,
+    config: IRecommendationConfig,
     userId: string,
     strategyData: Record<string, Record<string, RecItem[]>>,
   ): RecItem[] {
     if (!config.isActive) {
       this.logger.warn(
-        `${WARN_REC_SYSTEM.CONFIG_NOT_FOUND} for context: ${config?.target_context}.`,
+        `${EWarnRecSystem.CONFIG_NOT_FOUND} for context: ${config?.target_context}.`,
       );
       return [];
     }

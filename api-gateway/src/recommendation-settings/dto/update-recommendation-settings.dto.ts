@@ -10,10 +10,10 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { StrategyWeightDto } from './create-recommendation-settings.dto';
-import { StrategyScope } from 'src/common/interface/strategies.interface';
-import { IsStrategyForScope } from 'src/common/validators/is-strategy-for-scope.validator';
+import { StrategyScope } from 'src/common/enum/StrategyScope.enum';
+import { IsStrategyForScope } from 'src/common/util/scope-validator.util';
 
-export class UpdateRecommenderSettingDto {
+export class UpdateRecommendationSettingDto {
   @IsArray()
   @IsOptional()
   @ValidateNested({ each: true })
@@ -26,11 +26,11 @@ export class UpdateRecommenderSettingDto {
 
   @IsString()
   @IsOptional()
-  @ValidateIf((o: UpdateRecommenderSettingDto) => !!o.fallback_weight)
+  @ValidateIf((o: UpdateRecommendationSettingDto) => !!o.fallback_weight)
   @Validate(IsStrategyForScope, [StrategyScope.GLOBAL])
   fallback_strategy?: string;
 
-  @ValidateIf((o: UpdateRecommenderSettingDto) => !!o.fallback_strategy)
+  @ValidateIf((o: UpdateRecommendationSettingDto) => !!o.fallback_strategy)
   @IsNumber()
   @IsOptional()
   fallback_weight?: number;

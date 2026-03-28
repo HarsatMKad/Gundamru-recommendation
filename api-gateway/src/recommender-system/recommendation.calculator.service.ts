@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
-  PersonalResults,
-  GlobalResults,
-} from 'src/common/interface/strategies.interface';
+  TPersonalResults,
+  TGlobalResults,
+} from 'src/common/type/StrategyResult.type';
 import { StrategyRegistry } from './strategy-registry';
-import { UserEvent } from 'src/user-events/entities/user-event.entity';
+import { UserEvent } from 'src/database/entities/user-event.entity';
 
 @Injectable()
 export class RecommendationCalculatorService {
@@ -16,8 +16,8 @@ export class RecommendationCalculatorService {
     userEvents: UserEvent[],
     personalStrategyNames: string[],
     recLength: number,
-  ): PersonalResults {
-    const personalResultsMap: PersonalResults = {};
+  ): TPersonalResults {
+    const TPersonalResultsMap: TPersonalResults = {};
     const activePersonalStrategies =
       this.strategyRegistry.getPersonalStrategiesByNames(personalStrategyNames);
 
@@ -34,7 +34,7 @@ export class RecommendationCalculatorService {
       try {
         this.logger.debug(`Calculating personal strategy: ${strategy.name}`);
         const result = strategy.calculate(userIds, userEvents, recLength);
-        personalResultsMap[strategy.name] = result;
+        TPersonalResultsMap[strategy.name] = result;
         this.logger.debug(
           `Successfully calculated ${strategy.name} for ${Object.keys(result).length} users`,
         );
@@ -45,15 +45,15 @@ export class RecommendationCalculatorService {
         );
       }
     }
-    return personalResultsMap;
+    return TPersonalResultsMap;
   }
 
   calculateGlobalRecommendations(
     userEvents: UserEvent[],
     globalStrategyNames: string[],
     recLength: number,
-  ): GlobalResults {
-    const globalResultsMap: GlobalResults = {};
+  ): TGlobalResults {
+    const TGlobalResultsMap: TGlobalResults = {};
     const activeGlobalStrategies =
       this.strategyRegistry.getGlobalStrategiesByNames(globalStrategyNames);
 
@@ -65,7 +65,7 @@ export class RecommendationCalculatorService {
     activeGlobalStrategies.map((strategy) => {
       try {
         const result = strategy.calculate(userEvents, recLength);
-        globalResultsMap[strategy.name] = result;
+        TGlobalResultsMap[strategy.name] = result;
       } catch (error) {
         this.logger.error(
           `Error calculating global strategy ${strategy.name}:`,
@@ -73,6 +73,6 @@ export class RecommendationCalculatorService {
         );
       }
     });
-    return globalResultsMap;
+    return TGlobalResultsMap;
   }
 }

@@ -26,7 +26,7 @@ import { ConfigService } from '@nestjs/config';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE_NAME'),
         autoLoadEntities: true,
-        synchronize: true, // в продакшене поставить false
+        synchronize: true, // не забыть в продакшене поставить false
       }),
     }),
     ProductsModule,

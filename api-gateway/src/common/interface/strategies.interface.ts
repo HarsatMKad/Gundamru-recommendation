@@ -1,34 +1,13 @@
-import { UserEvent } from 'src/user-events/entities/user-event.entity';
-import { RecommendationItem } from './recommendation.interface';
+import { UserEvent } from 'src/database/entities/user-event.entity';
+import { IRecommendationItem } from './recommendation.interface';
+import { StrategyScope } from '../enum/StrategyScope.enum';
+import { TPersonalStrategyResult } from '../type/StrategyResult.type';
 
-export enum StrategyScope {
-  PERSONAL = 'personal',
-  GLOBAL = 'global',
-}
-
-export interface StrategyDefinition {
+export interface IStrategyDefinition {
   name: string;
   description: string;
   scope: StrategyScope;
 }
-
-export const AVAILABLE_STRATEGIES: StrategyDefinition[] = [
-  {
-    name: 'collab',
-    description: 'Коллаборативная фильтрация',
-    scope: StrategyScope.PERSONAL,
-  },
-  {
-    name: 'popular_global',
-    description: 'Тренды недели (глобально)',
-    scope: StrategyScope.GLOBAL,
-  },
-];
-
-export const STRATEGY_NAMES = AVAILABLE_STRATEGIES.map((s) => s.name);
-export const STRATEGY_DESCRIPTIONS = AVAILABLE_STRATEGIES.map(
-  (s) => s.description,
-);
 
 export interface IBaseRectrategy {
   readonly name: string;
@@ -41,16 +20,10 @@ export interface IPersonalStrategy extends IBaseRectrategy {
     usersIds: string[],
     userEvents: UserEvent[],
     recLength: number,
-  ): PersonalStrategyResult;
+  ): TPersonalStrategyResult;
 }
-
-export type PersonalStrategyResult = Record<string, RecommendationItem[]>;
 
 export interface IGlobalStrategy extends IBaseRectrategy {
   readonly scope: StrategyScope.GLOBAL;
-  calculate(userEvents: UserEvent[], recLength: number): RecommendationItem[];
+  calculate(userEvents: UserEvent[], recLength: number): IRecommendationItem[];
 }
-
-export type PersonalResults = Record<string, PersonalStrategyResult>;
-
-export type GlobalResults = Record<string, RecommendationItem[]>;

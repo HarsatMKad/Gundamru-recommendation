@@ -2,9 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserEvent } from '../entities/user-event.entity';
+import { UserEvent } from 'src/database/entities/user-event.entity';
 import { EventTypesService } from 'src/event-types/event-types.service';
-import { LOG_HANDLER } from 'src/common/util/log-handler.util';
+import { ELogHandler } from 'src/common/enum/LogHandler.enum';
 
 @Injectable()
 export class CleanupService {
@@ -21,7 +21,7 @@ export class CleanupService {
     timeZone: 'Europe/Moscow',
   })
   async handleCleanup() {
-    this.logger.log(LOG_HANDLER.CLEANUP_START);
+    this.logger.log(ELogHandler.CLEANUP_START);
 
     const eventTypes = await this.eventTypeService.findAll();
 
@@ -38,10 +38,10 @@ export class CleanupService {
         .execute();
 
       this.logger.log(
-        `${LOG_HANDLER.DELETED_RECODS}: ${deleteResult.affected}; types: ${type.name}.`,
+        `${ELogHandler.DELETED_RECODS}: ${deleteResult.affected}; types: ${type.name}.`,
       );
     }
 
-    this.logger.log(LOG_HANDLER.CLEANUP_STOP);
+    this.logger.log(ELogHandler.CLEANUP_STOP);
   }
 }

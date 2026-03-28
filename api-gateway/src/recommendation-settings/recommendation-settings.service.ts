@@ -1,30 +1,28 @@
 import { HttpStatus, Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { RecommenderSetting } from './entities/settings.entity';
-import { UpdateRecommenderSettingDto } from './dto/update-recommendation-settings.dto';
-import { CreateRecommenderSettingDto } from './dto/create-recommendation-settings.dto';
-import { RecommendationItem } from 'src/common/interface/recommendation.interface';
+import { RecommendationSetting } from 'src/database/entities/recommendation-settings.entity';
+import { UpdateRecommendationSettingDto } from './dto/update-recommendation-settings.dto';
+import { CreateRecommendationSettingDto } from './dto/create-recommendation-settings.dto';
+import { IRecommendationItem } from 'src/common/interface/recommendation.interface';
 import { NotFoundException, ConflictException } from '@nestjs/common';
-import { ERR_REC_SETTINGS } from 'src/common/util/err-handler.util';
-import { REST_STATUS } from 'src/common/util/rest-message-handler.util';
-import {
-  AVAILABLE_STRATEGIES,
-  StrategyScope,
-} from 'src/common/interface/strategies.interface';
+import { EErrRecSetting } from 'src/common/enum/ErrHandler.enum';
+import { ERestStatus } from 'src/common/enum/Rest.enum';
+import { AVAILABLE_STRATEGIES } from 'src/common/const/ConstHandler.const';
+import { StrategyScope } from 'src/common/enum/StrategyScope.enum';
 
 @Injectable()
 export class RecommendationSettingsService {
   constructor(
-    @InjectRepository(RecommenderSetting)
-    private settingsRepo: Repository<RecommenderSetting>,
+    @InjectRepository(RecommendationSetting)
+    private settingsRepo: Repository<RecommendationSetting>,
   ) {}
 
   async getAll() {
     const items = await this.settingsRepo.find();
     return {
       code: HttpStatus.OK,
-      message: REST_STATUS.SUCCESS,
+      message: ERestStatus.SUCCESS,
       data: items,
     };
   }
@@ -36,13 +34,13 @@ export class RecommendationSettingsService {
 
     if (!setting) {
       throw new NotFoundException(
-        `${ERR_REC_SETTINGS.SETTINGS_NOT_FOUND} for id: ${id}`,
+        `${EErrRecSetting.SETTINGS_NOT_FOUND} for id: ${id}`,
       );
     }
 
     return {
       code: HttpStatus.OK,
-      message: REST_STATUS.SUCCESS,
+      message: ERestStatus.SUCCESS,
       data: setting,
     };
   }
@@ -54,20 +52,20 @@ export class RecommendationSettingsService {
 
     if (!setting) {
       throw new NotFoundException(
-        `${ERR_REC_SETTINGS.SETTINGS_NOT_FOUND} for context: ${context}`,
+        `${EErrRecSetting.SETTINGS_NOT_FOUND} for context: ${context}`,
       );
     }
 
     return {
       code: HttpStatus.OK,
-      message: REST_STATUS.SUCCESS,
+      message: ERestStatus.SUCCESS,
       data: setting,
     };
   }
 
   async updateSettings(
     context: string,
-    updateDto: UpdateRecommenderSettingDto,
+    updateDto: UpdateRecommendationSettingDto,
   ) {
     const setting = await this.settingsRepo.findOne({
       where: { target_context: context },
@@ -75,7 +73,7 @@ export class RecommendationSettingsService {
 
     if (!setting) {
       throw new NotFoundException(
-        `${ERR_REC_SETTINGS.SETTINGS_NOT_FOUND}. For context: ${context}`,
+        `${EErrRecSetting.SETTINGS_NOT_FOUND}. For context: ${context}`,
       );
     }
 
@@ -84,17 +82,17 @@ export class RecommendationSettingsService {
 
     return {
       code: HttpStatus.OK,
-      message: REST_STATUS.UPDATED,
+      message: ERestStatus.UPDATED,
       data: updated,
     };
   }
 
-  async createSettings(createDto: CreateRecommenderSettingDto) {
+  async createSettings(createDto: CreateRecommendationSettingDto) {
     const existing = await this.settingsRepo.findOne({
       where: { target_context: createDto.target_context },
     });
     if (existing) {
-      throw new ConflictException(ERR_REC_SETTINGS.SETTINGS_EXIST);
+      throw new ConflictException(EErrRecSetting.SETTINGS_EXIST);
     }
 
     const newSettings = this.settingsRepo.create(createDto);
@@ -102,7 +100,7 @@ export class RecommendationSettingsService {
 
     return {
       code: HttpStatus.CREATED,
-      message: REST_STATUS.CREATED,
+      message: ERestStatus.CREATED,
       data: saved,
     };
   }
@@ -113,7 +111,7 @@ export class RecommendationSettingsService {
     });
 
     if (!existing) {
-      throw new NotFoundException(ERR_REC_SETTINGS.SETTINGS_NOT_FOUND);
+      throw new NotFoundException(EErrRecSetting.SETTINGS_NOT_FOUND);
     }
 
     await this.settingsRepo.delete({ target_context: context });
@@ -123,7 +121,7 @@ export class RecommendationSettingsService {
 
     return {
       code: HttpStatus.OK,
-      message: REST_STATUS.DEACTIVATED,
+      message: ERestStatus.DEACTIVATED,
       data: {
         deactivated: true,
         context: context,
@@ -137,14 +135,14 @@ export class RecommendationSettingsService {
     });
 
     if (!existing) {
-      throw new NotFoundException(ERR_REC_SETTINGS.SETTINGS_NOT_FOUND);
+      throw new NotFoundException(EErrRecSetting.SETTINGS_NOT_FOUND);
     }
 
     await this.settingsRepo.delete({ id });
 
     return {
       code: HttpStatus.OK,
-      message: REST_STATUS.DELETED,
+      message: ERestStatus.DELETED,
       data: {
         deleted: true,
       },
@@ -153,7 +151,7 @@ export class RecommendationSettingsService {
 
   async updateFallback(
     id: string,
-    data: { fallback_skus: RecommendationItem[]; fallback_updated_at: Date },
+    data: { fallback_skus: IRecommendationItem[]; fallback_updated_at: Date },
   ) {
     const setting = await this.settingsRepo.findOne({
       where: { id },
@@ -161,7 +159,7 @@ export class RecommendationSettingsService {
 
     if (!setting) {
       throw new NotFoundException(
-        `${ERR_REC_SETTINGS.SETTINGS_NOT_FOUND} ID: ${id}`,
+        `${EErrRecSetting.SETTINGS_NOT_FOUND} ID: ${id}`,
       );
     }
 
@@ -176,7 +174,7 @@ export class RecommendationSettingsService {
 
     return {
       code: HttpStatus.OK,
-      message: REST_STATUS.SUCCESS,
+      message: ERestStatus.SUCCESS,
       data: updated,
     };
   }
@@ -188,7 +186,7 @@ export class RecommendationSettingsService {
 
     return {
       code: HttpStatus.OK,
-      message: REST_STATUS.SUCCESS,
+      message: ERestStatus.SUCCESS,
       data: activeConfigs,
     };
   }
@@ -198,13 +196,13 @@ export class RecommendationSettingsService {
       const validScopes = Object.values(StrategyScope);
       if (!validScopes.includes(scope)) {
         throw new BadRequestException(
-          `${ERR_REC_SETTINGS.INVALID_SCOPE}: ${scope}. Available scopes: ${validScopes.join(', ')}`,
+          `${EErrRecSetting.INVALID_SCOPE}: ${scope}. Available scopes: ${validScopes.join(', ')}`,
         );
       }
     }
     return {
       code: HttpStatus.OK,
-      message: REST_STATUS.SUCCESS,
+      message: ERestStatus.SUCCESS,
       data: AVAILABLE_STRATEGIES,
     };
   }

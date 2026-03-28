@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
-import { UserRole } from 'src/common/interface/recommendation.interface';
+import { UserRole } from 'src/common/enum/UserRole.enum';
 
 @Entity('user')
 export class User {

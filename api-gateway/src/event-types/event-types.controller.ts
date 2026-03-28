@@ -12,7 +12,6 @@ import {
 import { EventTypesService } from './event-types.service';
 import { CreateEventTypeDto } from './dto/create_event-type.dto';
 import { UpdateEventTypeDto } from './dto/update_event-type.dto';
-import { PARAMS } from 'src/common/util/request-param-handler.util';
 
 @Controller('event-types')
 export class EventTypesController {
@@ -28,14 +27,14 @@ export class EventTypesController {
     return this.service.create(dto);
   }
 
-  @Patch(`:${PARAMS.ID}`)
+  @Patch(':id')
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  update(@Param(PARAMS.ID) id: string, @Body() dto: UpdateEventTypeDto) {
+  update(@Param('id') id: string, @Body() dto: UpdateEventTypeDto) {
     return this.service.update(id, dto);
   }
 
-  @Delete(`:${PARAMS.ID}`)
-  remove(@Param(PARAMS.ID) id: string) {
+  @Delete(':id')
+  remove(@Param('id') id: string) {
     return this.service.remove(id);
   }
 }

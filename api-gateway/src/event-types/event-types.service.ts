@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { EventType } from './entities/event-types.entity';
+import { EventType } from 'src/database/entities/event-types.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateEventTypeDto } from './dto/create_event-type.dto';
 import { UpdateEventTypeDto } from './dto/update_event-type.dto';
 import { NotFoundException, ConflictException } from '@nestjs/common';
-import { ERR_EVENT_TYPE } from 'src/common/util/err-handler.util';
-import { REST_STATUS } from 'src/common/util/rest-message-handler.util';
+import { EErrEventType } from 'src/common/enum/ErrHandler.enum';
+import { ERestStatus } from 'src/common/enum/Rest.enum';
 import { HttpStatus } from '@nestjs/common';
 
 @Injectable()
@@ -20,7 +20,7 @@ export class EventTypesService {
     const items = await this.repoEventTypes.find();
     return {
       code: HttpStatus.OK,
-      message: REST_STATUS.SUCCESS,
+      message: ERestStatus.SUCCESS,
       data: items,
     };
   }
@@ -30,13 +30,13 @@ export class EventTypesService {
 
     if (!item) {
       throw new NotFoundException(
-        `${ERR_EVENT_TYPE.EVENT_TYPE_NOT_FOUND}: ${id}`,
+        `${EErrEventType.EVENT_TYPE_NOT_FOUND}: ${id}`,
       );
     }
 
     return {
       code: HttpStatus.OK,
-      message: REST_STATUS.SUCCESS,
+      message: ERestStatus.SUCCESS,
       data: item,
     };
   }
@@ -46,7 +46,7 @@ export class EventTypesService {
 
     if (existing) {
       throw new ConflictException(
-        `${ERR_EVENT_TYPE.EVENT_TYPE_EXISTED}: ${dto.name}`,
+        `${EErrEventType.EVENT_TYPE_EXISTED}: ${dto.name}`,
       );
     }
 
@@ -55,7 +55,7 @@ export class EventTypesService {
 
     return {
       code: HttpStatus.CREATED,
-      message: REST_STATUS.SUCCESS,
+      message: ERestStatus.SUCCESS,
       data: saved,
     };
   }
@@ -65,7 +65,7 @@ export class EventTypesService {
 
     if (!existing) {
       throw new NotFoundException(
-        `${ERR_EVENT_TYPE.EVENT_TYPE_NOT_FOUND}: ${id}`,
+        `${EErrEventType.EVENT_TYPE_NOT_FOUND}: ${id}`,
       );
     }
 
@@ -74,7 +74,7 @@ export class EventTypesService {
 
     return {
       code: HttpStatus.OK,
-      message: REST_STATUS.UPDATED,
+      message: ERestStatus.UPDATED,
       data: updated,
     };
   }
@@ -86,14 +86,14 @@ export class EventTypesService {
 
     if (!existing) {
       throw new NotFoundException(
-        `${ERR_EVENT_TYPE.EVENT_TYPE_NOT_FOUND}: ${id}`,
+        `${EErrEventType.EVENT_TYPE_NOT_FOUND}: ${id}`,
       );
     }
 
     await this.repoEventTypes.delete({ id });
     return {
       code: HttpStatus.OK,
-      message: REST_STATUS.SUCCESS,
+      message: ERestStatus.SUCCESS,
       data: {
         deleted: true,
       },

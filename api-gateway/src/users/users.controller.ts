@@ -8,9 +8,8 @@ import {
   Delete,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { User } from './entities/user.entity';
+import { User } from 'src/database/entities/user.entity';
 import { UserDto } from './dto/user.dto';
-import { PARAMS } from 'src/common/util/request-param-handler.util';
 
 @Controller('users')
 export class UsersController {
@@ -26,21 +25,18 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  @Get(`:${PARAMS.ID}`)
-  findOne(@Param(PARAMS.ID) id: string): Promise<User> {
+  @Get(':id')
+  findOne(@Param('id') id: string): Promise<User> {
     return this.usersService.findOne(id);
   }
 
-  @Patch(`:${PARAMS.ID}`)
-  update(
-    @Param(PARAMS.ID) id: string,
-    @Body() userDto: UserDto,
-  ): Promise<User> {
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() userDto: UserDto): Promise<User> {
     return this.usersService.update(id, userDto);
   }
 
-  @Delete(`:${PARAMS.ID}`)
-  remove(@Param(PARAMS.ID) id: string): Promise<void> {
+  @Delete(':id')
+  remove(@Param('id') id: string): Promise<void> {
     return this.usersService.remove(id);
   }
 }

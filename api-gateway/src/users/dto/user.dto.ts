@@ -1,5 +1,5 @@
 import { IsEnum, IsOptional } from 'class-validator';
-import { UserRole } from 'src/common/interface/recommendation.interface';
+import { UserRole } from 'src/common/enum/UserRole.enum';
 
 export class UserDto {
   username: string;

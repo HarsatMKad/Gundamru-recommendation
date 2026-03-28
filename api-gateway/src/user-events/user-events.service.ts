@@ -1,11 +1,11 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserEvent } from './entities/user-event.entity';
+import { UserEvent } from 'src/database/entities/user-event.entity';
 import { UserEventDto } from './dto/user-event.dto';
 import { EventTypesService } from 'src/event-types/event-types.service';
-import { REST_STATUS } from 'src/common/util/rest-message-handler.util';
-import { ERR_USER_EVENTS } from 'src/common/util/err-handler.util';
+import { EErrUserEvents } from 'src/common/enum/ErrHandler.enum';
+import { ERestStatus } from 'src/common/enum/Rest.enum';
 
 @Injectable()
 export class UserEventService {
@@ -21,7 +21,7 @@ export class UserEventService {
 
     if (!eventType) {
       throw new NotFoundException(
-        `${ERR_USER_EVENTS.TYPE_NOT_FOUND} with id: ${dto.user_id}`,
+        `${EErrUserEvents.TYPE_NOT_FOUND} with id: ${dto.user_id}`,
       );
     }
 
@@ -36,7 +36,7 @@ export class UserEventService {
 
     return {
       code: HttpStatus.CREATED,
-      message: REST_STATUS.LOG_CREATED,
+      message: ERestStatus.LOG_CREATED,
       data: savedEvent,
     };
   }
@@ -46,7 +46,7 @@ export class UserEventService {
 
     return {
       code: HttpStatus.OK,
-      message: REST_STATUS.SUCCESS,
+      message: ERestStatus.SUCCESS,
       data: events,
     };
   }

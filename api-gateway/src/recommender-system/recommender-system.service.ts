@@ -2,15 +2,10 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { RecommenderOrchestrator } from './recommender-orchestrator.service';
 import { Logger } from '@nestjs/common';
 import { InternalServerErrorException } from '@nestjs/common';
-import { LOG_HANDLER } from 'src/common/util/log-handler.util';
-import {
-  WARN_REC_SYSTEM,
-  ERR_REC_SYSTEM,
-} from 'src/common/util/err-handler.util';
-import {
-  REST_MESSAGES,
-  REST_STATUS,
-} from 'src/common/util/rest-message-handler.util';
+import { ELogHandler } from 'src/common/enum/LogHandler.enum';
+import { EWarnRecSystem } from 'src/common/enum/WarnHandler.enum';
+import { EErrRecSystem } from 'src/common/enum/ErrHandler.enum';
+import { ERestMessages, ERestStatus } from 'src/common/enum/Rest.enum';
 
 @Injectable()
 export class RecommenderSystemService {
@@ -28,30 +23,30 @@ export class RecommenderSystemService {
   } {
     this.logger.debug(`orchestr key: ${this.isGenerating}`);
     if (this.isGenerating) {
-      this.logger.warn(WARN_REC_SYSTEM.TRIGER_ALREADY_RUNNING);
+      this.logger.warn(EWarnRecSystem.TRIGER_ALREADY_RUNNING);
       return {
         code: HttpStatus.PROCESSING,
-        status: REST_STATUS.BUSY,
-        message: REST_MESSAGES.GENERATION_STILL_PROGRESS,
+        status: ERestStatus.BUSY,
+        message: ERestMessages.GENERATION_STILL_PROGRESS,
       };
     }
 
     this.isGenerating = true;
-    this.logger.log(LOG_HANDLER.GENERATION_MANUAL_INITIALIZED);
+    this.logger.log(ELogHandler.GENERATION_MANUAL_INITIALIZED);
     try {
       void this.recommenderOrchestrator.handleCron().finally(() => {
         this.isGenerating = false;
-        this.logger.log(LOG_HANDLER.GENERATION_MANUAL_COMPLITE);
+        this.logger.log(ELogHandler.GENERATION_MANUAL_COMPLITE);
       });
       return {
-        code: HttpStatus.OK,
-        status: REST_STATUS.SUCCESS,
-        message: REST_MESSAGES.GENERATION_RUN_BACKGROUND,
+        code: HttpStatus.ACCEPTED,
+        status: ERestStatus.ACCEPTED,
+        message: ERestMessages.GENERATION_RUN_BACKGROUND,
       };
     } catch (error) {
-      this.logger.error(ERR_REC_SYSTEM.ERROR_DURING_GENERATION, error);
+      this.logger.error(EErrRecSystem.ERROR_DURING_GENERATION, error);
       throw new InternalServerErrorException(
-        ERR_REC_SYSTEM.ERROR_DURING_GENERATION,
+        EErrRecSystem.ERROR_DURING_GENERATION,
       );
     }
   }

@@ -4,7 +4,7 @@ import { UserEventsController } from './user-events.controller';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CleanupService } from './services/cleanup.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserEvent } from './entities/user-event.entity';
+import { UserEvent } from 'src/database/entities/user-event.entity';
 import { ProductsModule } from 'src/products/products.module';
 import { UsersModule } from 'src/users/users.module';
 import { EventTypesModule } from 'src/event-types/event-types.module';

@@ -1,12 +1,10 @@
-import {
-  IPersonalStrategy,
-  StrategyScope,
-} from 'src/common/interface/strategies.interface';
-import { PersonalStrategyResult } from 'src/common/interface/strategies.interface';
+import { IPersonalStrategy } from 'src/common/interface/strategies.interface';
+import { TPersonalStrategyResult } from 'src/common/type/StrategyResult.type';
 import { Injectable } from '@nestjs/common';
-import { UserEvent } from 'src/user-events/entities/user-event.entity';
+import { UserEvent } from 'src/database/entities/user-event.entity';
 import { Logger } from '@nestjs/common';
 import { Matrix } from 'ml-matrix';
+import { StrategyScope } from 'src/common/enum/StrategyScope.enum';
 
 @Injectable()
 export class CollabStrategy implements IPersonalStrategy {
@@ -18,7 +16,7 @@ export class CollabStrategy implements IPersonalStrategy {
     userIds: string[],
     userEvents: UserEvent[],
     recLength: number,
-  ): PersonalStrategyResult {
+  ): TPersonalStrategyResult {
     this.logger.log(
       `Начало расчета коллаборативной фильтрации для ${userIds.length} пользователей`,
     );
@@ -139,8 +137,8 @@ export class CollabStrategy implements IPersonalStrategy {
     ratingMatrix: Matrix,
     covarianceMatrix: Matrix,
     recLength: number,
-  ): PersonalStrategyResult {
-    const results: PersonalStrategyResult = {};
+  ): TPersonalStrategyResult {
+    const results: TPersonalStrategyResult = {};
     const userIdToIndex = new Map(allUserIds.map((id, idx) => [id, idx]));
 
     for (const userId of targetUserIds) {
@@ -198,8 +196,8 @@ export class CollabStrategy implements IPersonalStrategy {
     return results;
   }
 
-  private emptyResults(userIds: string[]): PersonalStrategyResult {
-    const results: PersonalStrategyResult = {};
+  private emptyResults(userIds: string[]): TPersonalStrategyResult {
+    const results: TPersonalStrategyResult = {};
     for (const userId of userIds) {
       results[userId] = [];
     }

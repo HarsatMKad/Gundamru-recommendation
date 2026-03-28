@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
-import { UserRole } from 'src/common/interface/recommendation.interface';
+import { UserRole } from 'src/common/enum/UserRole.enum';
 
 @Injectable()
 export class UserIdsProvider {

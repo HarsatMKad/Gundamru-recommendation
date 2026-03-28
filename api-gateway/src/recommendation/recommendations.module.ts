@@ -2,15 +2,15 @@ import { Module } from '@nestjs/common';
 import { RecommendationService } from './recommendations.service';
 import { RecommendationController } from './recommendations.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Recommendation } from './entities/recommendations.entity';
-import { RecommenderSetting } from 'src/recommendation-settings/entities/settings.entity';
+import { Recommendation } from 'src/database/entities/recommendations.entity';
+import { RecommendationSetting } from 'src/database/entities/recommendation-settings.entity';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ConfigModule } from '@nestjs/config';
 import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Recommendation, RecommenderSetting]),
+    TypeOrmModule.forFeature([Recommendation, RecommendationSetting]),
     CacheModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

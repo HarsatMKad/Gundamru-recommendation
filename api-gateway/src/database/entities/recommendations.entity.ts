@@ -6,8 +6,8 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { RecommenderSetting } from 'src/recommendation-settings/entities/settings.entity';
-import { RecommendationItem } from 'src/common/interface/recommendation.interface';
+import { RecommendationSetting } from 'src/database/entities/recommendation-settings.entity';
+import { IRecommendationItem } from 'src/common/interface/recommendation.interface';
 
 @Entity('user_recommendation')
 @Index(['user_id', 'setting_id'], { unique: true })
@@ -21,15 +21,15 @@ export class Recommendation {
   @Column('uuid')
   setting_id: string;
 
-  @ManyToOne(() => RecommenderSetting)
+  @ManyToOne(() => RecommendationSetting)
   @JoinColumn({ name: 'setting_id' })
-  setting: RecommenderSetting;
+  setting: RecommendationSetting;
 
   @Column({
     type: 'jsonb',
     default: () => "'[]'",
   })
-  recommended_skus: RecommendationItem[];
+  recommended_skus: IRecommendationItem[];
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   generated_at: Date;

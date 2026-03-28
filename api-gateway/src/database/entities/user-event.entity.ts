@@ -6,7 +6,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { EventType } from 'src/event-types/entities/event-types.entity';
+import { EventType } from './event-types.entity';
 
 @Entity('user_event')
 @Index(['user_id', 'product_id', 'timestamp'])

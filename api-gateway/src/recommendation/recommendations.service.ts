@@ -1,9 +1,10 @@
 import { Injectable, Inject, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Recommendation } from './entities/recommendations.entity';
-import { RecommendationItem } from 'src/common/interface/recommendation.interface';
-import { RecommenderSetting } from 'src/recommendation-settings/entities/settings.entity';
+import { Recommendation } from 'src/database/entities/recommendations.entity';
+import { IRecommendationItem } from 'src/common/interface/recommendation.interface';
+import { RecommendationSetting } from 'src/database/entities/recommendation-settings.entity';
+import { ERestMessages, ERestStatus } from 'src/common/enum/Rest.enum';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { BadRequestException } from '@nestjs/common';
@@ -11,11 +12,7 @@ import {
   CACH_CONST,
   RECOMMENDATION_LENTGH,
   RECOMMENDATION_MODS,
-} from 'src/common/util/const-handler.util';
-import {
-  REST_MESSAGES,
-  REST_STATUS,
-} from 'src/common/util/rest-message-handler.util';
+} from 'src/common/const/ConstHandler.const';
 
 @Injectable()
 export class RecommendationService {
@@ -23,8 +20,8 @@ export class RecommendationService {
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     @InjectRepository(Recommendation)
     private readonly recRepo: Repository<Recommendation>,
-    @InjectRepository(RecommenderSetting)
-    private readonly settingRepo: Repository<RecommenderSetting>,
+    @InjectRepository(RecommendationSetting)
+    private readonly settingRepo: Repository<RecommendationSetting>,
   ) {}
 
   /** 1. Только пользовательские */
@@ -32,13 +29,13 @@ export class RecommendationService {
     userId: string,
     context: string,
     minScore?: number,
-  ): Promise<RecommendationItem[]> {
+  ): Promise<IRecommendationItem[]> {
     let minscoreCacheKey = '';
     if (minScore) {
       minscoreCacheKey = `_${minScore}`;
     }
     const cacheKey = `${CACH_CONST.CACHEKEY_PERSONAL}_${userId}_${context}${minscoreCacheKey}`;
-    const cached = await this.cacheManager.get<RecommendationItem[]>(cacheKey);
+    const cached = await this.cacheManager.get<IRecommendationItem[]>(cacheKey);
     if (cached) return cached;
 
     const setting = await this.settingRepo.findOne({
@@ -64,14 +61,14 @@ export class RecommendationService {
   async getFallback(
     context: string,
     minScore?: number,
-  ): Promise<RecommendationItem[]> {
+  ): Promise<IRecommendationItem[]> {
     let minscoreCacheKey = '';
     if (minScore) {
       minscoreCacheKey = `_${minScore}`;
     }
     const cacheKey = `${CACH_CONST.CACHEKEY_FALLBACK}_${context}${minscoreCacheKey}`;
     const cached = await this.cacheManager.get(cacheKey);
-    if (cached) return cached as RecommendationItem[];
+    if (cached) return cached as IRecommendationItem[];
 
     const setting = await this.settingRepo.findOne({
       where: { target_context: context },
@@ -89,9 +86,9 @@ export class RecommendationService {
   //** Смешенные данные, если не хватает до нужного количества - дополняются из стандартных
   // если передан minScore -  пользовательские товары отсеивается, если их уверенность меньше */
   private mergeAndFill(
-    personal: RecommendationItem[],
-    fallback: RecommendationItem[],
-  ): RecommendationItem[] {
+    personal: IRecommendationItem[],
+    fallback: IRecommendationItem[],
+  ): IRecommendationItem[] {
     const seen = new Set(personal.map((i) => i.sku));
     const result = [...personal];
 
@@ -112,7 +109,7 @@ export class RecommendationService {
     limit: number = RECOMMENDATION_LENTGH,
     minScore?: number,
   ) {
-    let result: RecommendationItem[] = [];
+    let result: IRecommendationItem[] = [];
 
     switch (mode) {
       case RECOMMENDATION_MODS.PERSONAL:
@@ -139,7 +136,7 @@ export class RecommendationService {
       }
       default:
         throw new BadRequestException(
-          `${REST_MESSAGES.INVALID_MOD}: ${mode}. Available modes: ${Object.values(RECOMMENDATION_MODS).join(', ')}`,
+          `${ERestMessages.INVALID_MOD}: ${mode}. Available modes: ${Object.values(RECOMMENDATION_MODS).join(', ')}`,
         );
     }
 
@@ -157,7 +154,7 @@ export class RecommendationService {
         limit,
         minScore,
       },
-      message: REST_STATUS.SUCCESS,
+      message: ERestStatus.SUCCESS,
     };
   }
 

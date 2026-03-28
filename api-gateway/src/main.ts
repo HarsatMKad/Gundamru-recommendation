@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { ApiKeyGuard } from './common/guards/api-key.guard';
+import { ApiKeyGuard } from './common/util/api-key.guard.util';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

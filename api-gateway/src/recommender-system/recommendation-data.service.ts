@@ -5,14 +5,14 @@ import { RecommendationService } from 'src/recommendation/recommendations.servic
 import { UsersService } from 'src/users/users.service';
 import { UserEventService } from 'src/user-events/user-events.service';
 import {
-  RecommendationData,
-  ValidationData,
+  IRecommendationData,
+  IValidationData,
 } from 'src/common/interface/recommendation.interface';
-import { UserEvent } from 'src/user-events/entities/user-event.entity';
+import { UserEvent } from 'src/database/entities/user-event.entity';
 
 @Injectable()
-export class RecommendationDataService {
-  private readonly logger = new Logger(RecommendationDataService.name);
+export class IRecommendationDataService {
+  private readonly logger = new Logger(IRecommendationDataService.name);
 
   constructor(
     private readonly settingsService: RecommendationSettingsService,
@@ -24,7 +24,7 @@ export class RecommendationDataService {
 
   async getCalculationData(
     validUserIds: string[],
-  ): Promise<RecommendationData> {
+  ): Promise<IRecommendationData> {
     this.logger.log('Начат процесс чтения данных');
     const [users, userEvents] = await Promise.all([
       this.userService.findAll(),
@@ -42,7 +42,7 @@ export class RecommendationDataService {
     return await this.userEventService.getRelevantUserEvents(validUserIds);
   }
 
-  async getValidationData(): Promise<ValidationData> {
+  async getIValidationData(): Promise<IValidationData> {
     this.logger.log('Начат процесс чтения данных');
     const [validUserIds, activeConfigs, inactiveRecIds] = await Promise.all([
       this.userIdsProvider.getValidUserIds(),
