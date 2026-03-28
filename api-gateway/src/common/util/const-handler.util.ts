@@ -10,6 +10,4 @@ export const RECOMMENDATION_MODS = {
   MIXED_FULLFALLBACK: 'mixed-fullfallback',
 };
 
-export const RECOMMENDATION_CONST = {
-  RECOMMENDATION_LENGTH: 10,
-};
+export const RECOMMENDATION_LENTGH = 10;

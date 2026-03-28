@@ -10,10 +10,16 @@ import { UserEvent } from 'src/user-events/entities/user-event.entity';
 import { RecommendationSettingsService } from 'src/recommendation-settings/recommendation-settings.service';
 import { UsersModule } from 'src/users/users.module';
 import { UserIdsProvider } from './user-ids.provider';
-import { PythonEngineClient } from './python-engine.client';
 import { RecommenderSystemController } from './recommender-system.controller';
 import { RecommenderSystemService } from './recommender-system.service';
 import { RecommendationsModule } from 'src/recommendation/recommendations.module';
+import { RecommendationCalculatorService } from './recommendation.calculator.service';
+import { RecommendationDataService } from './recommendation-data.service';
+import { UserEventService } from 'src/user-events/user-events.service';
+import { StrategyRegistry } from './strategy-registry';
+import { EventTypesModule } from 'src/event-types/event-types.module';
+import { CollabStrategy } from './strategy/collab.strategy';
+import { GlobalPopularStrategy } from './strategy/global.strategy';
 
 @Module({
   imports: [
@@ -24,6 +30,7 @@ import { RecommendationsModule } from 'src/recommendation/recommendations.module
       UserEvent,
     ]),
     UsersModule,
+    EventTypesModule,
     RecommendationsModule,
   ],
   providers: [
@@ -32,8 +39,13 @@ import { RecommendationsModule } from 'src/recommendation/recommendations.module
     RecommenderOrchestrator,
     RecommendationSettingsService,
     UserIdsProvider,
-    PythonEngineClient,
     RecommenderSystemService,
+    RecommendationCalculatorService,
+    RecommendationDataService,
+    UserEventService,
+    StrategyRegistry,
+    CollabStrategy,
+    GlobalPopularStrategy,
   ],
   exports: [RecommenderOrchestrator],
   controllers: [RecommenderSystemController],

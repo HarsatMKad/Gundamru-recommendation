@@ -3,35 +3,31 @@ import { BatchWriter } from './batch-writer.service';
 import { Logger } from '@nestjs/common';
 import { RecommendationInput } from '../common/interface/recommendation.interface';
 import { RecommendationSettingsService } from 'src/recommendation-settings/recommendation-settings.service';
-import { PythonEngineClient } from './python-engine.client';
 import { PipelineEngine } from './pipeline-engine.service';
-import { UserIdsProvider } from './user-ids.provider';
-import { AVAILABLE_STRATEGIES } from 'src/common/config/strategies.config';
-import { StrategyScope } from 'src/common/config/strategies.config';
 import { LOG_HANDLER } from 'src/common/util/log-handler.util';
-import { WARN_REC_SYSTEM } from 'src/common/util/err-handler.util';
 import { ConfigService } from '@nestjs/config';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { RecommenderSetting } from 'src/recommendation-settings/entities/settings.entity';
-import { RecommendationService } from 'src/recommendation/recommendations.service';
 import { CronJob } from 'cron';
 import {
-  PythonPersonalResults,
-  PythonGlobalResults,
-} from '../common/interface/recommendation.interface';
+  PersonalResults,
+  GlobalResults,
+} from 'src/common/interface/strategies.interface';
+import { RecommendationDataService } from './recommendation-data.service';
+import { RecommendationCalculatorService } from './recommendation.calculator.service';
+import { RECOMMENDATION_LENTGH } from 'src/common/util/const-handler.util';
 
 @Injectable()
 export class RecommenderOrchestrator {
   private readonly logger = new Logger(RecommenderOrchestrator.name);
   constructor(
     private readonly writer: BatchWriter,
-    private readonly userIdsProvider: UserIdsProvider,
     private readonly settingsService: RecommendationSettingsService,
-    private readonly recommendationService: RecommendationService,
-    private readonly pythonClient: PythonEngineClient,
     private readonly pipelineEngine: PipelineEngine,
     private configService: ConfigService,
     private schedulerRegistry: SchedulerRegistry,
+    private readonly recommendationCalculatorService: RecommendationCalculatorService,
+    private readonly recommendationDataService: RecommendationDataService,
   ) {}
 
   onModuleInit() {
@@ -51,19 +47,56 @@ export class RecommenderOrchestrator {
 
   async handleCron() {
     this.logger.log(LOG_HANDLER.REC_GENERATION_START);
-    const [validUserIds, activeConfigs, inactiveRecIds] = await Promise.all([
-      this.userIdsProvider.getValidUserIds(),
-      this.settingsService.getActiveConfigs().then((r) => r.data),
-      this.recommendationService.getInactiveRecommendationSettingIds(),
-    ]);
+
+    // получаем данные для валидации
+    const valData = await this.recommendationDataService.getValidationData();
+    const { validUserIds, activeConfigs, inactiveRecIds } = valData;
+
+    if (validUserIds.length === 0) {
+      this.logger.warn('No valid users.');
+      return;
+    }
+
     // Очистка устаревших данных
     await this.cleanupInactiveSettings(inactiveRecIds);
 
     // Валидация стратегий
-    this.validateStrategies(activeConfigs);
+    this.logger.log('ВАЛИДАЦИЯ СТРАТЕГИЙ');
+    const { personalStrategys, globalStrategys } =
+      this.validateStrategies(activeConfigs);
 
-    // Генерация и сохранение
-    await this.generateAndSaveRecommendations(validUserIds, activeConfigs);
+    // получаем данные для генерации
+    this.logger.log('ПОЛУЧАЕМ ДАННЫЕ ДЛЯ ГЕНЕРАЦИИ');
+    const userEvents =
+      await this.recommendationDataService.getRelevantEvents(validUserIds);
+
+    // получаем сырые рекомендации
+    this.logger.log('ПОЛУЧАЕМ СЫРЫЕ ПЕРСОНАЛЬНЫЕ РЕКОМЕНДАЦИИ');
+    const personalData =
+      this.recommendationCalculatorService.calculatePersonalRecommendations(
+        validUserIds,
+        userEvents,
+        personalStrategys,
+        RECOMMENDATION_LENTGH, // добавить обработку
+      );
+
+    // получаем сырые рекомендации
+    this.logger.log('ПОЛУЧАЕМ СЫРЫЕ ГЛОБАЛЬНЫЕ РЕКОМЕНДАЦИИ');
+    const globalData =
+      this.recommendationCalculatorService.calculateGlobalRecommendations(
+        userEvents,
+        globalStrategys,
+        RECOMMENDATION_LENTGH, // добавить обработку
+      );
+
+    const { personalConfigs, fallbackConfigs } =
+      this.separateSonfigs(activeConfigs);
+
+    this.logger.log('СОХРАНЯЕМ');
+    await Promise.all([
+      this.savePersonalRecs(personalConfigs, validUserIds, personalData),
+      this.saveFallbackRecs(fallbackConfigs, globalData),
+    ]);
     this.logger.log(LOG_HANDLER.REC_GENERATION_STOP);
   }
 
@@ -75,80 +108,42 @@ export class RecommenderOrchestrator {
   }
 
   private validateStrategies(configs: RecommenderSetting[]) {
-    const personal = Array.from(
-      new Set(
-        configs.flatMap(
-          (c) => c.personal_methods?.map((m) => m.strategy) || [],
-        ),
-      ),
-    );
-    const global = Array.from(
-      new Set(
-        configs.map((c) => c.fallback_strategy).filter((s): s is string => !!s),
-      ),
-    );
+    const personalStrategyNames = new Set<string>();
+    const fallbackStrategyNames = new Set<string>();
 
-    const check = (list: string[], scope: StrategyScope) => {
-      for (const strat of list) {
-        const def = AVAILABLE_STRATEGIES.find((s) => s.name === strat);
-        if (!def || def.scope !== scope) {
-          this.logger.warn(
-            `${WARN_REC_SYSTEM.NOT_STRATEGY_OR_SCOPE}: ${strat}`,
-          );
-        }
+    for (const config of configs) {
+      config.personal_methods.forEach((method) =>
+        personalStrategyNames.add(method.strategy),
+      );
+      if (config.fallback_strategy) {
+        fallbackStrategyNames.add(config.fallback_strategy);
       }
+    }
+
+    this.logger.log('personal strategis:', personalStrategyNames);
+    this.logger.log('global strategis:', fallbackStrategyNames);
+
+    return {
+      personalStrategys: Array.from(personalStrategyNames),
+      globalStrategys: Array.from(fallbackStrategyNames),
     };
-
-    this.logger.log('personal strategis:', personal);
-    this.logger.log('global strategis:', global);
-
-    check(personal, StrategyScope.PERSONAL);
-    check(global, StrategyScope.GLOBAL);
   }
 
-  private async generateAndSaveRecommendations(
-    userIds: string[],
-    configs: RecommenderSetting[],
-  ) {
+  private separateSonfigs(configs: RecommenderSetting[]) {
     const personalConfigs = configs.filter(
       (c) => c.personal_methods?.length > 0,
     );
     const fallbackConfigs = configs.filter((c) => c.fallback_strategy);
 
-    const personalStrategies = Array.from(
-      new Set(
-        configs.flatMap(
-          (c) => c.personal_methods?.map((m) => m.strategy) || [],
-        ),
-      ),
-    );
-    const fallbackStrategies = Array.from(
-      new Set(
-        configs.map((c) => c.fallback_strategy).filter((s): s is string => !!s),
-      ),
-    );
-
-    const [personalData, globalData] = await Promise.all([
-      this.pythonClient.fetchPersonalStrategyResults(
-        personalStrategies,
-        userIds,
-      ),
-      this.pythonClient.fetchGlobalStrategyResults(fallbackStrategies),
-    ]);
-
-    await Promise.all([
-      this.savePersonalRecs(personalConfigs, userIds, personalData),
-      this.saveFallbackRecs(fallbackConfigs, globalData),
-    ]);
+    return { personalConfigs, fallbackConfigs };
   }
 
   private async savePersonalRecs(
     configs: RecommenderSetting[],
     userIds: string[],
-    personalData: PythonPersonalResults,
+    personalData: PersonalResults,
   ): Promise<void> {
     const batchData: RecommendationInput[] = [];
-
     for (const config of configs) {
       for (const userId of userIds) {
         batchData.push({
@@ -174,7 +169,7 @@ export class RecommenderOrchestrator {
 
   private async saveFallbackRecs(
     configs: RecommenderSetting[],
-    globalData: PythonGlobalResults,
+    globalData: GlobalResults,
   ): Promise<void> {
     await Promise.all(
       configs.map(async (config) => {

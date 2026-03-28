@@ -13,7 +13,7 @@ import {
 import { RecommendationSettingsService } from './recommendation-settings.service';
 import { CreateRecommenderSettingDto } from './dto/create-recommendation-settings.dto';
 import { UpdateRecommenderSettingDto } from './dto/update-recommendation-settings.dto';
-import { StrategyScope } from 'src/common/config/strategies.config';
+import { StrategyScope } from 'src/common/interface/strategies.interface';
 import {
   REC_SETTINGS_ENDPOINTS,
   PARAMS,

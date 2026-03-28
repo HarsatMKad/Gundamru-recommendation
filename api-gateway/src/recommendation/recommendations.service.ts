@@ -9,7 +9,7 @@ import type { Cache } from 'cache-manager';
 import { BadRequestException } from '@nestjs/common';
 import {
   CACH_CONST,
-  RECOMMENDATION_CONST,
+  RECOMMENDATION_LENTGH,
   RECOMMENDATION_MODS,
 } from 'src/common/util/const-handler.util';
 import {
@@ -109,7 +109,7 @@ export class RecommendationService {
     userId: string,
     context: string,
     mode: string,
-    limit: number = RECOMMENDATION_CONST.RECOMMENDATION_LENGTH,
+    limit: number = RECOMMENDATION_LENTGH,
     minScore?: number,
   ) {
     let result: RecommendationItem[] = [];

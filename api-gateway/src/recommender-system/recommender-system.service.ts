@@ -26,7 +26,7 @@ export class RecommenderSystemService {
     status: string;
     message: string;
   } {
-    this.logger.log(`orchestr key: ${this.isGenerating}`);
+    this.logger.debug(`orchestr key: ${this.isGenerating}`);
     if (this.isGenerating) {
       this.logger.warn(WARN_REC_SYSTEM.TRIGER_ALREADY_RUNNING);
       return {

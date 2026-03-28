@@ -4,13 +4,13 @@ import {
   RecommendationConfig,
   RecommendationItem as RecItem,
 } from '../common/interface/recommendation.interface';
-import { RECOMMENDATION_CONST } from 'src/common/util/const-handler.util';
+import { RECOMMENDATION_LENTGH } from 'src/common/util/const-handler.util';
 import { WARN_REC_SYSTEM } from 'src/common/util/err-handler.util';
 
 @Injectable()
 export class PipelineEngine {
   private readonly logger = new Logger(PipelineEngine.name);
-  private recLength = RECOMMENDATION_CONST.RECOMMENDATION_LENGTH;
+  private recLength = RECOMMENDATION_LENTGH;
 
   processed(
     config: RecommendationConfig,

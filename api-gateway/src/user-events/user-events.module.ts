@@ -19,5 +19,6 @@ import { EventTypesModule } from 'src/event-types/event-types.module';
   ],
   providers: [UserEventService, CleanupService],
   controllers: [UserEventsController],
+  exports: [UserEventService],
 })
 export class UserEventsModule {}

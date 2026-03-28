@@ -1,3 +1,7 @@
+import { RecommenderSetting } from 'src/recommendation-settings/entities/settings.entity';
+import { UserEvent } from 'src/user-events/entities/user-event.entity';
+import { User } from 'src/users/entities/user.entity';
+
 export interface RecommendationItem {
   sku: string;
   score: number;
@@ -27,15 +31,19 @@ export interface RecommendationInput {
   generated_at?: Date;
 }
 
-export type PythonPersonalResults = Record<
-  string,
-  Record<number, RecommendationItem[]>
->;
-
-export type PythonGlobalResults = Record<string, RecommendationItem[]>;
-
 export enum UserRole {
   CUSTOMER = 'customer',
   ADMIN = 'admin',
   MANAGER = 'manager',
+}
+
+export interface RecommendationData {
+  users: User[];
+  userEvents: UserEvent[];
+}
+
+export interface ValidationData {
+  validUserIds: string[];
+  activeConfigs: RecommenderSetting[];
+  inactiveRecIds: string[];
 }

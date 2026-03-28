@@ -10,7 +10,7 @@ import {
   Validate,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { StrategyScope } from 'src/common/config/strategies.config';
+import { StrategyScope } from 'src/common/interface/strategies.interface';
 import { IsStrategyForScope } from 'src/common/validators/is-strategy-for-scope.validator';
 
 export class StrategyWeightDto {

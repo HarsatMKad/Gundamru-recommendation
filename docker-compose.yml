@@ -18,23 +18,8 @@ services:
     build: ./api-gateway
     ports:
       - "3000:3000"
-    environment:
-      PYTHON_ENGINE_URL: http://rec-engine:8000
     depends_on:
       - db
-      - rec-engine
-    networks:
-      - app-network
-
-  rec-engine:
-    build: ./recommendation-engine
-    container_name: rec-engine
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
-    environment:
-      DATABASE_URL: postgresql://harsat:admin@db:5432/gundamru-recommendation
     networks:
       - app-network
 

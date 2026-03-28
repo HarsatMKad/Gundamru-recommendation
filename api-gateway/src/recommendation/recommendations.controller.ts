@@ -14,13 +14,13 @@ export class RecommendationController {
   }
 
   @Get(`:${PARAMS.CONTEXT}/:${PARAMS.MODE}/:${PARAMS.USERID}`)
-  getRecommendations(
+  async getRecommendations(
     @Param(PARAMS.CONTEXT) context: string, // Где
     @Param(PARAMS.MODE) mode: string, // Как
     @Param(PARAMS.USERID) userId: string, // Кому
     @Query() query: RecQueryDto,
   ) {
-    return this.service.getRecommendations(
+    return await this.service.getRecommendations(
       userId,
       context,
       mode,
@@ -30,12 +30,12 @@ export class RecommendationController {
   }
 
   @Get(`/all/:${PARAMS.USERID}`)
-  getAllRecommendations(@Param(PARAMS.USERID) userId?: string) {
-    return this.service.getAllRecommendations(userId);
+  async getAllRecommendations(@Param(PARAMS.USERID) userId?: string) {
+    return await this.service.getAllRecommendations(userId);
   }
 
   @Get(`/all`)
-  getAll() {
-    return this.service.getAll();
+  async getAll() {
+    return await this.service.getAll();
   }
 }

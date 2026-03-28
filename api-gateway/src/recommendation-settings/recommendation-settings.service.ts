@@ -11,7 +11,7 @@ import { REST_STATUS } from 'src/common/util/rest-message-handler.util';
 import {
   AVAILABLE_STRATEGIES,
   StrategyScope,
-} from 'src/common/config/strategies.config';
+} from 'src/common/interface/strategies.interface';
 
 @Injectable()
 export class RecommendationSettingsService {
