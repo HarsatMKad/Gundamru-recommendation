@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Provider } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -11,23 +11,38 @@ import { RecommenderSystemModule } from './recommender-system/recommender-system
 import { EventTypesModule } from './event-types/event-types.module';
 import { ConfigModule } from '@nestjs/config';
 import { ConfigService } from '@nestjs/config';
+import configLoader from './common/config/ConfigLoader';
+import { IDatabaseConfig } from './common/interface/config.interface';
+import { EConfigKey } from './common/enum/ConfigKey.enum';
+import { ApiKeyGuard } from './common/util/api-key.guard.util';
+import { APP_GUARD } from '@nestjs/core';
+
+const globalGuardProvider: Provider<ApiKeyGuard> = {
+  provide: APP_GUARD,
+  useClass: ApiKeyGuard,
+};
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ load: [configLoader], isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get<string>('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USERNAME'),
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_DATABASE_NAME'),
-        autoLoadEntities: true,
-        synchronize: true, // не забыть в продакшене поставить false
-      }),
+      useFactory: (configService: ConfigService) => {
+        const dbConfig = configService.get<IDatabaseConfig>(
+          EConfigKey.database,
+        );
+        return {
+          type: 'postgres',
+          host: dbConfig?.host,
+          port: dbConfig?.port,
+          username: dbConfig?.username,
+          password: dbConfig?.password,
+          database: dbConfig?.name,
+          autoLoadEntities: true,
+          synchronize: true, // не забыть в продакшене поставить false
+        };
+      },
     }),
     ProductsModule,
     UsersModule,
@@ -38,6 +53,6 @@ import { ConfigService } from '@nestjs/config';
     EventTypesModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, globalGuardProvider],
 })
 export class AppModule {}

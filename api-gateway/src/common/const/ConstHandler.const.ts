@@ -30,6 +30,4 @@ export const STRATEGY_NAMES = AVAILABLE_STRATEGIES.map((s) => s.name);
 export const STRATEGY_DESCRIPTIONS = AVAILABLE_STRATEGIES.map(
   (s) => s.description,
 );
-
-export const RECOMMENDATION_LENTGH = 10;
 export const API_KEY_HEADER = 'x-api-key';

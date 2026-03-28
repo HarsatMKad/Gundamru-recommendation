@@ -1,12 +1,21 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { ApiKeyGuard } from './common/util/api-key.guard.util';
+import { ConfigService } from '@nestjs/config';
+import { IServerConfig } from './common/interface/config.interface';
+import { EConfigKey } from './common/enum/ConfigKey.enum';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.useGlobalGuards(new ApiKeyGuard());
+
   app.useGlobalPipes(new ValidationPipe());
-  await app.listen(process.env.PORT ?? 3000);
+
+  const configService = app.get(ConfigService);
+
+  const port =
+    configService.get<IServerConfig>(EConfigKey.server)?.port ?? 4333;
+
+  await app.listen(port);
+  console.log(`Server is running on: ${await app.getUrl()}`);
 }
 void bootstrap();

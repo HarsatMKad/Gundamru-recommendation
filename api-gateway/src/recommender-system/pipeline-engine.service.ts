@@ -4,13 +4,21 @@ import {
   IRecommendationConfig,
   IRecommendationItem as RecItem,
 } from '../common/interface/recommendation.interface';
-import { RECOMMENDATION_LENTGH } from 'src/common/const/ConstHandler.const';
 import { EWarnRecSystem } from 'src/common/enum/WarnHandler.enum';
+import { ConfigService } from '@nestjs/config';
+import { IGenerationConfig } from 'src/common/interface/config.interface';
+import { EConfigKey } from 'src/common/enum/ConfigKey.enum';
 
 @Injectable()
 export class PipelineEngine {
   private readonly logger = new Logger(PipelineEngine.name);
-  private recLength = RECOMMENDATION_LENTGH;
+  private readonly recLength: number;
+
+  constructor(private configService: ConfigService) {
+    this.recLength =
+      this.configService.get<IGenerationConfig>(EConfigKey.generation)
+        ?.length ?? 10;
+  }
 
   processed(
     config: IRecommendationConfig,

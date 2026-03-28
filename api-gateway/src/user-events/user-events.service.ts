@@ -60,4 +60,16 @@ export class UserEventService {
     }
     return await queryBuilder.getMany();
   }
+
+  async deleteOldEvents(typeId: string, cutOffDate: Date): Promise<number> {
+    const deleteResult = await this.eventsRepository
+      .createQueryBuilder()
+      .delete()
+      .from(UserEvent)
+      .where('event_type_id = :typeId', { typeId })
+      .andWhere('timestamp < :cutOffDate', { cutOffDate })
+      .execute();
+
+    return deleteResult.affected ?? 0;
+  }
 }

@@ -10,7 +10,6 @@ import type { Cache } from 'cache-manager';
 import { BadRequestException } from '@nestjs/common';
 import {
   CACH_CONST,
-  RECOMMENDATION_LENTGH,
   RECOMMENDATION_MODS,
 } from 'src/common/const/ConstHandler.const';
 
@@ -106,7 +105,7 @@ export class RecommendationService {
     userId: string,
     context: string,
     mode: string,
-    limit: number = RECOMMENDATION_LENTGH,
+    limit?: number,
     minScore?: number,
   ) {
     let result: IRecommendationItem[] = [];
@@ -140,9 +139,11 @@ export class RecommendationService {
         );
     }
 
-    const sortedResults = result
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit);
+    let sortedResults = result.sort((a, b) => b.score - a.score);
+
+    if (limit && limit > 0) {
+      sortedResults = sortedResults.slice(0, limit);
+    }
 
     return {
       code: HttpStatus.OK,

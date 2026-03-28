@@ -1,12 +1,11 @@
 import { IsInt, Min, IsOptional, IsNumber } from 'class-validator';
 import { Type } from 'class-transformer';
-import { RECOMMENDATION_LENTGH } from 'src/common/const/ConstHandler.const';
 
 export class RecQueryDto {
   @IsInt()
   @Min(0)
   @Type(() => Number)
-  limit?: number = RECOMMENDATION_LENTGH;
+  limit?: number;
 
   @IsOptional()
   @IsNumber()

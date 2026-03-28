@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { BatchWriter } from './batch-writer.service';
-import { Logger } from '@nestjs/common';
 import { IRecommendationInput } from '../common/interface/recommendation.interface';
 import { RecommendationSettingsService } from 'src/recommendation-settings/recommendation-settings.service';
 import { PipelineEngine } from './pipeline-engine.service';
@@ -10,30 +9,40 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { RecommendationSetting } from 'src/database/entities/recommendation-settings.entity';
 import { IRecommendationDataService } from './recommendation-data.service';
 import { RecommendationCalculatorService } from './recommendation.calculator.service';
-import { RECOMMENDATION_LENTGH } from 'src/common/const/ConstHandler.const';
 import {
   TPersonalResults,
   TGlobalResults,
 } from 'src/common/type/StrategyResult.type';
 import { CronJob } from 'cron';
+import {
+  ICronConfig,
+  IGenerationConfig,
+} from 'src/common/interface/config.interface';
+import { EConfigKey } from 'src/common/enum/ConfigKey.enum';
 
 @Injectable()
 export class RecommenderOrchestrator {
   private readonly logger = new Logger(RecommenderOrchestrator.name);
+  private readonly recLength: number;
   constructor(
-    private readonly writer: BatchWriter,
-    private readonly settingsService: RecommendationSettingsService,
-    private readonly pipelineEngine: PipelineEngine,
     private configService: ConfigService,
+    private readonly writer: BatchWriter,
     private schedulerRegistry: SchedulerRegistry,
+    private readonly pipelineEngine: PipelineEngine,
+    private readonly settingsService: RecommendationSettingsService,
     private readonly recommendationCalculatorService: RecommendationCalculatorService,
     private readonly IRecommendationDataService: IRecommendationDataService,
-  ) {}
+  ) {
+    this.recLength =
+      this.configService.get<IGenerationConfig>(EConfigKey.generation)
+        ?.length ?? 10;
+  }
 
   onModuleInit() {
+    // запуск каждый день по расписанию generationTime или в 4ч ночи по мск
     const cronTime =
-      this.configService.get<string>('CRON_GENERATION_TIME') || '0 4 * * *';
-    // запуск каждый день по расписанию в CRON_GENERATION_TIME
+      this.configService.get<ICronConfig>(EConfigKey.cron)?.generationTime ??
+      '0 4 * * *';
     const job = new CronJob(
       cronTime,
       () => this.handleCron(),
@@ -77,7 +86,7 @@ export class RecommenderOrchestrator {
         validUserIds,
         userEvents,
         personalStrategys,
-        RECOMMENDATION_LENTGH, // добавить обработку
+        this.recLength, // добавить обработку
       );
 
     // получаем сырые рекомендации
@@ -86,7 +95,7 @@ export class RecommenderOrchestrator {
       this.recommendationCalculatorService.calculateGlobalRecommendations(
         userEvents,
         globalStrategys,
-        RECOMMENDATION_LENTGH, // добавить обработку
+        this.recLength, // добавить обработку
       );
 
     const { personalConfigs, fallbackConfigs } =
