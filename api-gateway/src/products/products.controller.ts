@@ -6,7 +6,6 @@ import {
   Patch,
   Param,
   Delete,
-  ParseIntPipe,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductDto } from './dto/product.dto';
@@ -27,20 +26,20 @@ export class ProductsController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: string): Promise<Product> {
+  findOne(@Param('id') id: string): Promise<Product> {
     return this.productsService.findOne(id);
   }
 
   @Patch(':id')
   update(
-    @Param('id', ParseIntPipe) id: string,
+    @Param('id') id: string,
     @Body() ProductDto: ProductDto,
   ): Promise<Product> {
     return this.productsService.update(id, ProductDto);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: string): Promise<void> {
+  remove(@Param('id') id: string): Promise<void> {
     return this.productsService.remove(id);
   }
 }

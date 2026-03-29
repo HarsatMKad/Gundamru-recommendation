@@ -7,9 +7,11 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { EventType } from './event-types.entity';
+import { User } from './user.entity';
+import { Product } from './product.entity';
 
 @Entity('user_event')
-@Index(['user_id', 'product_id', 'timestamp'])
+@Index(['user_id', 'product_id', 'event_type_id', 'timestamp'])
 export class UserEvent {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -17,8 +19,16 @@ export class UserEvent {
   @Column('uuid')
   user_id: string;
 
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
+
   @Column('uuid')
   product_id: string;
+
+  @ManyToOne(() => Product)
+  @JoinColumn({ name: 'product_id' })
+  product: Product;
 
   @Column('uuid')
   event_type_id: string;
@@ -26,6 +36,9 @@ export class UserEvent {
   @ManyToOne(() => EventType)
   @JoinColumn({ name: 'event_type_id' })
   eventType: EventType;
+
+  @Column({ type: 'int', default: 1 })
+  count: number;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   timestamp: Date;

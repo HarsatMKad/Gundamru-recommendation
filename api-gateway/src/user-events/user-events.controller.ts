@@ -1,6 +1,8 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query } from '@nestjs/common';
 import { UserEventService } from './user-events.service';
 import { UserEventDto } from './dto/user-event.dto';
+import { FindEventsQueryDto } from './dto/find-events.dto';
+import { ResponseMessage } from 'src/common/const/ResponseMessage.const';
 
 @Controller('user-events')
 export class UserEventsController {
@@ -12,7 +14,8 @@ export class UserEventsController {
   }
 
   @Get()
-  findAll() {
-    return this.userEventService.findAll();
+  @ResponseMessage('События пользователей получены')
+  getQuery(@Query() dto: FindEventsQueryDto) {
+    return this.userEventService.findBy(dto);
   }
 }

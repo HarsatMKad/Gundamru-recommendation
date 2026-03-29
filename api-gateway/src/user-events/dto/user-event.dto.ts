@@ -1,9 +1,4 @@
-import {
-  IsNotEmpty,
-  IsOptional,
-  IsDateString,
-  IsString,
-} from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class UserEventDto {
   @IsString()
@@ -17,8 +12,4 @@ export class UserEventDto {
   @IsString()
   @IsNotEmpty()
   event_type_id: string;
-
-  @IsOptional()
-  @IsDateString()
-  timestamp?: string;
 }

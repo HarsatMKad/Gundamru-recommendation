@@ -7,6 +7,7 @@ export enum ERestStatus {
   LOG_CREATED = 'Log created',
   BUSY = 'Busy',
   ACCEPTED = 'accepted',
+  ERROR = 'Error',
 }
 
 export enum ERestMessages {

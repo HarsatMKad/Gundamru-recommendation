@@ -1,58 +1,68 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindManyOptions, Repository } from 'typeorm';
+import { FindEventsQueryDto } from './dto/find-events.dto';
 import { UserEvent } from 'src/database/entities/user-event.entity';
 import { UserEventDto } from './dto/user-event.dto';
-import { EventTypesService } from 'src/event-types/event-types.service';
-import { EErrUserEvents } from 'src/common/enum/ErrHandler.enum';
-import { ERestStatus } from 'src/common/enum/Rest.enum';
 
 @Injectable()
 export class UserEventService {
   constructor(
     @InjectRepository(UserEvent)
     private eventsRepository: Repository<UserEvent>,
-    private readonly eventTypesService: EventTypesService,
   ) {}
 
   async create(dto: UserEventDto) {
-    const eventType = (await this.eventTypesService.findById(dto.event_type_id))
-      .data;
-
-    if (!eventType) {
-      throw new NotFoundException(
-        `${EErrUserEvents.TYPE_NOT_FOUND} with id: ${dto.user_id}`,
-      );
-    }
-
-    const event = this.eventsRepository.create({
+    const existingEvent = await this.eventsRepository.findOneBy({
       user_id: dto.user_id,
       product_id: dto.product_id,
-      event_type_id: eventType.id,
-      timestamp: dto.timestamp || new Date(),
+      event_type_id: dto.event_type_id,
     });
 
-    const savedEvent = await this.eventsRepository.save(event);
+    if (existingEvent) {
+      existingEvent.count = existingEvent.count + 1;
+      existingEvent.timestamp = new Date();
+      return await this.eventsRepository.save(existingEvent);
+    } else {
+      const newEvent = this.eventsRepository.create({
+        user_id: dto.user_id,
+        product_id: dto.product_id,
+        event_type_id: dto.event_type_id,
+        timestamp: new Date(),
+      });
+      return await this.eventsRepository.save(newEvent);
+    }
+  }
+
+  async findBy(dto: FindEventsQueryDto) {
+    const where = Object.fromEntries(
+      Object.entries({
+        id: dto.id,
+        user_id: dto.userId,
+        product_id: dto.productId,
+        event_type_id: dto.eventTypeId,
+      }).filter(([value]) => value !== undefined),
+    );
+
+    const queryOptions: FindManyOptions<UserEvent> = {
+      where: Object.keys(where).length > 0 ? where : undefined,
+    };
+
+    if (dto.limit) {
+      queryOptions.take = dto.limit;
+    }
+
+    const result = await this.eventsRepository.find(queryOptions);
 
     return {
-      code: HttpStatus.CREATED,
-      message: ERestStatus.LOG_CREATED,
-      data: savedEvent,
+      length: result.length,
+      result,
     };
   }
 
-  async findAll(limit: number = 50) {
-    const events = await this.eventsRepository.find({ take: limit });
-
-    return {
-      code: HttpStatus.OK,
-      message: ERestStatus.SUCCESS,
-      data: events,
-    };
-  }
   async getRelevantUserEvents(userIds: string[]): Promise<UserEvent[]> {
-    const queryBuilder = this.eventsRepository.createQueryBuilder('ue');
-    queryBuilder
+    const queryBuilder = this.eventsRepository
+      .createQueryBuilder('ue')
       .innerJoinAndSelect('ue.eventType', 'et')
       .where('et.is_active = :isActive', { isActive: true });
     if (userIds.length > 0) {
