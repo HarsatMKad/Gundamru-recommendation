@@ -9,22 +9,21 @@ import { StrategyScope } from 'src/common/enum/StrategyScope.enum';
 @Injectable()
 export class CollabStrategy implements IPersonalStrategy {
   readonly name = 'collab';
+  readonly description = 'Коллаборативная фильтрация';
   readonly scope = StrategyScope.PERSONAL;
   private readonly logger = new Logger(CollabStrategy.name);
 
   calculate(
-    userIds: string[],
     userEvents: UserEvent[],
     recLength: number,
   ): TPersonalStrategyResult {
-    this.logger.log(
-      `Начало расчета коллаборативной фильтрации для ${userIds.length} пользователей`,
-    );
     const {
       matrix,
       userIds: allUserIds,
       productIds,
     } = this.buildRatingMatrix(userEvents);
+
+    const userIds = [...new Set(userEvents.map((event) => event.user_id))];
 
     const normalizedMatrix = this.normalizeMatrix(matrix);
 
@@ -193,14 +192,6 @@ export class CollabStrategy implements IPersonalStrategy {
         .map(({ productId, score }) => ({ sku: productId, score }));
     }
 
-    return results;
-  }
-
-  private emptyResults(userIds: string[]): TPersonalStrategyResult {
-    const results: TPersonalStrategyResult = {};
-    for (const userId of userIds) {
-      results[userId] = [];
-    }
     return results;
   }
 }

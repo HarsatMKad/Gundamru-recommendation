@@ -9,7 +9,7 @@ import { RecommenderOrchestrator } from './recommender-orchestrator.service';
 import { UserEvent } from 'src/database/entities/user-event.entity';
 import { RecommendationSettingsService } from 'src/recommendation-settings/recommendation-settings.service';
 import { UsersModule } from 'src/users/users.module';
-import { UserIdsProvider } from './user-ids.provider';
+import { ValidItemProvider } from './validItem.provider';
 import { RecommenderSystemController } from './recommender-system.controller';
 import { RecommenderSystemService } from './recommender-system.service';
 import { RecommendationsModule } from 'src/recommendation/recommendations.module';
@@ -20,6 +20,7 @@ import { StrategyRegistry } from './strategy-registry';
 import { EventTypesModule } from 'src/event-types/event-types.module';
 import { CollabStrategy } from './strategy/collab.strategy';
 import { GlobalPopularStrategy } from './strategy/global.strategy';
+import { ProductsModule } from 'src/products/products.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { GlobalPopularStrategy } from './strategy/global.strategy';
       RecommendationSetting,
       UserEvent,
     ]),
+    ProductsModule,
     UsersModule,
     EventTypesModule,
     RecommendationsModule,
@@ -38,7 +40,7 @@ import { GlobalPopularStrategy } from './strategy/global.strategy';
     BatchWriter,
     RecommenderOrchestrator,
     RecommendationSettingsService,
-    UserIdsProvider,
+    ValidItemProvider,
     RecommenderSystemService,
     RecommendationCalculatorService,
     IRecommendationDataService,
@@ -47,7 +49,7 @@ import { GlobalPopularStrategy } from './strategy/global.strategy';
     CollabStrategy,
     GlobalPopularStrategy,
   ],
-  exports: [RecommenderOrchestrator],
+  exports: [RecommenderOrchestrator, StrategyRegistry],
   controllers: [RecommenderSystemController],
 })
 export class RecommenderSystemModule {}

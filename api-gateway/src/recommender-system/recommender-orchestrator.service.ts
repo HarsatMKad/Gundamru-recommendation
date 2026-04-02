@@ -1,6 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { BatchWriter } from './batch-writer.service';
-import { IRecommendationInput } from '../common/interface/recommendation.interface';
+import {
+  IAggregateFallback,
+  IRecommendationInput,
+} from '../common/interface/recommendation.interface';
 import { RecommendationSettingsService } from 'src/recommendation-settings/recommendation-settings.service';
 import { PipelineEngine } from './pipeline-engine.service';
 import { ELogHandler } from 'src/common/enum/LogHandler.enum';
@@ -9,10 +12,6 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { RecommendationSetting } from 'src/database/entities/recommendation-settings.entity';
 import { IRecommendationDataService } from './recommendation-data.service';
 import { RecommendationCalculatorService } from './recommendation.calculator.service';
-import {
-  TPersonalResults,
-  TGlobalResults,
-} from 'src/common/type/StrategyResult.type';
 import { CronJob } from 'cron';
 import {
   ICronConfig,
@@ -58,53 +57,59 @@ export class RecommenderOrchestrator {
     this.logger.log(ELogHandler.REC_GENERATION_START);
 
     // получаем данные для валидации
-    const valData = await this.IRecommendationDataService.getIValidationData();
-    const { validUserIds, activeConfigs, inactiveRecIds } = valData;
+    const valData = await this.IRecommendationDataService.getValidationData();
+    const { activeConfigs, inactiveRecIds, userEvents } = valData;
 
-    if (validUserIds.length === 0) {
-      this.logger.warn('No valid users.');
+    if (activeConfigs.length === 0 || userEvents.length === 0) {
+      this.logger.warn('Not enough data.');
       return;
     }
 
-    // Очистка устаревших данных
+    // Очистка устаревших рекомендаций
     await this.cleanupInactiveSettings(inactiveRecIds);
 
-    // Валидация стратегий
-    this.logger.log('ВАЛИДАЦИЯ СТРАТЕГИЙ');
     const { personalStrategys, globalStrategys } =
       this.validateStrategies(activeConfigs);
 
-    // получаем данные для генерации
-    this.logger.log('ПОЛУЧАЕМ ДАННЫЕ ДЛЯ ГЕНЕРАЦИИ');
-    const userEvents =
-      await this.IRecommendationDataService.getRelevantEvents(validUserIds);
-
-    // получаем сырые рекомендации
-    this.logger.log('ПОЛУЧАЕМ СЫРЫЕ ПЕРСОНАЛЬНЫЕ РЕКОМЕНДАЦИИ');
+    this.logger.log('1. Расчет персональных методов.');
     const personalData =
       this.recommendationCalculatorService.calculatePersonalRecommendations(
-        validUserIds,
         userEvents,
         personalStrategys,
-        this.recLength, // добавить обработку
+        this.recLength,
       );
 
-    // получаем сырые рекомендации
-    this.logger.log('ПОЛУЧАЕМ СЫРЫЕ ГЛОБАЛЬНЫЕ РЕКОМЕНДАЦИИ');
+    this.logger.log('2. Расчет глобальных методов.');
     const globalData =
       this.recommendationCalculatorService.calculateGlobalRecommendations(
         userEvents,
         globalStrategys,
-        this.recLength, // добавить обработку
+        this.recLength,
       );
 
+    // разделяем настройки на персональные и стандартные
     const { personalConfigs, fallbackConfigs } =
       this.separateSonfigs(activeConfigs);
 
-    this.logger.log('СОХРАНЯЕМ');
+    this.logger.log('3. Агрегация персональных методов.');
+    const aggregatedPersonalRecs =
+      this.pipelineEngine.aggregatePersonalStrategys(
+        this.recLength,
+        personalConfigs,
+        personalData,
+      );
+
+    this.logger.log('4. Агрегация глобальных методов.');
+    const aggregateGlobalRecs = this.pipelineEngine.aggregateFallbacks(
+      this.recLength,
+      fallbackConfigs,
+      globalData,
+    );
+
+    this.logger.log('5. Сохранение рекомендаций.');
     await Promise.all([
-      this.savePersonalRecs(personalConfigs, validUserIds, personalData),
-      this.saveFallbackRecs(fallbackConfigs, globalData),
+      this.savePersonalRecs(aggregatedPersonalRecs),
+      this.saveGlobalRecs(aggregateGlobalRecs),
     ]);
     this.logger.log(ELogHandler.REC_GENERATION_STOP);
   }
@@ -143,31 +148,12 @@ export class RecommenderOrchestrator {
       (c) => c.personal_methods?.length > 0,
     );
     const fallbackConfigs = configs.filter((c) => c.fallback_strategy);
-
     return { personalConfigs, fallbackConfigs };
   }
 
   private async savePersonalRecs(
-    configs: RecommendationSetting[],
-    userIds: string[],
-    personalData: TPersonalResults,
+    batchData: IRecommendationInput[],
   ): Promise<void> {
-    const batchData: IRecommendationInput[] = [];
-    for (const config of configs) {
-      for (const userId of userIds) {
-        batchData.push({
-          user_id: userId,
-          setting_id: config.id,
-          recommended_skus: this.pipelineEngine.processed(
-            config,
-            userId,
-            personalData,
-          ),
-          generated_at: new Date(),
-        });
-      }
-    }
-
     if (batchData.length > 0) {
       await this.writer.saveBatch(batchData);
       this.logger.log(`${ELogHandler.REC_SAVED}. Count: ${batchData.length}`);
@@ -176,27 +162,15 @@ export class RecommenderOrchestrator {
     }
   }
 
-  private async saveFallbackRecs(
-    configs: RecommendationSetting[],
-    globalData: TGlobalResults,
-  ): Promise<void> {
+  private async saveGlobalRecs(batchData: IAggregateFallback[]): Promise<void> {
     await Promise.all(
-      configs.map(async (config) => {
-        if (config.fallback_strategy && config.fallback_weight) {
-          const globalRecs = this.pipelineEngine.processedGlobal(
-            config.fallback_strategy,
-            config.fallback_weight,
-            globalData,
-          );
-
-          await this.settingsService.updateFallback(config.id, {
-            fallback_skus: globalRecs,
-            fallback_updated_at: new Date(),
-          });
-        }
+      batchData.map(async ({ configId, fallbacks }) => {
+        await this.settingsService.updateFallback(configId, {
+          fallback_skus: fallbacks,
+          fallback_updated_at: new Date(),
+        });
       }),
     );
-
     this.logger.log(ELogHandler.FALLBACK_UPDATE_COMPLETE);
   }
 }

@@ -6,7 +6,12 @@ export class RecommenderSystemController {
   constructor(private readonly service: RecommenderSystemService) {}
 
   @Get('generate')
-  manualGenerateAll() {
-    return this.service.triggerGenerationOrchestr();
+  manualGenerate() {
+    return this.service.triggerGeneration();
+  }
+
+  @Get('strategys')
+  getAllStrategys() {
+    return this.service.getAllStrategys();
   }
 }

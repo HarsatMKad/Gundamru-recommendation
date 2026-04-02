@@ -1,7 +1,10 @@
 import { UserEvent } from 'src/database/entities/user-event.entity';
 import { IRecommendationItem } from './recommendation.interface';
 import { StrategyScope } from '../enum/StrategyScope.enum';
-import { TPersonalStrategyResult } from '../type/StrategyResult.type';
+import {
+  TPersonalStrategyResult,
+  TStrategyResult,
+} from '../type/StrategyResult.type';
 
 export interface IStrategyDefinition {
   name: string;
@@ -11,13 +14,14 @@ export interface IStrategyDefinition {
 
 export interface IBaseRectrategy {
   readonly name: string;
+  readonly description: string;
   readonly scope: StrategyScope;
+  calculate(userEvents: UserEvent[], recLength: number): TStrategyResult;
 }
 
 export interface IPersonalStrategy extends IBaseRectrategy {
   readonly scope: StrategyScope.PERSONAL;
   calculate(
-    usersIds: string[],
     userEvents: UserEvent[],
     recLength: number,
   ): TPersonalStrategyResult;

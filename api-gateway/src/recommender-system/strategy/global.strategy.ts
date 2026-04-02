@@ -7,6 +7,7 @@ import { Injectable } from '@nestjs/common';
 @Injectable()
 export class GlobalPopularStrategy implements IGlobalStrategy {
   readonly name = 'popular_global';
+  readonly description = 'Тренды недели (глобально)';
   readonly scope = StrategyScope.GLOBAL;
 
   calculate(userEvents: UserEvent[], recLength: number): IRecommendationItem[] {

@@ -11,7 +11,7 @@ import {
 import { Type } from 'class-transformer';
 import { StrategyWeightDto } from './create-recommendation-settings.dto';
 import { StrategyScope } from 'src/common/enum/StrategyScope.enum';
-import { IsStrategyForScope } from 'src/common/util/scope-validator.util';
+import { IsStrategyForScope } from '../scope-validator.util';
 
 export class UpdateRecommendationSettingDto {
   @IsArray()
@@ -26,12 +26,11 @@ export class UpdateRecommendationSettingDto {
 
   @IsString()
   @IsOptional()
-  @ValidateIf((o: UpdateRecommendationSettingDto) => !!o.fallback_weight)
   @Validate(IsStrategyForScope, [StrategyScope.GLOBAL])
   fallback_strategy?: string;
 
-  @ValidateIf((o: UpdateRecommendationSettingDto) => !!o.fallback_strategy)
   @IsNumber()
   @IsOptional()
+  @ValidateIf((o: UpdateRecommendationSettingDto) => !!o.fallback_strategy)
   fallback_weight?: number;
 }

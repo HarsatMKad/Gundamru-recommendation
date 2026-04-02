@@ -7,6 +7,7 @@ import { CollabStrategy } from './strategy/collab.strategy';
 import { GlobalPopularStrategy } from './strategy/global.strategy';
 import { StrategyScope } from 'src/common/enum/StrategyScope.enum';
 import { Injectable, OnModuleInit } from '@nestjs/common';
+import { IStrategyDefinition } from 'src/common/interface/strategies.interface';
 import { Logger } from '@nestjs/common';
 
 @Injectable()
@@ -39,6 +40,22 @@ export class StrategyRegistry implements OnModuleInit {
 
   getGlobalStrategy(name: string): IGlobalStrategy | undefined {
     return this.globalStrategies.get(name);
+  }
+
+  getAllPersonalStrategies(): IStrategyDefinition[] {
+    return Array.from(this.personalStrategies.values()).map((s) => ({
+      name: s.name,
+      description: s.description,
+      scope: s.scope,
+    }));
+  }
+
+  getAllGlobalStrategies(): IStrategyDefinition[] {
+    return Array.from(this.globalStrategies.values()).map((s) => ({
+      name: s.name,
+      description: s.description,
+      scope: s.scope,
+    }));
   }
 
   getPersonalStrategiesByNames(names: string[]): IPersonalStrategy[] {

@@ -13,7 +13,6 @@ import {
 import { RecommendationSettingsService } from './recommendation-settings.service';
 import { CreateRecommendationSettingDto } from './dto/create-recommendation-settings.dto';
 import { UpdateRecommendationSettingDto } from './dto/update-recommendation-settings.dto';
-import { StrategyScope } from 'src/common/enum/StrategyScope.enum';
 
 @Controller('recommendation-settings')
 export class RecommendationSettingsController {
@@ -26,11 +25,6 @@ export class RecommendationSettingsController {
     if (id) return this.recSettingsService.getById(id);
     if (context) return this.recSettingsService.getByContext(context);
     return this.recSettingsService.getAll();
-  }
-
-  @Get('strategies')
-  getStrategies(@Query('scope') scope?: StrategyScope) {
-    return this.recSettingsService.getStrategies(scope);
   }
 
   @Post()

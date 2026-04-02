@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, BadRequestException } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RecommendationSetting } from 'src/database/entities/recommendation-settings.entity';
@@ -8,8 +8,6 @@ import { IRecommendationItem } from 'src/common/interface/recommendation.interfa
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { EErrRecSetting } from 'src/common/enum/ErrHandler.enum';
 import { ERestStatus } from 'src/common/enum/Rest.enum';
-import { AVAILABLE_STRATEGIES } from 'src/common/const/ConstHandler.const';
-import { StrategyScope } from 'src/common/enum/StrategyScope.enum';
 
 @Injectable()
 export class RecommendationSettingsService {
@@ -28,39 +26,15 @@ export class RecommendationSettingsService {
   }
 
   async getById(id: string) {
-    const setting = await this.settingsRepo.findOne({
+    return await this.settingsRepo.findOne({
       where: { id },
     });
-
-    if (!setting) {
-      throw new NotFoundException(
-        `${EErrRecSetting.SETTINGS_NOT_FOUND} for id: ${id}`,
-      );
-    }
-
-    return {
-      code: HttpStatus.OK,
-      message: ERestStatus.SUCCESS,
-      data: setting,
-    };
   }
 
   async getByContext(context: string) {
-    const setting = await this.settingsRepo.findOne({
+    return await this.settingsRepo.findOne({
       where: { target_context: context },
     });
-
-    if (!setting) {
-      throw new NotFoundException(
-        `${EErrRecSetting.SETTINGS_NOT_FOUND} for context: ${context}`,
-      );
-    }
-
-    return {
-      code: HttpStatus.OK,
-      message: ERestStatus.SUCCESS,
-      data: setting,
-    };
   }
 
   async updateSettings(
@@ -78,13 +52,7 @@ export class RecommendationSettingsService {
     }
 
     Object.assign(setting, updateDto);
-    const updated = await this.settingsRepo.save(setting);
-
-    return {
-      code: HttpStatus.OK,
-      message: ERestStatus.UPDATED,
-      data: updated,
-    };
+    return await this.settingsRepo.save(setting);
   }
 
   async createSettings(createDto: CreateRecommendationSettingDto) {
@@ -96,13 +64,7 @@ export class RecommendationSettingsService {
     }
 
     const newSettings = this.settingsRepo.create(createDto);
-    const saved = await this.settingsRepo.save(newSettings);
-
-    return {
-      code: HttpStatus.CREATED,
-      message: ERestStatus.CREATED,
-      data: saved,
-    };
+    return await this.settingsRepo.save(newSettings);
   }
 
   async softDeleteSettingsByContext(context: string) {
@@ -188,22 +150,6 @@ export class RecommendationSettingsService {
       code: HttpStatus.OK,
       message: ERestStatus.SUCCESS,
       data: activeConfigs,
-    };
-  }
-
-  getStrategies(scope?: StrategyScope) {
-    if (scope) {
-      const validScopes = Object.values(StrategyScope);
-      if (!validScopes.includes(scope)) {
-        throw new BadRequestException(
-          `${EErrRecSetting.INVALID_SCOPE}: ${scope}. Available scopes: ${validScopes.join(', ')}`,
-        );
-      }
-    }
-    return {
-      code: HttpStatus.OK,
-      message: ERestStatus.SUCCESS,
-      data: AVAILABLE_STRATEGIES,
     };
   }
 }

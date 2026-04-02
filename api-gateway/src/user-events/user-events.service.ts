@@ -60,13 +60,21 @@ export class UserEventService {
     };
   }
 
-  async getRelevantUserEvents(userIds: string[]): Promise<UserEvent[]> {
+  async getRelevantUserEvents(
+    userIds: string[],
+    productIds: string[],
+  ): Promise<UserEvent[]> {
     const queryBuilder = this.eventsRepository
       .createQueryBuilder('ue')
       .innerJoinAndSelect('ue.eventType', 'et')
       .where('et.is_active = :isActive', { isActive: true });
     if (userIds.length > 0) {
       queryBuilder.andWhere('ue.user_id IN (:...userIds)', { userIds });
+    }
+    if (productIds.length > 0) {
+      queryBuilder.andWhere('ue.product_id IN (:...productIds)', {
+        productIds,
+      });
     }
     return await queryBuilder.getMany();
   }

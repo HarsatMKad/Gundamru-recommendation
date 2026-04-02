@@ -11,7 +11,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { StrategyScope } from 'src/common/enum/StrategyScope.enum';
-import { IsStrategyForScope } from 'src/common/util/scope-validator.util';
+import { IsStrategyForScope } from '../scope-validator.util';
 
 export class StrategyWeightDto {
   @IsString()

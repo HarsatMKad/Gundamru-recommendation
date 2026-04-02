@@ -13,7 +13,7 @@ export class User {
     type: 'enum',
     enum: UserRole,
     array: true,
-    default: [UserRole.CUSTOMER],
+    default: [UserRole.USER],
   })
   roles: UserRole[];
 }

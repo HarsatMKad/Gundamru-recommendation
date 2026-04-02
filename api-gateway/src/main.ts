@@ -6,6 +6,7 @@ import { IServerConfig } from './common/interface/config.interface';
 import { EConfigKey } from './common/enum/ConfigKey.enum';
 import { ResponseInterceptor } from './common/util/responseInterceper.util';
 import { AllExceptionsFilter } from './common/util/responseInterceper.util';
+import { useContainer } from 'class-validator';
 import { Reflector } from '@nestjs/core';
 
 async function bootstrap() {
@@ -16,6 +17,8 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ResponseInterceptor(new Reflector()));
 
   app.useGlobalFilters(new AllExceptionsFilter());
+
+  useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
   const configService = app.get(ConfigService);
 

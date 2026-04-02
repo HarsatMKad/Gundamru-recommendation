@@ -12,7 +12,6 @@ export class RecommendationCalculatorService {
   constructor(private readonly strategyRegistry: StrategyRegistry) {}
 
   calculatePersonalRecommendations(
-    userIds: string[],
     userEvents: UserEvent[],
     personalStrategyNames: string[],
     recLength: number,
@@ -26,18 +25,11 @@ export class RecommendationCalculatorService {
       return {};
     }
 
-    this.logger.log(
-      `Calculating personal recommendations for ${userIds.length} users using ${activePersonalStrategies.length} strategies`,
-    );
-
     for (const strategy of activePersonalStrategies) {
       try {
         this.logger.debug(`Calculating personal strategy: ${strategy.name}`);
-        const result = strategy.calculate(userIds, userEvents, recLength);
+        const result = strategy.calculate(userEvents, recLength);
         TPersonalResultsMap[strategy.name] = result;
-        this.logger.debug(
-          `Successfully calculated ${strategy.name} for ${Object.keys(result).length} users`,
-        );
       } catch (error) {
         this.logger.error(
           `Error calculating personal strategy ${strategy.name}:`,
@@ -64,6 +56,7 @@ export class RecommendationCalculatorService {
 
     activeGlobalStrategies.map((strategy) => {
       try {
+        this.logger.debug(`Calculating global strategy: ${strategy.name}`);
         const result = strategy.calculate(userEvents, recLength);
         TGlobalResultsMap[strategy.name] = result;
       } catch (error) {

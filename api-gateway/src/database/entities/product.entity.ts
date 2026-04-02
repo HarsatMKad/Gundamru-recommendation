@@ -14,6 +14,9 @@ export class Product {
   @Column({ default: 0 })
   price: number;
 
+  @Column({ default: 0 })
+  stock_quantity: number;
+
   @Column({ default: true })
   is_published: boolean;
 }

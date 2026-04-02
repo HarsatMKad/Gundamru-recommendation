@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { RecommenderOrchestrator } from './recommender-orchestrator.service';
 import { Logger } from '@nestjs/common';
 import { InternalServerErrorException } from '@nestjs/common';
@@ -6,6 +6,7 @@ import { ELogHandler } from 'src/common/enum/LogHandler.enum';
 import { EWarnRecSystem } from 'src/common/enum/WarnHandler.enum';
 import { EErrRecSystem } from 'src/common/enum/ErrHandler.enum';
 import { ERestMessages, ERestStatus } from 'src/common/enum/Rest.enum';
+import { StrategyRegistry } from './strategy-registry';
 
 @Injectable()
 export class RecommenderSystemService {
@@ -14,32 +15,24 @@ export class RecommenderSystemService {
 
   constructor(
     private readonly recommenderOrchestrator: RecommenderOrchestrator,
+    private readonly strategyRegistry: StrategyRegistry,
   ) {}
 
-  triggerGenerationOrchestr(): {
-    code: HttpStatus;
-    status: string;
-    message: string;
-  } {
-    this.logger.debug(`orchestr key: ${this.isGenerating}`);
+  triggerGeneration() {
     if (this.isGenerating) {
       this.logger.warn(EWarnRecSystem.TRIGER_ALREADY_RUNNING);
-      return {
-        code: HttpStatus.PROCESSING,
-        status: ERestStatus.BUSY,
-        message: ERestMessages.GENERATION_STILL_PROGRESS,
-      };
+      throw new ConflictException(ERestMessages.GENERATION_STILL_PROGRESS);
     }
 
     this.isGenerating = true;
     this.logger.log(ELogHandler.GENERATION_MANUAL_INITIALIZED);
+
     try {
       void this.recommenderOrchestrator.handleCron().finally(() => {
         this.isGenerating = false;
         this.logger.log(ELogHandler.GENERATION_MANUAL_COMPLITE);
       });
       return {
-        code: HttpStatus.ACCEPTED,
         status: ERestStatus.ACCEPTED,
         message: ERestMessages.GENERATION_RUN_BACKGROUND,
       };
@@ -49,5 +42,15 @@ export class RecommenderSystemService {
         EErrRecSystem.ERROR_DURING_GENERATION,
       );
     }
+  }
+
+  getAllStrategys() {
+    const personalStrategys = this.strategyRegistry.getAllPersonalStrategies();
+    const globalStrategys = this.strategyRegistry.getAllGlobalStrategies();
+
+    return {
+      personal: personalStrategys,
+      global: globalStrategys,
+    };
   }
 }

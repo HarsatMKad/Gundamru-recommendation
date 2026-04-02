@@ -32,7 +32,12 @@ export interface IRecommendationData {
 }
 
 export interface IValidationData {
-  validUserIds: string[];
   activeConfigs: RecommendationSetting[];
   inactiveRecIds: string[];
+  userEvents: UserEvent[];
+}
+
+export interface IAggregateFallback {
+  configId: string;
+  fallbacks: IRecommendationItem[];
 }
