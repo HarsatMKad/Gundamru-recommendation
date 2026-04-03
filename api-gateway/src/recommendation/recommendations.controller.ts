@@ -27,13 +27,11 @@ export class RecommendationController {
     );
   }
 
-  @Get(`/all/:userId`)
-  async getAllRecommendations(@Param('userId') userId?: string) {
-    return await this.service.getAllRecommendations(userId);
-  }
-
   @Get(`/all`)
-  async getAll() {
-    return await this.service.getAll();
+  async getAllRecommendations(
+    @Query('limit') limit: number = 100,
+    @Query('userId') userId?: string,
+  ) {
+    return await this.service.getAllRecommendations(limit, userId);
   }
 }

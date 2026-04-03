@@ -38,10 +38,9 @@ export class CleanupService {
 
   async handleCleanup() {
     this.logger.log(ELogHandler.CLEANUP_START);
-
     const eventTypes = await this.eventTypeService.findAll();
 
-    for (const type of eventTypes.data) {
+    for (const type of eventTypes) {
       const cutOffDate = new Date();
       cutOffDate.setDate(cutOffDate.getDate() - type.retention_days);
 

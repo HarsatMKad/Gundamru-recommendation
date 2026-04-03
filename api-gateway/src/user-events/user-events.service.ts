@@ -87,7 +87,6 @@ export class UserEventService {
       .where('event_type_id = :typeId', { typeId })
       .andWhere('timestamp < :cutOffDate', { cutOffDate })
       .execute();
-
     return deleteResult.affected ?? 0;
   }
 }

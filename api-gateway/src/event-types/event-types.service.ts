@@ -6,8 +6,6 @@ import { CreateEventTypeDto } from './dto/create_event-type.dto';
 import { UpdateEventTypeDto } from './dto/update_event-type.dto';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { EErrEventType } from 'src/common/enum/ErrHandler.enum';
-import { ERestStatus } from 'src/common/enum/Rest.enum';
-import { HttpStatus } from '@nestjs/common';
 
 @Injectable()
 export class EventTypesService {
@@ -17,28 +15,11 @@ export class EventTypesService {
   ) {}
 
   async findAll() {
-    const items = await this.repoEventTypes.find();
-    return {
-      code: HttpStatus.OK,
-      message: ERestStatus.SUCCESS,
-      data: items,
-    };
+    return await this.repoEventTypes.find();
   }
 
   async findById(id: string) {
-    const item = await this.repoEventTypes.findOneBy({ id });
-
-    if (!item) {
-      throw new NotFoundException(
-        `${EErrEventType.EVENT_TYPE_NOT_FOUND}: ${id}`,
-      );
-    }
-
-    return {
-      code: HttpStatus.OK,
-      message: ERestStatus.SUCCESS,
-      data: item,
-    };
+    return await this.repoEventTypes.findOneBy({ id });
   }
 
   async create(dto: CreateEventTypeDto) {
@@ -51,13 +32,7 @@ export class EventTypesService {
     }
 
     const newType = this.repoEventTypes.create(dto);
-    const saved = await this.repoEventTypes.save(newType);
-
-    return {
-      code: HttpStatus.CREATED,
-      message: ERestStatus.SUCCESS,
-      data: saved,
-    };
+    return await this.repoEventTypes.save(newType);
   }
 
   async update(id: string, dto: UpdateEventTypeDto) {
@@ -70,13 +45,7 @@ export class EventTypesService {
     }
 
     await this.repoEventTypes.update(id, dto);
-    const updated = await this.repoEventTypes.findOneBy({ id });
-
-    return {
-      code: HttpStatus.OK,
-      message: ERestStatus.UPDATED,
-      data: updated,
-    };
+    return await this.repoEventTypes.findOneBy({ id });
   }
 
   async remove(id: string) {
@@ -91,12 +60,6 @@ export class EventTypesService {
     }
 
     await this.repoEventTypes.delete({ id });
-    return {
-      code: HttpStatus.OK,
-      message: ERestStatus.SUCCESS,
-      data: {
-        deleted: true,
-      },
-    };
+    return { deleted: true };
   }
 }

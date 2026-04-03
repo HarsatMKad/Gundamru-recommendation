@@ -3,11 +3,12 @@ import {
   IGlobalStrategy,
   IBaseRectrategy,
 } from 'src/common/interface/strategies.interface';
-import { CollabStrategy } from './strategy/collab.strategy';
 import { GlobalPopularStrategy } from './strategy/global.strategy';
 import { StrategyScope } from 'src/common/enum/StrategyScope.enum';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { IStrategyDefinition } from 'src/common/interface/strategies.interface';
+import { ItemBasedCollabStrategy } from './strategy/collab.item-based.strategy';
+import { ItemBasedCollabStrategyPython } from './strategy/collab.item-based.python.strategy';
 import { Logger } from '@nestjs/common';
 
 @Injectable()
@@ -17,12 +18,14 @@ export class StrategyRegistry implements OnModuleInit {
   private globalStrategies: Map<string, IGlobalStrategy> = new Map();
 
   constructor(
-    private readonly collabStrategy: CollabStrategy,
+    private readonly itemBasedCollabStrategyPython: ItemBasedCollabStrategyPython,
+    private readonly itemBasedCollabStrategy: ItemBasedCollabStrategy,
     private readonly globalRecStrategy: GlobalPopularStrategy,
   ) {}
 
   onModuleInit() {
-    this.registerStrategy(this.collabStrategy);
+    this.registerStrategy(this.itemBasedCollabStrategy);
+    this.registerStrategy(this.itemBasedCollabStrategyPython);
     this.registerStrategy(this.globalRecStrategy);
   }
 

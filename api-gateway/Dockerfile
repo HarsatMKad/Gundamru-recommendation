@@ -1,10 +1,23 @@
 FROM node:20
 
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip python3-venv && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 COPY package.json yarn.lock ./
 
 RUN yarn install
+
+RUN python3 -m venv /opt/venv
+
+ENV PATH="/opt/venv/bin:$PATH"
+
+COPY ./src/recommender-system/strategy/python/requirements.txt ./src/recommender-system/strategy/python/requirements.txt
+
+RUN pip install --no-cache-dir -r ./src/recommender-system/strategy/python/requirements.txt
 
 COPY . .
 

@@ -19,7 +19,7 @@ export class IRecommendationDataService {
       await Promise.all([
         this.validItemProvider.getValidUserIds(),
         this.validItemProvider.getValidProductIds(),
-        this.settingsService.getActiveConfigs().then((r) => r.data),
+        this.settingsService.getActiveConfigs(),
         this.recommendationService.getActiveRecommendationSettingIds(),
       ]);
 

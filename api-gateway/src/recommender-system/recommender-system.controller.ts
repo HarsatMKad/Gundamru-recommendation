@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { RecommenderSystemService } from './recommender-system.service';
 
-@Controller('recommender-system')
+@Controller('recommendation-system')
 export class RecommenderSystemController {
   constructor(private readonly service: RecommenderSystemService) {}
 

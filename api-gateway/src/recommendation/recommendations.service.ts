@@ -1,10 +1,10 @@
-import { Injectable, Inject, HttpStatus } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Recommendation } from 'src/database/entities/recommendations.entity';
 import { IRecommendationItem } from 'src/common/interface/recommendation.interface';
 import { RecommendationSetting } from 'src/database/entities/recommendation-settings.entity';
-import { ERestMessages, ERestStatus } from 'src/common/enum/Rest.enum';
+import { ERestMessages } from 'src/common/enum/Rest.enum';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { BadRequestException } from '@nestjs/common';
@@ -105,7 +105,7 @@ export class RecommendationService {
     userId: string,
     context: string,
     mode: string,
-    limit?: number,
+    limit: number,
     minScore?: number,
   ) {
     let result: IRecommendationItem[] = [];
@@ -139,23 +139,17 @@ export class RecommendationService {
         );
     }
 
-    let sortedResults = result.sort((a, b) => b.score - a.score);
-
-    if (limit && limit > 0) {
-      sortedResults = sortedResults.slice(0, limit);
-    }
+    const sortedResults = result
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
 
     return {
-      code: HttpStatus.OK,
-      data: {
-        recommendations: sortedResults,
-        length: sortedResults.length,
-        mode,
-        context,
-        limit,
-        minScore,
-      },
-      message: ERestStatus.SUCCESS,
+      mode,
+      context,
+      limit,
+      minScore,
+      length: sortedResults.length,
+      recommendations: sortedResults,
     };
   }
 
@@ -170,15 +164,20 @@ export class RecommendationService {
     return inactiveRecommendationIds;
   }
 
-  async getAllRecommendations(userId?: string) {
+  async getAllRecommendations(limit: number, userId?: string) {
     if (userId) {
-      return await this.recRepo.findBy({ user_id: userId });
+      const result = await this.recRepo.find({ where: { user_id: userId } });
+      return {
+        length: result.length,
+        recommendations: result,
+      };
     } else {
-      return await this.recRepo.find();
+      const result = await this.recRepo.find({ take: limit });
+      return {
+        limit,
+        length: result.length,
+        recommendations: result,
+      };
     }
-  }
-
-  async getAll() {
-    return this.recRepo.find({ take: 100 });
   }
 }

@@ -5,6 +5,7 @@ import {
 } from 'src/common/type/StrategyResult.type';
 import { StrategyRegistry } from './strategy-registry';
 import { UserEvent } from 'src/database/entities/user-event.entity';
+import { performance } from 'perf_hooks';
 
 @Injectable()
 export class RecommendationCalculatorService {
@@ -28,7 +29,12 @@ export class RecommendationCalculatorService {
     for (const strategy of activePersonalStrategies) {
       try {
         this.logger.debug(`Calculating personal strategy: ${strategy.name}`);
+        const start = performance.now();
         const result = strategy.calculate(userEvents, recLength);
+        const end = performance.now();
+        console.log(
+          `Время выполнения стратегии ${strategy.name}: ${(end - start) / 1000} секунд`,
+        );
         TPersonalResultsMap[strategy.name] = result;
       } catch (error) {
         this.logger.error(
@@ -57,7 +63,12 @@ export class RecommendationCalculatorService {
     activeGlobalStrategies.map((strategy) => {
       try {
         this.logger.debug(`Calculating global strategy: ${strategy.name}`);
+        const start = performance.now();
         const result = strategy.calculate(userEvents, recLength);
+        const end = performance.now();
+        console.log(
+          `Время выполнения стратегии ${strategy.name}: ${(end - start) / 1000} секунд`,
+        );
         TGlobalResultsMap[strategy.name] = result;
       } catch (error) {
         this.logger.error(

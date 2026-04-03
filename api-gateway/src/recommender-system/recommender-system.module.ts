@@ -18,9 +18,10 @@ import { IRecommendationDataService } from './recommendation-data.service';
 import { UserEventService } from 'src/user-events/user-events.service';
 import { StrategyRegistry } from './strategy-registry';
 import { EventTypesModule } from 'src/event-types/event-types.module';
-import { CollabStrategy } from './strategy/collab.strategy';
+import { ItemBasedCollabStrategy } from './strategy/collab.item-based.strategy';
 import { GlobalPopularStrategy } from './strategy/global.strategy';
 import { ProductsModule } from 'src/products/products.module';
+import { ItemBasedCollabStrategyPython } from './strategy/collab.item-based.python.strategy';
 
 @Module({
   imports: [
@@ -46,7 +47,8 @@ import { ProductsModule } from 'src/products/products.module';
     IRecommendationDataService,
     UserEventService,
     StrategyRegistry,
-    CollabStrategy,
+    ItemBasedCollabStrategy,
+    ItemBasedCollabStrategyPython,
     GlobalPopularStrategy,
   ],
   exports: [RecommenderOrchestrator, StrategyRegistry],

@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RecommendationSetting } from 'src/database/entities/recommendation-settings.entity';
@@ -7,7 +7,6 @@ import { CreateRecommendationSettingDto } from './dto/create-recommendation-sett
 import { IRecommendationItem } from 'src/common/interface/recommendation.interface';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { EErrRecSetting } from 'src/common/enum/ErrHandler.enum';
-import { ERestStatus } from 'src/common/enum/Rest.enum';
 
 @Injectable()
 export class RecommendationSettingsService {
@@ -17,12 +16,7 @@ export class RecommendationSettingsService {
   ) {}
 
   async getAll() {
-    const items = await this.settingsRepo.find();
-    return {
-      code: HttpStatus.OK,
-      message: ERestStatus.SUCCESS,
-      data: items,
-    };
+    return await this.settingsRepo.find();
   }
 
   async getById(id: string) {
@@ -82,32 +76,8 @@ export class RecommendationSettingsService {
     await this.settingsRepo.save(existing);
 
     return {
-      code: HttpStatus.OK,
-      message: ERestStatus.DEACTIVATED,
-      data: {
-        deactivated: true,
-        context: context,
-      },
-    };
-  }
-
-  async deleteSettingsById(id: string) {
-    const existing = await this.settingsRepo.findOne({
-      where: { id },
-    });
-
-    if (!existing) {
-      throw new NotFoundException(EErrRecSetting.SETTINGS_NOT_FOUND);
-    }
-
-    await this.settingsRepo.delete({ id });
-
-    return {
-      code: HttpStatus.OK,
-      message: ERestStatus.DELETED,
-      data: {
-        deleted: true,
-      },
+      deactivated: true,
+      context: context,
     };
   }
 
@@ -130,26 +100,14 @@ export class RecommendationSettingsService {
       fallback_updated_at: data.fallback_updated_at,
     });
 
-    const updated = await this.settingsRepo.findOne({
+    return await this.settingsRepo.findOne({
       where: { id },
     });
-
-    return {
-      code: HttpStatus.OK,
-      message: ERestStatus.SUCCESS,
-      data: updated,
-    };
   }
 
   async getActiveConfigs() {
-    const activeConfigs = await this.settingsRepo.find({
+    return await this.settingsRepo.find({
       where: { isActive: true },
     });
-
-    return {
-      code: HttpStatus.OK,
-      message: ERestStatus.SUCCESS,
-      data: activeConfigs,
-    };
   }
 }

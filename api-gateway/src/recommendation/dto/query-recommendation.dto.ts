@@ -5,7 +5,7 @@ export class RecQueryDto {
   @IsInt()
   @Min(0)
   @Type(() => Number)
-  limit?: number;
+  limit: number = 100;
 
   @IsOptional()
   @IsNumber()
