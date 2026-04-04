@@ -17,21 +17,17 @@ export class ItemBasedCollabStrategy implements IPersonalStrategy {
     userEvents: UserEvent[],
     recLength: number,
   ): TPersonalStrategyResult {
-    // Шаг 1: Построение матрицы взаимодействий
     const { matrix, userIds, productIds } =
       this.buildInteractionMatrix(userEvents);
 
-    // Шаг 2: Центрирование матрицы (вычитаем среднее пользователя)
     const { centeredMatrix, userMeans } = this.centerMatrixByRow(matrix);
 
-    // Шаг 3: Построение матрицы схожести товаров
-    const itemUserMatrix = centeredMatrix.transpose(); // Items x Users
+    const itemUserMatrix = centeredMatrix.transpose();
     const itemSimilarityMatrix = this.calculateItemSimilarity(
       itemUserMatrix,
       this.MIN_SIMILARITY_THRESHOLD,
     );
 
-    // Шаг 4: Генерация рекомендаций
     const results: TPersonalStrategyResult = {};
 
     for (let userIdx = 0; userIdx < userIds.length; userIdx++) {
@@ -40,7 +36,6 @@ export class ItemBasedCollabStrategy implements IPersonalStrategy {
       const userCenteredInteractions = centeredMatrix.getRow(userIdx);
       const userMean = userMeans[userIdx];
 
-      // Находим товары, с которыми пользователь уже взаимодействовал
       const interactedProductIndices: number[] = [];
       for (let i = 0; i < productIds.length; i++) {
         if (userInteractions[i] > 0) {
@@ -55,16 +50,14 @@ export class ItemBasedCollabStrategy implements IPersonalStrategy {
 
       const scores: { productIdIndex: number; score: number }[] = [];
 
-      // Для каждого товара, который пользователь НЕ оценивал
       for (let productIdx = 0; productIdx < productIds.length; productIdx++) {
         if (userInteractions[productIdx] > 0) {
-          continue; // Пропускаем уже оцененные товары
+          continue;
         }
 
         let weightedScoreSum = 0;
         let similaritySum = 0;
 
-        // Суммируем по всем товарам, которые оценил пользователь
         for (let i = 0; i < interactedProductIndices.length; i++) {
           const interactedProductIdx = interactedProductIndices[i];
           const similarity = itemSimilarityMatrix.get(
@@ -80,9 +73,7 @@ export class ItemBasedCollabStrategy implements IPersonalStrategy {
         }
 
         if (similaritySum > 0) {
-          // Предсказание в центрированном пространстве
           const centeredPrediction = weightedScoreSum / similaritySum;
-          // Добавляем обратно среднее пользователя, чтобы получить предсказание в исходном масштабе
           const prediction = userMean + centeredPrediction;
 
           scores.push({
@@ -92,7 +83,6 @@ export class ItemBasedCollabStrategy implements IPersonalStrategy {
         }
       }
 
-      // Сортируем по убыванию и берем топ-N
       results[userId] = scores
         .sort((a, b) => b.score - a.score)
         .slice(0, recLength)
@@ -113,7 +103,6 @@ export class ItemBasedCollabStrategy implements IPersonalStrategy {
     let userCount = 0;
     let productCount = 0;
 
-    // Первый проход: собираем уникальные ID и суммируем веса
     for (let i = 0; i < userEvents.length; i++) {
       const event = userEvents[i];
       const weight = event.eventType.weight > 0 ? event.eventType.weight : 0;
@@ -138,7 +127,6 @@ export class ItemBasedCollabStrategy implements IPersonalStrategy {
         (ratings[currentUserId][currentProductId] || 0) + weight;
     }
 
-    // Создаем матрицу
     const matrix = Matrix.zeros(userCount, productCount);
     const userIds: string[] = Array.from({ length: userCount });
     for (const userId in userIdToIndex) {
@@ -150,7 +138,6 @@ export class ItemBasedCollabStrategy implements IPersonalStrategy {
       productIds[productIdToIndex[productId]] = productId;
     }
 
-    // Заполняем матрицу
     for (const userId in ratings) {
       const userIdx = userIdToIndex[userId];
       for (const productId in ratings[userId]) {
@@ -171,27 +158,20 @@ export class ItemBasedCollabStrategy implements IPersonalStrategy {
 
     for (let i = 0; i < matrix.rows; i++) {
       const row = matrix.getRow(i);
-
-      // Вычисляем среднее (только для ненулевых значений?)
       let sum = 0;
       let count = 0;
       for (let j = 0; j < row.length; j++) {
         if (row[j] > 0) {
-          // Учитываем только оценки, которые есть
           sum += row[j];
           count++;
         }
       }
 
-      // Если у пользователя нет оценок, среднее = 0
       const mean = count > 0 ? sum / count : 0;
       userMeans[i] = mean;
 
-      // Центрируем
       for (let j = 0; j < matrix.columns; j++) {
         const value = matrix.get(i, j);
-        // Центрируем только ненулевые значения?
-        // В классическом CF центрируем все значения, но нули остаются нулями
         if (value > 0) {
           centeredMatrix.set(i, j, value - mean);
         } else {
@@ -212,7 +192,6 @@ export class ItemBasedCollabStrategy implements IPersonalStrategy {
       itemUserMatrix.rows,
     );
 
-    // Извлекаем все строки для быстрого доступа
     const rows: number[][] = [];
     for (let i = 0; i < itemUserMatrix.rows; i++) {
       rows.push(itemUserMatrix.getRow(i));
