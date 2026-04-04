@@ -12,11 +12,11 @@ def calculate():
     min_similarity_threshold = 0.01
     
     events = [e for e in events if e.get('weight', 0) > 0]
-
+    
     if not events:
         print(json.dumps({}))
         return
-
+    
     df = pd.DataFrame(events)
     
     pivot = df.pivot_table(
@@ -40,17 +40,15 @@ def calculate():
     pivot_centered = pivot_matrix - user_means.reshape(-1, 1)
     pivot_centered[pivot_matrix == 0] = 0
     
-    item_sim = cosine_similarity(pivot_centered.T)
-    item_sim[item_sim < min_similarity_threshold] = 0
-    np.fill_diagonal(item_sim, 1.0)
+    user_sim = cosine_similarity(pivot_centered)
+    user_sim[user_sim < min_similarity_threshold] = 0
+    np.fill_diagonal(user_sim, 1.0)
     
-    weighted_sum = pivot_centered @ item_sim
-    similarity_sum = (pivot_centered != 0).astype(float) @ item_sim
+    sim_sum = user_sim.sum(axis=1, keepdims=True)
+    sim_sum[sim_sum == 0] = 1
+    user_sim_norm = user_sim / sim_sum
     
-    with np.errstate(divide='ignore', invalid='ignore'):
-        predictions_centered = np.divide(weighted_sum, similarity_sum)
-        predictions_centered[~np.isfinite(predictions_centered)] = 0
-    
+    predictions_centered = user_sim_norm @ pivot_centered
     predictions = predictions_centered + user_means.reshape(-1, 1)
     predictions[pivot_matrix > 0] = np.nan
     
@@ -73,8 +71,15 @@ def calculate():
             normalized_scores = np.full_like(raw_scores, 5)
         
         if len(raw_scores) > 2:
-            z_scores = stats.zscore(raw_scores)
-            confidences = 1 / (1 + np.exp(-z_scores * 0.7))
+            if np.std(raw_scores) < 1e-6:
+                confidences = np.full_like(raw_scores, 0.3)
+            else:
+                try:
+                    z_scores = stats.zscore(raw_scores)
+                    z_scores = np.clip(z_scores, -5, 5)
+                    confidences = 1 / (1 + np.exp(-z_scores * 0.7))
+                except:
+                    confidences = np.full_like(raw_scores, 0.5)
         else:
             confidences = np.full_like(raw_scores, 0.5)
         

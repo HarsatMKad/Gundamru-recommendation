@@ -28,12 +28,12 @@ export class RecommendationCalculatorService {
 
     for (const strategy of activePersonalStrategies) {
       try {
-        this.logger.debug(`Calculating personal strategy: ${strategy.name}`);
+        this.logger.debug(`Calculating personal strategy: ${strategy.name}.`);
         const start = performance.now();
         const result = strategy.calculate(userEvents, recLength);
         const end = performance.now();
-        console.log(
-          `Время выполнения стратегии ${strategy.name}: ${(end - start) / 1000} секунд`,
+        this.logger.debug(
+          `Время выполнения ${strategy.name}: ${(end - start) / 1000} секунд`,
         );
         TPersonalResultsMap[strategy.name] = result;
       } catch (error) {
@@ -66,8 +66,8 @@ export class RecommendationCalculatorService {
         const start = performance.now();
         const result = strategy.calculate(userEvents, recLength);
         const end = performance.now();
-        console.log(
-          `Время выполнения стратегии ${strategy.name}: ${(end - start) / 1000} секунд`,
+        this.logger.debug(
+          `Время выполнения ${strategy.name}: ${(end - start) / 1000} секунд`,
         );
         TGlobalResultsMap[strategy.name] = result;
       } catch (error) {
