@@ -25,23 +25,23 @@ export class RecommendationSettingsService {
     });
   }
 
-  async getByContext(context: string) {
+  async getByContext(name: string) {
     return await this.settingsRepo.findOne({
-      where: { target_context: context },
+      where: { name },
     });
   }
 
   async updateSettings(
-    context: string,
+    name: string,
     updateDto: UpdateRecommendationSettingDto,
   ) {
     const setting = await this.settingsRepo.findOne({
-      where: { target_context: context },
+      where: { name },
     });
 
     if (!setting) {
       throw new NotFoundException(
-        `${EErrRecSetting.SETTINGS_NOT_FOUND}. For context: ${context}`,
+        `${EErrRecSetting.SETTINGS_NOT_FOUND}. For context: ${name}`,
       );
     }
 
@@ -51,7 +51,7 @@ export class RecommendationSettingsService {
 
   async createSettings(createDto: CreateRecommendationSettingDto) {
     const existing = await this.settingsRepo.findOne({
-      where: { target_context: createDto.target_context },
+      where: { name: createDto.name },
     });
     if (existing) {
       throw new ConflictException(EErrRecSetting.SETTINGS_EXIST);
@@ -61,23 +61,23 @@ export class RecommendationSettingsService {
     return await this.settingsRepo.save(newSettings);
   }
 
-  async softDeleteSettingsByContext(context: string) {
+  async softDeleteSettingsByContext(name: string) {
     const existing = await this.settingsRepo.findOne({
-      where: { target_context: context },
+      where: { name },
     });
 
     if (!existing) {
       throw new NotFoundException(EErrRecSetting.SETTINGS_NOT_FOUND);
     }
 
-    await this.settingsRepo.delete({ target_context: context });
+    await this.settingsRepo.delete({ name });
 
     existing.isActive = false;
     await this.settingsRepo.save(existing);
 
     return {
       deactivated: true,
-      context: context,
+      name,
     };
   }
 

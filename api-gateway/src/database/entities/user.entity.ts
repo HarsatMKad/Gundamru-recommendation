@@ -4,10 +4,10 @@ import { UserRole } from 'src/common/enum/UserRole.enum';
 @Entity('user')
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  username: string;
+  username!: string;
 
   @Column({
     type: 'enum',
@@ -15,5 +15,5 @@ export class User {
     array: true,
     default: [UserRole.USER],
   })
-  roles: UserRole[];
+  roles!: UserRole[];
 }

@@ -38,7 +38,7 @@ export class RecommendationService {
     if (cached) return cached;
 
     const setting = await this.settingRepo.findOne({
-      where: { target_context: context },
+      where: { name: context },
     });
     if (!setting) return [];
 
@@ -70,7 +70,7 @@ export class RecommendationService {
     if (cached) return cached as IRecommendationItem[];
 
     const setting = await this.settingRepo.findOne({
-      where: { target_context: context },
+      where: { name: context },
     });
 
     const data = setting?.fallback_skus || [];

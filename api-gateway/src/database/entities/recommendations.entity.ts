@@ -13,24 +13,24 @@ import { IRecommendationItem } from 'src/common/interface/recommendation.interfa
 @Index(['user_id', 'setting_id'], { unique: true })
 export class Recommendation {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column('uuid')
-  user_id: string;
+  user_id!: string;
 
   @Column('uuid')
-  setting_id: string;
+  setting_id!: string;
 
   @ManyToOne(() => RecommendationSetting)
   @JoinColumn({ name: 'setting_id' })
-  setting: RecommendationSetting;
+  setting!: RecommendationSetting;
 
   @Column({
     type: 'jsonb',
     default: () => "'[]'",
   })
-  recommended_skus: IRecommendationItem[];
+  recommended_skus!: IRecommendationItem[];
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  generated_at: Date;
+  generated_at!: Date;
 }

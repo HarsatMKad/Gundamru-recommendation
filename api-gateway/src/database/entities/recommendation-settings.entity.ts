@@ -4,16 +4,16 @@ import { IRecommendationItem } from 'src/common/interface/recommendation.interfa
 @Entity('recommender_setting')
 export class RecommendationSetting {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ unique: true, nullable: false })
-  target_context: string;
+  name!: string;
 
   @Column({ type: 'jsonb' })
-  personal_methods: { strategy: string; weight: number }[];
+  personal_methods!: { strategy: string; weight: number }[];
 
   @Column({ default: true, nullable: false })
-  isActive: boolean;
+  isActive!: boolean;
 
   @Column({ nullable: true })
   fallback_strategy?: string;

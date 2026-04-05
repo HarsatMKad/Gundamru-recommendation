@@ -7,16 +7,15 @@ export interface IRecommendationItem {
   score: number;
 }
 
+export interface IStrategyResultItem {
+  sku: string;
+  score: number;
+  confidence: number;
+}
+
 export interface IRecommendationMethod {
   strategy: string;
   weight: number;
-}
-
-export interface IRecommendationConfig {
-  id: string;
-  target_context?: string;
-  personal_methods: IRecommendationMethod[];
-  isActive: boolean;
 }
 
 export interface IRecommendationInput {

@@ -3,13 +3,21 @@ import sys
 import pandas as pd
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-from scipy import stats
+from util import calculate_confidences
+from config import (
+    MIN_SIMILARITY_THRESHOLD,
+    MIN_CONFIDENCE,
+    ZSCORE_SIGMOID_FACTOR,
+    DEFAULT_CONFIDENCE_LOW_DATA,
+    NORMALIZATION_MIN,
+    NORMALIZATION_MAX,
+    NORMALIZATION_DEFAULT
+    )
 
 def calculate():
     input_data = json.load(sys.stdin)
     events = input_data['events']
     rec_length = input_data["recLength"]
-    min_similarity_threshold = 0.01
     
     events = [e for e in events if e.get('weight', 0) > 0]
     
@@ -41,7 +49,7 @@ def calculate():
     pivot_centered[pivot_matrix == 0] = 0
     
     user_sim = cosine_similarity(pivot_centered)
-    user_sim[user_sim < min_similarity_threshold] = 0
+    user_sim[user_sim < MIN_SIMILARITY_THRESHOLD] = 0
     np.fill_diagonal(user_sim, 1.0)
     
     sim_sum = user_sim.sum(axis=1, keepdims=True)
@@ -66,31 +74,21 @@ def calculate():
         
         raw_min, raw_max = raw_scores.min(), raw_scores.max()
         if raw_max > raw_min:
-            normalized_scores = 10 * (raw_scores - raw_min) / (raw_max - raw_min)
+            normalized_scores = NORMALIZATION_MIN + (NORMALIZATION_MAX - NORMALIZATION_MIN) * (raw_scores - raw_min) / (raw_max - raw_min)
         else:
-            normalized_scores = np.full_like(raw_scores, 5)
+            normalized_scores = np.full_like(raw_scores, NORMALIZATION_DEFAULT)
         
-        if len(raw_scores) > 2:
-            if np.std(raw_scores) < 1e-6:
-                confidences = np.full_like(raw_scores, 0.3)
-            else:
-                try:
-                    z_scores = stats.zscore(raw_scores)
-                    z_scores = np.clip(z_scores, -5, 5)
-                    confidences = 1 / (1 + np.exp(-z_scores * 0.7))
-                except:
-                    confidences = np.full_like(raw_scores, 0.5)
-        else:
-            confidences = np.full_like(raw_scores, 0.5)
-        
-        min_confidence = 0.3
-        adjusted_confidences = min_confidence + confidences * (1 - min_confidence)
+        adjusted_confidences = calculate_confidences(raw_scores, MIN_CONFIDENCE, ZSCORE_SIGMOID_FACTOR, DEFAULT_CONFIDENCE_LOW_DATA)
         
         final_scores = normalized_scores * adjusted_confidences
         top_indices = np.argsort(final_scores)[::-1][:rec_length]
         
         results[user_id] = [
-            {"sku": product_ids[product_indices[idx]], "score": float(final_scores[idx])}
+            {
+                "sku": product_ids[product_indices[idx]], 
+                "score": float(normalized_scores[idx]),
+                "confidence": float(adjusted_confidences[idx])
+            }
             for idx in top_indices
         ]
     

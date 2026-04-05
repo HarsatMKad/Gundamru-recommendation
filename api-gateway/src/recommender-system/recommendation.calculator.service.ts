@@ -28,12 +28,11 @@ export class RecommendationCalculatorService {
 
     for (const strategy of activePersonalStrategies) {
       try {
-        this.logger.debug(`Calculating personal strategy: ${strategy.name}.`);
         const start = performance.now();
         const result = strategy.calculate(userEvents, recLength);
         const end = performance.now();
         this.logger.debug(
-          `Время выполнения ${strategy.name}: ${(end - start) / 1000} секунд`,
+          `Время расчета ${strategy.name}: ${(end - start) / 1000} секунд`,
         );
         TPersonalResultsMap[strategy.name] = result;
       } catch (error) {
@@ -62,12 +61,11 @@ export class RecommendationCalculatorService {
 
     activeGlobalStrategies.map((strategy) => {
       try {
-        this.logger.debug(`Calculating global strategy: ${strategy.name}`);
         const start = performance.now();
         const result = strategy.calculate(userEvents, recLength);
         const end = performance.now();
         this.logger.debug(
-          `Время выполнения ${strategy.name}: ${(end - start) / 1000} секунд`,
+          `Время расчета ${strategy.name}: ${(end - start) / 1000} секунд`,
         );
         TGlobalResultsMap[strategy.name] = result;
       } catch (error) {

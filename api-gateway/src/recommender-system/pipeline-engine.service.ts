@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { Logger } from '@nestjs/common';
 import {
   IAggregateFallback,
-  IRecommendationConfig,
   IRecommendationInput,
   IRecommendationItem,
 } from '../common/interface/recommendation.interface';
@@ -12,9 +11,13 @@ import {
   TGlobalResults,
   TPersonalResults,
 } from 'src/common/type/StrategyResult.type';
+import { agregation_config } from 'src/common/const/StrategyParams.const';
 
 @Injectable()
 export class PipelineEngine {
+  ALPHA = agregation_config.SMOOTHING_ALPHA;
+  LAMBDA = agregation_config.SMOOTHING_LAMBDA;
+  BASE_SCORE = agregation_config.SMOOTHING_BASE_SCORE;
   private readonly logger = new Logger(PipelineEngine.name);
 
   aggregatePersonalStrategys(
@@ -64,9 +67,7 @@ export class PipelineEngine {
     const aggregatedResults: IAggregateFallback[] = [];
     for (const config of configs) {
       if (!config.isActive) {
-        this.logger.warn(
-          `${EWarnRecSystem.CONFIG_NOT_FOUND}: ${config.target_context}.`,
-        );
+        this.logger.warn(`${EWarnRecSystem.CONFIG_NOT_FOUND}: ${config.name}.`);
         continue;
       }
 
@@ -88,34 +89,51 @@ export class PipelineEngine {
 
   private processedPersonal(
     recLength: number,
-    config: IRecommendationConfig,
+    config: RecommendationSetting,
     userId: string,
-    strategyData: Record<string, Record<string, IRecommendationItem[]>>,
+    strategyData: TPersonalResults,
   ): IRecommendationItem[] {
     if (!config.isActive) {
       this.logger.warn(
-        `${EWarnRecSystem.CONFIG_NOT_FOUND} for context: ${config.target_context}.`,
+        `${EWarnRecSystem.CONFIG_NOT_FOUND} for context: ${config.name}.`,
       );
       return [];
     }
-    const scores = new Map<string, number>();
 
-    // Итерируемся по методам этой настройки
+    const numerator: Record<string, number> = {}; // Σ(score × confidence × weight)
+    const denominator: Record<string, number> = {}; // Σ(confidence × weight)
+    const skuMethodCount: Record<string, number> = {}; // количество методов, в которых есть товар
+
     for (const method of config.personal_methods) {
       const strategyMap = strategyData[method.strategy];
-      // Получаем результат для данного пользователя в этой стратегии
       const strategyResults = strategyMap?.[userId] || [];
 
       for (const item of strategyResults) {
-        const current = scores.get(item.sku) || 0;
-        // Добавляем вес и оценку
-        scores.set(item.sku, current + item.score * method.weight);
+        const effectiveWeight = item.confidence * method.weight;
+
+        numerator[item.sku] =
+          (numerator[item.sku] || 0) + item.score * effectiveWeight;
+        denominator[item.sku] = (denominator[item.sku] || 0) + effectiveWeight;
+
+        skuMethodCount[item.sku] = (skuMethodCount[item.sku] || 0) + 1;
       }
     }
-    return Array.from(scores.entries())
-      .map(([sku, score]) => ({ sku, score }))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, recLength);
+
+    const results: IRecommendationItem[] = [];
+    for (const sku of Object.keys(numerator)) {
+      const smoothedScore =
+        (numerator[sku] + this.BASE_SCORE * this.LAMBDA) /
+        (denominator[sku] + this.LAMBDA);
+
+      const consensusFactor = Math.pow(
+        skuMethodCount[sku] / config.personal_methods.length,
+        this.ALPHA,
+      );
+
+      const finalScore = smoothedScore * consensusFactor;
+      results.push({ sku, score: finalScore });
+    }
+    return results.sort((a, b) => b.score - a.score).slice(0, recLength);
   }
 
   private processedGlobal(

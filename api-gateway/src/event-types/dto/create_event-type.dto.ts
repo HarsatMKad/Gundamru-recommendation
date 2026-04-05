@@ -2,10 +2,10 @@ import { IsString, IsNumber, IsBoolean, IsOptional } from 'class-validator';
 
 export class CreateEventTypeDto {
   @IsString()
-  name: string;
+  name!: string;
 
   @IsNumber()
-  weight: number;
+  weight!: number;
 
   @IsBoolean()
   @IsOptional()

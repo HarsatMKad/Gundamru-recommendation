@@ -17,21 +17,21 @@ export class StrategyWeightDto {
   @IsString()
   @IsNotEmpty()
   @Validate(IsStrategyForScope, [StrategyScope.PERSONAL], { each: true })
-  strategy: string;
+  strategy!: string;
 
   @IsNumber()
-  weight: number;
+  weight!: number;
 }
 
 export class CreateRecommendationSettingDto {
   @IsString()
   @IsNotEmpty()
-  target_context: string;
+  name?: string;
 
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => StrategyWeightDto)
-  personal_methods: StrategyWeightDto[];
+  personal_methods?: StrategyWeightDto[];
 
   @IsBoolean()
   @IsOptional()

@@ -3,20 +3,20 @@ import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 @Entity('product')
 export class Product {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column({ type: 'text', nullable: true })
-  description: string;
+  description?: string;
 
   @Column({ default: 0 })
-  price: number;
+  price!: number;
 
   @Column({ default: 0 })
-  stock_quantity: number;
+  stock_quantity!: number;
 
   @Column({ default: true })
-  is_published: boolean;
+  is_published!: boolean;
 }

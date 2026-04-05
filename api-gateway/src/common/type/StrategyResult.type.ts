@@ -1,6 +1,9 @@
-import { IRecommendationItem } from '../interface/recommendation.interface';
+import {
+  IRecommendationItem,
+  IStrategyResultItem,
+} from '../interface/recommendation.interface';
 
-export type TPersonalStrategyResult = Record<string, IRecommendationItem[]>;
+export type TPersonalStrategyResult = Record<string, IStrategyResultItem[]>;
 
 export type TPersonalResults = Record<string, TPersonalStrategyResult>;
 

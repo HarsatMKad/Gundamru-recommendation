@@ -55,9 +55,15 @@ export class RecommenderOrchestrator {
 
   async handleCron() {
     this.logger.log(ELogHandler.REC_GENERATION_START);
+    const generateStart = performance.now();
 
     // получаем данные для валидации
+    const gettingDataStart = performance.now();
     const valData = await this.IRecommendationDataService.getValidationData();
+    const gettingDataEnd = performance.now();
+    this.logger.debug(
+      `Время получения данных: ${(gettingDataEnd - gettingDataStart) / 1000} секунд`,
+    );
     const { activeConfigs, inactiveRecIds, userEvents } = valData;
 
     if (activeConfigs.length === 0 || userEvents.length === 0) {
@@ -91,7 +97,8 @@ export class RecommenderOrchestrator {
     const { personalConfigs, fallbackConfigs } =
       this.separateSonfigs(activeConfigs);
 
-    this.logger.log('3. Агрегация персональных методов.');
+    this.logger.log('3. Агрегация методов.');
+    const aggregateStart = performance.now();
     const aggregatedPersonalRecs =
       this.pipelineEngine.aggregatePersonalStrategys(
         this.recLength,
@@ -99,24 +106,36 @@ export class RecommenderOrchestrator {
         personalData,
       );
 
-    this.logger.log('4. Агрегация глобальных методов.');
     const aggregateGlobalRecs = this.pipelineEngine.aggregateFallbacks(
       this.recLength,
       fallbackConfigs,
       globalData,
     );
+    const aggregateEnd = performance.now();
+    this.logger.debug(
+      `Время агрегации: ${(aggregateEnd - aggregateStart) / 1000} секунд`,
+    );
 
-    this.logger.log('5. Сохранение рекомендаций.');
+    const saveStart = performance.now();
+    this.logger.log('4. Сохранение.');
     await Promise.all([
       this.savePersonalRecs(aggregatedPersonalRecs),
       this.saveGlobalRecs(aggregateGlobalRecs),
     ]);
+    const saveEnd = performance.now();
+    this.logger.debug(
+      `Время сохранения: ${(saveEnd - saveStart) / 1000} секунд`,
+    );
     this.logger.log(ELogHandler.REC_GENERATION_STOP);
+    const generateEnd = performance.now();
+    this.logger.debug(
+      `Общее время генерации: ${(generateEnd - generateStart) / 1000} секунд`,
+    );
   }
 
   private async cleanupInactiveSettings(ids: string[]) {
     if (ids.length === 0) return;
-    this.logger.log(`${ELogHandler.DISABLED_SETTINGS_FOUND}: ${ids.length}`);
+    this.logger.debug(`${ELogHandler.DISABLED_SETTINGS_FOUND}: ${ids.length}`);
     await this.writer.deleteRecommendationsBySettingIds(ids);
     this.logger.log(ELogHandler.CLEANING_REC_COMPLETE);
   }
@@ -134,8 +153,8 @@ export class RecommenderOrchestrator {
       }
     }
 
-    this.logger.log('personal strategis:', personalStrategyNames);
-    this.logger.log('global strategis:', fallbackStrategyNames);
+    this.logger.debug('personal strategis:', personalStrategyNames);
+    this.logger.debug('global strategis:', fallbackStrategyNames);
 
     return {
       personalStrategys: Array.from(personalStrategyNames),
@@ -156,9 +175,6 @@ export class RecommenderOrchestrator {
   ): Promise<void> {
     if (batchData.length > 0) {
       await this.writer.saveBatch(batchData);
-      this.logger.log(`${ELogHandler.REC_SAVED}. Count: ${batchData.length}`);
-    } else {
-      this.logger.log(ELogHandler.REC_NO_SAVED);
     }
   }
 
@@ -171,6 +187,5 @@ export class RecommenderOrchestrator {
         });
       }),
     );
-    this.logger.log(ELogHandler.FALLBACK_UPDATE_COMPLETE);
   }
 }

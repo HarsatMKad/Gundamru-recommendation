@@ -14,32 +14,32 @@ import { Product } from './product.entity';
 @Index(['user_id', 'product_id', 'event_type_id', 'timestamp'])
 export class UserEvent {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column('uuid')
-  user_id: string;
+  user_id!: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user!: User;
 
   @Column('uuid')
-  product_id: string;
+  product_id!: string;
 
   @ManyToOne(() => Product)
   @JoinColumn({ name: 'product_id' })
-  product: Product;
+  product!: Product;
 
   @Column('uuid')
-  event_type_id: string;
+  event_type_id!: string;
 
   @ManyToOne(() => EventType)
   @JoinColumn({ name: 'event_type_id' })
-  eventType: EventType;
+  eventType!: EventType;
 
   @Column({ type: 'int', default: 1 })
-  count: number;
+  count!: number;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  timestamp: Date;
+  timestamp!: Date;
 }

@@ -21,9 +21,9 @@ export class RecommendationSettingsController {
   ) {}
 
   @Get()
-  find(@Query(':id') id?: string, @Query('context') context?: string) {
+  find(@Query(':id') id?: string, @Query('name') name?: string) {
     if (id) return this.recSettingsService.getById(id);
-    if (context) return this.recSettingsService.getByContext(context);
+    if (name) return this.recSettingsService.getByContext(name);
     return this.recSettingsService.getAll();
   }
 
@@ -33,17 +33,17 @@ export class RecommendationSettingsController {
     return await this.recSettingsService.createSettings(createDto);
   }
 
-  @Patch(`:context`)
+  @Patch(`:name`)
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async update(
-    @Param('context') context: string,
+    @Param('name') name: string,
     @Body() updateDto: UpdateRecommendationSettingDto,
   ) {
-    return await this.recSettingsService.updateSettings(context, updateDto);
+    return await this.recSettingsService.updateSettings(name, updateDto);
   }
 
-  @Delete(':context')
-  async delete(@Param('context') context: string) {
-    return await this.recSettingsService.softDeleteSettingsByContext(context);
+  @Delete(':name')
+  async delete(@Param('name') name: string) {
+    return await this.recSettingsService.softDeleteSettingsByContext(name);
   }
 }
