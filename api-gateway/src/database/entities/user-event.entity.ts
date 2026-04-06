@@ -5,12 +5,14 @@ import {
   Index,
   ManyToOne,
   JoinColumn,
+  Unique,
 } from 'typeorm';
 import { EventType } from './event-types.entity';
 import { User } from './user.entity';
 import { Product } from './product.entity';
 
 @Entity('user_event')
+@Unique('UQ_user_product_event', ['user_id', 'product_id', 'event_type_id'])
 @Index(['user_id', 'product_id', 'event_type_id', 'timestamp'])
 export class UserEvent {
   @PrimaryGeneratedColumn('uuid')

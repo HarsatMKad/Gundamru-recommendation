@@ -2,8 +2,9 @@ import json
 import sys
 import pandas as pd
 import numpy as np
+from datetime import datetime
 from sklearn.metrics.pairwise import cosine_similarity
-from util import calculate_confidences
+from util import calculate_confidences, calculate_time_weight
 from config import (
     MIN_SIMILARITY_THRESHOLD,
     MIN_CONFIDENCE,
@@ -20,17 +21,27 @@ def calculate():
     rec_length = input_data["recLength"]
     
     events = [e for e in events if e.get('weight', 0) > 0]
-    
+
     if not events:
         print(json.dumps({}))
         return
-    
+
     df = pd.DataFrame(events)
+
+    current_time_ms = datetime.now().timestamp() * 1000
+    df['final_weight'] = df.apply(
+        lambda row: row['weight'] * row['count'] * calculate_time_weight(
+            current_time_ms,
+            row['timestamp'], 
+            row['retention_days'],
+        ),
+        axis=1
+    )
     
     pivot = df.pivot_table(
         index='user_id', 
         columns='product_id', 
-        values='weight', 
+        values='final_weight', 
         fill_value=0,
         aggfunc='sum'
     )

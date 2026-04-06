@@ -28,6 +28,7 @@ export class UserEventService {
         user_id: dto.user_id,
         product_id: dto.product_id,
         event_type_id: dto.event_type_id,
+        count: 1,
         timestamp: new Date(),
       });
       return await this.eventsRepository.save(newEvent);

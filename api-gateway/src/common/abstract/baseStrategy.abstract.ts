@@ -27,6 +27,9 @@ export abstract class BaseGenerateStrategy<
         user_id: e.user_id,
         product_id: e.product_id,
         weight: e.eventType.weight,
+        count: e.count,
+        timestamp: e.timestamp.getTime(),
+        retention_days: e.eventType.retention_days,
       })),
       recLength: recLength,
     };

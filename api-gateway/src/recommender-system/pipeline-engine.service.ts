@@ -11,13 +11,11 @@ import {
   TGlobalResults,
   TPersonalResults,
 } from 'src/common/type/StrategyResult.type';
-import { agregation_config } from 'src/common/const/StrategyParams.const';
+import { agregationConfig } from 'src/common/const/GenerateParams';
 
 @Injectable()
 export class PipelineEngine {
-  ALPHA = agregation_config.SMOOTHING_ALPHA;
-  LAMBDA = agregation_config.SMOOTHING_LAMBDA;
-  BASE_SCORE = agregation_config.SMOOTHING_BASE_SCORE;
+  ALPHA = agregationConfig.SMOOTHING_ALPHA;
   private readonly logger = new Logger(PipelineEngine.name);
 
   aggregatePersonalStrategys(
@@ -104,6 +102,8 @@ export class PipelineEngine {
     const denominator: Record<string, number> = {}; // Σ(confidence × weight)
     const skuMethodCount: Record<string, number> = {}; // количество методов, в которых есть товар
 
+    const totalMethods = config.personal_methods.length;
+
     for (const method of config.personal_methods) {
       const strategyMap = strategyData[method.strategy];
       const strategyResults = strategyMap?.[userId] || [];
@@ -121,16 +121,19 @@ export class PipelineEngine {
 
     const results: IRecommendationItem[] = [];
     for (const sku of Object.keys(numerator)) {
-      const smoothedScore =
-        (numerator[sku] + this.BASE_SCORE * this.LAMBDA) /
-        (denominator[sku] + this.LAMBDA);
+      const score = numerator[sku] / denominator[sku];
 
       const consensusFactor = Math.pow(
-        skuMethodCount[sku] / config.personal_methods.length,
+        skuMethodCount[sku] / totalMethods,
         this.ALPHA,
       );
 
-      const finalScore = smoothedScore * consensusFactor;
+      // Сграживание, для защиты от выбрасов, но оценки будут стягиваться к BASE_SCORE
+      //const score =
+      //  (numerator[sku] + this.BASE_SCORE * this.LAMBDA) /
+      //  (denominator[sku] + this.LAMBDA);
+
+      const finalScore = score * consensusFactor;
       results.push({ sku, score: finalScore });
     }
     return results.sort((a, b) => b.score - a.score).slice(0, recLength);
