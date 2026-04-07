@@ -31,7 +31,7 @@ export abstract class BaseGenerateStrategy<
         timestamp: e.timestamp.getTime(),
         retention_days: e.eventType.retention_days,
       })),
-      recLength: recLength,
+      rec_length: recLength,
     };
 
     const pythonProcess = spawnSync(

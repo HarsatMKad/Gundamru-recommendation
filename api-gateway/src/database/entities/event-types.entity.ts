@@ -8,7 +8,7 @@ export class EventType {
   @Column({ unique: true })
   name!: string;
 
-  @Column('float')
+  @Column({ type: 'float', default: 1 })
   weight!: number;
 
   @Column({ type: 'int', default: 30 })

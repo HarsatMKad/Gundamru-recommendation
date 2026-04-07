@@ -4,21 +4,19 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from sklearn.metrics.pairwise import cosine_similarity
-from util import calculate_confidences, calculate_time_weight
+from util import calculate_confidences, calculate_time_weight, normalize_scores
 from config import (
     MIN_SIMILARITY_THRESHOLD,
     MIN_CONFIDENCE,
     ZSCORE_SIGMOID_FACTOR,
     DEFAULT_CONFIDENCE_LOW_DATA,
-    NORMALIZATION_MIN,
-    NORMALIZATION_MAX,
-    NORMALIZATION_DEFAULT
+    MIN_PRODUCT_FOR_USER
     )
 
 def calculate():
     input_data = json.load(sys.stdin)
     events = input_data['events']
-    rec_length = input_data["recLength"]
+    rec_length = input_data["rec_length"]
     
     events = [e for e in events if e.get('weight', 0) > 0]
 
@@ -28,13 +26,19 @@ def calculate():
 
     df = pd.DataFrame(events)
 
+    user_unique_products = df.groupby('user_id')['product_id'].nunique()
+    valid_users = user_unique_products[user_unique_products > MIN_PRODUCT_FOR_USER].index
+    df = df[df['user_id'].isin(valid_users)]
+
+    if df.empty:
+        print(json.dumps({}))
+        return
+
     current_time_ms = datetime.now().timestamp() * 1000
     df['final_weight'] = df.apply(
-        lambda row: row['weight'] * row['count'] * calculate_time_weight(
-            current_time_ms,
-            row['timestamp'], 
-            row['retention_days'],
-        ),
+        lambda row: row['weight'] *
+            row['count'] *
+            calculate_time_weight(current_time_ms, row['timestamp'], row['retention_days']),
         axis=1
     )
     
@@ -62,12 +66,15 @@ def calculate():
     user_sim = cosine_similarity(pivot_centered)
     user_sim[user_sim < MIN_SIMILARITY_THRESHOLD] = 0
     np.fill_diagonal(user_sim, 1.0)
+
+    non_zero_mask = (pivot_matrix != 0).astype(float)
+    weighted_sum = user_sim @ pivot_centered
+    similarity_sum = user_sim @ non_zero_mask
     
-    sim_sum = user_sim.sum(axis=1, keepdims=True)
-    sim_sum[sim_sum == 0] = 1
-    user_sim_norm = user_sim / sim_sum
-    
-    predictions_centered = user_sim_norm @ pivot_centered
+    with np.errstate(divide='ignore', invalid='ignore'):
+        predictions_centered = np.divide(weighted_sum, similarity_sum)
+        predictions_centered[~np.isfinite(predictions_centered)] = 0
+
     predictions = predictions_centered + user_means.reshape(-1, 1)
     predictions[pivot_matrix > 0] = np.nan
     
@@ -76,20 +83,30 @@ def calculate():
         user_preds = predictions[user_idx]
         valid_mask = ~np.isnan(user_preds)
         
+        # Проверка: есть ли кандидаты?
         if not np.any(valid_mask):
             results[user_id] = []
             continue
         
         raw_scores = user_preds[valid_mask]
         product_indices = np.where(valid_mask)[0]
+
+        # Проверка: информативны ли предсказания?
+        if np.std(raw_scores) < 1e-6:
+            results[user_id] = []
+            continue
+
+        # Проверка: достаточно ли уникальных значений?
+        unique_scores = len(np.unique(raw_scores))
+        if unique_scores < min(rec_length, 3):
+            results[user_id] = []
+            continue
         
-        raw_min, raw_max = raw_scores.min(), raw_scores.max()
-        if raw_max > raw_min:
-            normalized_scores = NORMALIZATION_MIN + (NORMALIZATION_MAX - NORMALIZATION_MIN) * (raw_scores - raw_min) / (raw_max - raw_min)
-        else:
-            normalized_scores = np.full_like(raw_scores, NORMALIZATION_DEFAULT)
-        
-        adjusted_confidences = calculate_confidences(raw_scores, MIN_CONFIDENCE, ZSCORE_SIGMOID_FACTOR, DEFAULT_CONFIDENCE_LOW_DATA)
+        normalized_scores = normalize_scores(raw_scores, method='sigmoid')
+
+        adjusted_confidences = calculate_confidences(
+            raw_scores, MIN_CONFIDENCE, ZSCORE_SIGMOID_FACTOR, DEFAULT_CONFIDENCE_LOW_DATA
+        )
         
         final_scores = normalized_scores * adjusted_confidences
         top_indices = np.argsort(final_scores)[::-1][:rec_length]

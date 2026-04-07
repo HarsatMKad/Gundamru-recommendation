@@ -7,6 +7,7 @@ import {
   IsBoolean,
   IsOptional,
   ValidateIf,
+  Min,
   Validate,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -20,6 +21,7 @@ export class StrategyWeightDto {
   strategy!: string;
 
   @IsNumber()
+  @Min(0.1)
   weight!: number;
 }
 
@@ -46,5 +48,6 @@ export class CreateRecommendationSettingDto {
   @ValidateIf((o: CreateRecommendationSettingDto) => !!o.fallback_strategy)
   @IsNumber()
   @IsOptional()
+  @Min(0.1)
   fallback_weight?: number;
 }

@@ -4,21 +4,19 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from sklearn.metrics.pairwise import cosine_similarity
-from util import calculate_confidences, calculate_time_weight
+from util import calculate_confidences, calculate_time_weight, normalize_scores
 from config import (
     MIN_SIMILARITY_THRESHOLD,
     MIN_CONFIDENCE,
     ZSCORE_SIGMOID_FACTOR,
     DEFAULT_CONFIDENCE_LOW_DATA,
-    NORMALIZATION_MIN,
-    NORMALIZATION_MAX,
-    NORMALIZATION_DEFAULT,
+    MIN_PRODUCT_FOR_USER
     )
 
 def calculate():
     input_data = json.load(sys.stdin)
     events = input_data['events']
-    rec_length = input_data["recLength"]
+    rec_length = input_data["rec_length"]
     
     events = [e for e in events if e.get('weight', 0) > 0]
 
@@ -28,13 +26,15 @@ def calculate():
 
     df = pd.DataFrame(events)
 
+    user_unique_products = df.groupby('user_id')['product_id'].nunique()
+    valid_users = user_unique_products[user_unique_products > MIN_PRODUCT_FOR_USER].index
+    df = df[df['user_id'].isin(valid_users)]
+
     current_time_ms = datetime.now().timestamp() * 1000
     df['final_weight'] = df.apply(
-        lambda row: row['weight'] * row['count'] * calculate_time_weight(
-            current_time_ms,
-            row['timestamp'], 
-            row['retention_days'],
-        ),
+        lambda row: row['weight'] *
+            row['count'] *
+            calculate_time_weight(current_time_ms, row['timestamp'], row['retention_days']),
         axis=1
     )
     
@@ -62,7 +62,7 @@ def calculate():
     item_sim = cosine_similarity(pivot_centered.T)
     item_sim[item_sim < MIN_SIMILARITY_THRESHOLD] = 0
     np.fill_diagonal(item_sim, 1.0)
-    
+
     weighted_sum = pivot_centered @ item_sim
     similarity_sum = (pivot_centered != 0).astype(float) @ item_sim
     
@@ -78,24 +78,34 @@ def calculate():
         user_preds = predictions[user_idx]
         valid_mask = ~np.isnan(user_preds)
         
+        # ПРОВЕРКА: Может ли CF сформировать рекомендации?
         if not np.any(valid_mask):
             results[user_id] = []
             continue
-        
+
         raw_scores = user_preds[valid_mask]
         product_indices = np.where(valid_mask)[0]
-        
-        raw_min, raw_max = raw_scores.min(), raw_scores.max()
-        if raw_max > raw_min:
-            normalized_scores = NORMALIZATION_MIN + (NORMALIZATION_MAX - NORMALIZATION_MIN) * (raw_scores - raw_min) / (raw_max - raw_min)
-        else:
-            normalized_scores = np.full_like(raw_scores, NORMALIZATION_DEFAULT)
-        
-        adjusted_confidences = calculate_confidences(raw_scores, MIN_CONFIDENCE, ZSCORE_SIGMOID_FACTOR, DEFAULT_CONFIDENCE_LOW_DATA)
+
+        # ПРОВЕРКА: информативны ли предсказания
+        if np.std(raw_scores) < 1e-6:
+            results[user_id] = []
+            continue
+
+        # ПРОВЕРКА: количество уникальных значений
+        unique_scores = len(np.unique(raw_scores))
+        if unique_scores < min(rec_length, 3):
+            results[user_id] = []
+            continue
+    
+        normalized_scores = normalize_scores(raw_scores, method='sigmoid')
+
+        adjusted_confidences = calculate_confidences(
+            raw_scores, MIN_CONFIDENCE, ZSCORE_SIGMOID_FACTOR, DEFAULT_CONFIDENCE_LOW_DATA
+        )
         
         final_scores = normalized_scores * adjusted_confidences
         top_indices = np.argsort(final_scores)[::-1][:rec_length]
-        
+
         results[user_id] = [
             {
                 "sku": product_ids[product_indices[idx]], 

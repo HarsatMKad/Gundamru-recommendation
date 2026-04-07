@@ -11,7 +11,7 @@ import {
   TGlobalResults,
   TPersonalResults,
 } from 'src/common/type/StrategyResult.type';
-import { agregationConfig } from 'src/common/const/GenerateParams';
+import { agregationConfig } from 'src/common/config/GenerateParams';
 
 @Injectable()
 export class PipelineEngine {
