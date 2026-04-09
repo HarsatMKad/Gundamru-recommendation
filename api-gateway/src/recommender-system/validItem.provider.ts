@@ -1,13 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { UsersService } from 'src/users/users.service';
+import { Inject, Injectable } from '@nestjs/common';
 import { UserRole } from 'src/common/enum/UserRole.enum';
-import { ProductsService } from 'src/products/products.service';
+import * as entitesInterface from 'src/common/interface/entites.interface';
 
 @Injectable()
 export class ValidItemProvider {
   constructor(
-    private readonly usersService: UsersService,
-    private readonly productService: ProductsService,
+    @Inject(entitesInterface.I_USERS_SERVICE)
+    private readonly usersService: entitesInterface.IUsersService,
+
+    @Inject(entitesInterface.I_PRODUCTS_SERVICE)
+    private readonly productService: entitesInterface.IProductService,
   ) {}
 
   async getValidUserIds(): Promise<string[]> {
@@ -18,7 +20,9 @@ export class ValidItemProvider {
     return users.map((u) => u.id);
   }
 
-  async getValidProductIds(): Promise<string[]> {
-    return await this.productService.getRecomendetProductIds();
+  async getValidProductsWithAttributes(): Promise<
+    entitesInterface.IProductWithAttributes[]
+  > {
+    return await this.productService.getPublishedProductsWithAttributes();
   }
 }

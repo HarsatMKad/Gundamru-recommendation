@@ -41,16 +41,24 @@ export class CleanupService {
     const eventTypes = await this.eventTypeService.findAll();
 
     for (const type of eventTypes) {
+      // удалять старые события
       const cutOffDate = new Date();
       cutOffDate.setDate(cutOffDate.getDate() - type.retention_days);
+      const timeBasedDeleted =
+        await this.userEventService.deleteOldEventsForUsers(
+          type.id,
+          cutOffDate,
+        );
 
-      const deleteResult = await this.userEventService.deleteOldEvents(
-        type.id,
-        cutOffDate,
-      );
+      // удалять если событий больше допустимого максимума на пользователя
+      const maxBasedDeleted =
+        await this.userEventService.deleteExcessEventsForUsers(
+          type.id,
+          type.max_for_user,
+        );
 
       this.logger.log(
-        `${ELogHandler.DELETED_RECODS}: ${deleteResult}; types: ${type.name}.`,
+        `${ELogHandler.DELETED_RECODS}: ${timeBasedDeleted + maxBasedDeleted}. for types: ${type.name}.`,
       );
     }
 

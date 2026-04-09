@@ -10,13 +10,18 @@ export class GlobalPopularStrategy implements IGlobalStrategy {
   readonly description = 'Тренды недели (глобально)';
   readonly scope = StrategyScope.GLOBAL;
 
-  calculate(userEvents: UserEvent[], recLength: number): IRecommendationItem[] {
+  calculate(
+    recLength: number,
+    userEvents?: UserEvent[],
+  ): IRecommendationItem[] {
     const productScores: Record<string, number> = {};
 
-    for (const event of userEvents) {
-      const eventWeight = event.eventType.weight;
-      productScores[event.product_id] =
-        (productScores[event.product_id] || 0) + eventWeight;
+    if (userEvents) {
+      for (const event of userEvents) {
+        const eventWeight = event.eventType.weight;
+        productScores[event.product_id] =
+          (productScores[event.product_id] || 0) + eventWeight;
+      }
     }
 
     const rankedProducts: IRecommendationItem[] = Object.entries(productScores)

@@ -15,23 +15,32 @@ export class IRecommendationDataService {
   ) {}
 
   async getValidationData(): Promise<IValidationData> {
-    const [validUserIds, validProductIds, activeConfigs, inactiveRecIds] =
-      await Promise.all([
-        this.validItemProvider.getValidUserIds(),
-        this.validItemProvider.getValidProductIds(),
-        this.settingsService.getActiveConfigs(),
-        this.recommendationService.getActiveRecommendationSettingIds(),
-      ]);
+    const [
+      activeConfigs,
+      inactiveRecIds,
+      validUserIds,
+      validIProductWithAttributes,
+    ] = await Promise.all([
+      this.settingsService.getActiveConfigs(),
+      this.recommendationService.getInactiveRecommendationSettingIds(),
+      this.validItemProvider.getValidUserIds(),
+      this.validItemProvider.getValidProductsWithAttributes(),
+    ]);
+
+    const productIds: string[] = validIProductWithAttributes.map(
+      (item) => item.id,
+    );
 
     const userEvents = await this.userEventService.getRelevantUserEvents(
       validUserIds,
-      validProductIds,
+      productIds,
     );
 
     return {
-      activeConfigs: activeConfigs,
-      inactiveRecIds: inactiveRecIds,
-      userEvents: userEvents,
+      activeConfigs,
+      inactiveRecIds,
+      userEvents,
+      productsWithAttributes: validIProductWithAttributes,
     };
   }
 }

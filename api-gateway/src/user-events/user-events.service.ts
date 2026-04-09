@@ -80,7 +80,10 @@ export class UserEventService {
     return await queryBuilder.getMany();
   }
 
-  async deleteOldEvents(typeId: string, cutOffDate: Date): Promise<number> {
+  async deleteOldEventsForUsers(
+    typeId: string,
+    cutOffDate: Date,
+  ): Promise<number> {
     const deleteResult = await this.eventsRepository
       .createQueryBuilder()
       .delete()
@@ -88,6 +91,41 @@ export class UserEventService {
       .where('event_type_id = :typeId', { typeId })
       .andWhere('timestamp < :cutOffDate', { cutOffDate })
       .execute();
+    return deleteResult.affected ?? 0;
+  }
+
+  async deleteExcessEventsForUsers(
+    typeId: string,
+    maxForUser: number,
+  ): Promise<number> {
+    const eventsToDelete = await this.eventsRepository
+      .createQueryBuilder('event')
+      .select('event.id')
+      .where('event.event_type_id = :typeId', { typeId })
+      .andWhere((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('event2.id')
+          .from(UserEvent, 'event2')
+          .where('event2.user_id = event.user_id')
+          .andWhere('event2.event_type_id = :typeId', { typeId })
+          .orderBy('event2.timestamp', 'DESC')
+          .limit(maxForUser)
+          .getQuery();
+
+        return `event.id NOT IN (${subQuery})`;
+      })
+      .getMany();
+
+    if (eventsToDelete.length === 0) return 0;
+
+    const deleteResult = await this.eventsRepository
+      .createQueryBuilder()
+      .delete()
+      .from(UserEvent)
+      .where('id IN (:...ids)', { ids: eventsToDelete.map((e) => e.id) })
+      .execute();
+
     return deleteResult.affected ?? 0;
   }
 }

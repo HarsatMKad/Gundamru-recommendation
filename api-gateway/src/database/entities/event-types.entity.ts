@@ -14,6 +14,9 @@ export class EventType {
   @Column({ type: 'int', default: 30 })
   retention_days!: number;
 
+  @Column({ type: 'int', default: 50 })
+  max_for_user!: number;
+
   @Column({ default: true })
   is_active!: boolean;
 }

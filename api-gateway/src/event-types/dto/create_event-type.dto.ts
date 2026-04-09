@@ -1,4 +1,10 @@
-import { IsString, IsNumber, IsBoolean, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsBoolean,
+  IsOptional,
+  Min,
+} from 'class-validator';
 
 export class CreateEventTypeDto {
   @IsString()
@@ -6,6 +12,10 @@ export class CreateEventTypeDto {
 
   @IsNumber()
   weight!: number;
+
+  @IsNumber()
+  @Min(1)
+  max_for_user?: number = 50;
 
   @IsBoolean()
   @IsOptional()

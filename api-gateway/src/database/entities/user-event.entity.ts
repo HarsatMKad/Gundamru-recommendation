@@ -13,7 +13,22 @@ import { Product } from './product.entity';
 
 @Entity('user_event')
 @Unique('UQ_user_product_event', ['user_id', 'product_id', 'event_type_id'])
-@Index(['user_id', 'product_id', 'event_type_id', 'timestamp'])
+@Index('IDX_user_product_event_type_timestamp', [
+  'user_id',
+  'product_id',
+  'event_type_id',
+  'timestamp',
+])
+@Index('IDX_event_type_user_timestamp', [
+  'event_type_id',
+  'user_id',
+  'timestamp',
+])
+@Index('IDX_user_event_type_timestamp', [
+  'user_id',
+  'event_type_id',
+  'timestamp',
+])
 export class UserEvent {
   @PrimaryGeneratedColumn('uuid')
   id!: string;

@@ -1,12 +1,13 @@
 import path from 'path';
 import { StrategyScope } from '../enum/StrategyScope.enum';
-import { IBaseRectrategy } from '../interface/strategies.interface';
-import { TStrategyResult } from '../type/StrategyResult.type';
+import { IBaseRectrategy, Ipayload } from '../interface/strategies.interface';
+import { TStrategyCalculateResult } from '../type/StrategyResult.type';
 import { UserEvent } from 'src/database/entities/user-event.entity';
 import { spawnSync } from 'child_process';
+import { IProductWithAttributes } from '../interface/entites.interface';
 
 export abstract class BaseGenerateStrategy<
-  T extends TStrategyResult,
+  T extends TStrategyCalculateResult,
 > implements IBaseRectrategy {
   abstract readonly name: string;
   abstract readonly description: string;
@@ -21,18 +22,18 @@ export abstract class BaseGenerateStrategy<
     return path.join(this.pythonBasePath, this.scriptName);
   }
 
-  calculate(userEvents: UserEvent[], recLength: number): T {
-    const payload = {
-      events: userEvents.map((e) => ({
-        user_id: e.user_id,
-        product_id: e.product_id,
-        weight: e.eventType.weight,
-        count: e.count,
-        timestamp: e.timestamp.getTime(),
-        retention_days: e.eventType.retention_days,
-      })),
-      rec_length: recLength,
-    };
+  abstract getPayload(
+    recLength: number,
+    userEvents?: UserEvent[],
+    products?: IProductWithAttributes[],
+  ): Ipayload;
+
+  calculate(
+    recLength: number,
+    userEvents?: UserEvent[],
+    products?: IProductWithAttributes[],
+  ): T {
+    const payload = this.getPayload(recLength, userEvents, products);
 
     const pythonProcess = spawnSync(
       this.pythonPath,

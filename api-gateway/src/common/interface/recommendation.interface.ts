@@ -1,6 +1,7 @@
 import { RecommendationSetting } from 'src/database/entities/recommendation-settings.entity';
 import { UserEvent } from 'src/database/entities/user-event.entity';
 import { User } from 'src/database/entities/user.entity';
+import { IProductWithAttributes } from './entites.interface';
 
 export interface IRecommendationItem {
   sku: string;
@@ -34,6 +35,7 @@ export interface IValidationData {
   activeConfigs: RecommendationSetting[];
   inactiveRecIds: string[];
   userEvents: UserEvent[];
+  productsWithAttributes: IProductWithAttributes[];
 }
 
 export interface IAggregateFallback {

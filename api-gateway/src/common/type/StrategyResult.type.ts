@@ -9,4 +9,8 @@ export type TPersonalResults = Record<string, TPersonalStrategyResult>;
 
 export type TGlobalResults = Record<string, IRecommendationItem[]>;
 
-export type TStrategyResult = TPersonalStrategyResult | IRecommendationItem[];
+export type TStrategyResult = TPersonalResults | TGlobalResults;
+
+export type TStrategyCalculateResult =
+  | TPersonalStrategyResult
+  | IRecommendationItem[];

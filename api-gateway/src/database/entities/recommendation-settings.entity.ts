@@ -18,8 +18,8 @@ export class RecommendationSetting {
   @Column({ nullable: true })
   fallback_strategy?: string;
 
-  @Column({ type: 'float', nullable: true })
-  fallback_weight?: number;
+  @Column({ type: 'float', default: 1 })
+  fallback_weight!: number;
 
   @Column({ type: 'jsonb', nullable: true })
   fallback_skus?: IRecommendationItem[];

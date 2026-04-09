@@ -1,5 +1,8 @@
+import json
+import sys
 import numpy as np
 from scipy import stats
+from pydantic import BaseModel, ValidationError
 from config import (
     MIN_CONFIDENCE,
     ZSCORE_SIGMOID_FACTOR,
@@ -14,6 +17,17 @@ from config import (
     NORMALIZATION_MAX,
     NORMALIZATION_DEFAULT,
     )
+
+def validate_payload(model_class: BaseModel):
+    try:
+        raw_data = json.load(sys.stdin)
+        return model_class(**raw_data)
+    except ValidationError as e:
+        print(f"Validation Error: {e.json()}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 def calculate_confidences(raw_scores, min_confidence=MIN_CONFIDENCE, 
                           sigmoid_factor=ZSCORE_SIGMOID_FACTOR, 
@@ -84,15 +98,6 @@ def normalize_scores(scores, method='sigmoid', min_val=NORMALIZATION_MIN, max_va
         else:
             normalized = np.tanh((scores - mean_val) / (std_val * 2))
             normalized = (normalized + 1) / 2
-    
-    elif method == 'robust':
-        p05, p95 = np.percentile(scores, [5, 95])
-        if p95 - p05 > epsilon:
-            clipped = np.clip(scores, p05, p95)
-            normalized = (clipped - p05) / (p95 - p05)
-        else:
-            normalized = np.full_like(scores, 0.5)
-    
     else:
         raise ValueError(f"Unknown method: {method}")
     

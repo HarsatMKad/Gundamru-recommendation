@@ -3,8 +3,10 @@ import sys
 import pandas as pd
 import numpy as np
 from datetime import datetime
+from pydantic import BaseModel, ValidationError
 from sklearn.metrics.pairwise import cosine_similarity
-from util import calculate_confidences, calculate_time_weight, normalize_scores
+from util import calculate_confidences, calculate_time_weight, normalize_scores, validate_payload
+from typing import List
 from config import (
     MIN_SIMILARITY_THRESHOLD,
     MIN_CONFIDENCE,
@@ -13,18 +15,32 @@ from config import (
     MIN_PRODUCT_FOR_USER
     )
 
+class Event(BaseModel):
+    user_id: str
+    product_id: str
+    weight: float
+    count: int
+    timestamp: int
+    retention_days: int
+
+class StrategyPayload(BaseModel):
+    rec_length: int
+    events: List[Event]
+
 def calculate():
-    input_data = json.load(sys.stdin)
-    events = input_data['events']
-    rec_length = input_data["rec_length"]
-    
-    events = [e for e in events if e.get('weight', 0) > 0]
+    payload = validate_payload(StrategyPayload)
+    rec_length = payload.rec_length
+    events = payload.events
+
+    events = [e for e in events if e.weight > 0]
 
     if not events:
         print(json.dumps({}))
         return
+    
+    list_of_dicts = [e.model_dump() for e in events] 
 
-    df = pd.DataFrame(events)
+    df = pd.DataFrame(list_of_dicts)
 
     user_unique_products = df.groupby('user_id')['product_id'].nunique()
     valid_users = user_unique_products[user_unique_products > MIN_PRODUCT_FOR_USER].index
@@ -87,7 +103,7 @@ def calculate():
         product_indices = np.where(valid_mask)[0]
 
         # ПРОВЕРКА: информативны ли предсказания
-        if np.std(raw_scores) < 1e-6:
+        if np.std(raw_scores) < MIN_SIMILARITY_THRESHOLD:
             results[user_id] = []
             continue
 

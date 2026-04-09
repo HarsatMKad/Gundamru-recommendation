@@ -21,10 +21,12 @@ export class PipelineEngine {
   aggregatePersonalStrategys(
     recLength: number,
     configs: RecommendationSetting[],
-    personalData: TPersonalResults,
+    personalData: TPersonalResults | undefined,
   ): IRecommendationInput[] {
+    if (personalData === undefined) {
+      return [];
+    }
     const batchData: IRecommendationInput[] = [];
-
     const userIdsFromData = new Set<string>();
 
     for (const strategyName in personalData) {
@@ -60,8 +62,12 @@ export class PipelineEngine {
   aggregateFallbacks(
     recLength: number,
     configs: RecommendationSetting[],
-    globalData: TGlobalResults,
+    globalData?: TGlobalResults,
   ): IAggregateFallback[] {
+    if (!globalData) {
+      return [];
+    }
+
     const aggregatedResults: IAggregateFallback[] = [];
     for (const config of configs) {
       if (!config.isActive) {
@@ -99,8 +105,8 @@ export class PipelineEngine {
     }
 
     const numerator: Record<string, number> = {}; // Σ(score × confidence × weight)
-    const denominator: Record<string, number> = {}; // Σ(confidence × weight)
-    const skuMethodCount: Record<string, number> = {}; // количество методов, в которых есть товар
+    const denominator: Record<string, number> = {}; // Σ(weight)
+    const methodCount: Record<string, number> = {}; // количество методов, в которых есть товар
 
     const totalMethods = config.personal_methods.length;
 
@@ -109,31 +115,25 @@ export class PipelineEngine {
       const strategyResults = strategyMap?.[userId] || [];
 
       for (const item of strategyResults) {
-        const effectiveWeight = item.confidence * method.weight;
-
         numerator[item.sku] =
-          (numerator[item.sku] || 0) + item.score * effectiveWeight;
-        denominator[item.sku] = (denominator[item.sku] || 0) + effectiveWeight;
-
-        skuMethodCount[item.sku] = (skuMethodCount[item.sku] || 0) + 1;
+          (numerator[item.sku] || 0) +
+          item.score * item.confidence * method.weight;
+        denominator[item.sku] = (denominator[item.sku] || 0) + method.weight;
+        methodCount[item.sku] = (methodCount[item.sku] || 0) + 1;
       }
     }
 
     const results: IRecommendationItem[] = [];
     for (const sku of Object.keys(numerator)) {
-      const score = numerator[sku] / denominator[sku];
+      const avgScore = numerator[sku] / denominator[sku];
 
       const consensusFactor = Math.pow(
-        skuMethodCount[sku] / totalMethods,
+        methodCount[sku] / totalMethods,
         this.ALPHA,
       );
 
-      // Сграживание, для защиты от выбрасов, но оценки будут стягиваться к BASE_SCORE
-      //const score =
-      //  (numerator[sku] + this.BASE_SCORE * this.LAMBDA) /
-      //  (denominator[sku] + this.LAMBDA);
+      const finalScore = avgScore * consensusFactor;
 
-      const finalScore = score * consensusFactor;
       results.push({ sku, score: finalScore });
     }
     return results.sort((a, b) => b.score - a.score).slice(0, recLength);

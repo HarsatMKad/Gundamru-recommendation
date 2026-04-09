@@ -17,6 +17,9 @@ export class Product {
   @Column({ default: 0 })
   stock_quantity!: number;
 
+  @Column()
+  brand_id!: string;
+
   @Column({ default: true })
   is_published!: boolean;
 }

@@ -153,7 +153,7 @@ export class RecommendationService {
     };
   }
 
-  async getActiveRecommendationSettingIds(): Promise<string[]> {
+  async getInactiveRecommendationSettingIds(): Promise<string[]> {
     const inactiveRecommendationIds = await this.recRepo
       .createQueryBuilder('rec')
       .leftJoinAndSelect('rec.setting', 'setting')
