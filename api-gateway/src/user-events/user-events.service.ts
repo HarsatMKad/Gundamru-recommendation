@@ -61,13 +61,14 @@ export class UserEventService {
     };
   }
 
-  async getRelevantUserEvents(
+  async getRelevantUserEventsWithProduct(
     userIds: string[],
     productIds: string[],
   ): Promise<UserEvent[]> {
     const queryBuilder = this.eventsRepository
       .createQueryBuilder('ue')
       .innerJoinAndSelect('ue.eventType', 'et')
+      .innerJoinAndSelect('ue.product', 'p')
       .where('et.is_active = :isActive', { isActive: true });
     if (userIds.length > 0) {
       queryBuilder.andWhere('ue.user_id IN (:...userIds)', { userIds });

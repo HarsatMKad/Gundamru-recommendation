@@ -33,7 +33,6 @@ export interface IRecommendationData {
 
 export interface IValidationData {
   activeConfigs: RecommendationSetting[];
-  inactiveRecIds: string[];
   userEvents: UserEvent[];
   productsWithAttributes: IProductWithAttributes[];
 }

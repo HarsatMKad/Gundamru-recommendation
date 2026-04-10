@@ -48,6 +48,7 @@ export interface Ipayload {
     product_id: string;
     weight: number;
     count: number;
+    price: number;
     timestamp: number;
     retention_days: number;
   }>;

@@ -4,15 +4,19 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from pydantic import BaseModel
+from typing import List
 from sklearn.metrics.pairwise import cosine_similarity
 from util import calculate_confidences, calculate_time_weight, normalize_scores, validate_payload
-from typing import List
 from config import (
     MIN_SIMILARITY_THRESHOLD,
     MIN_CONFIDENCE,
     ZSCORE_SIGMOID_FACTOR,
     DEFAULT_CONFIDENCE_LOW_DATA,
-    MIN_PRODUCT_FOR_USER
+    MIN_PRODUCT_FOR_USER,
+    PRICE_PERCENTAGE_RANGE,
+    PRICE_COEFFICIENT,
+    INTERACTION_SENSITIVITY_COEFFICIENT,
+    STD_EPSILON
     )
 
 class Event(BaseModel):
@@ -20,6 +24,7 @@ class Event(BaseModel):
     product_id: str
     weight: float
     count: int
+    price: int
     timestamp: int
     retention_days: int
 
@@ -38,10 +43,14 @@ def calculate():
         print(json.dumps({}))
         sys.exit(0)
 
-    list_of_dicts = [e.model_dump() for e in events] 
+    event_of_dicts = [e.model_dump() for e in events] 
+    df = pd.DataFrame(event_of_dicts)
 
-    df = pd.DataFrame(list_of_dicts)
+    product_prices_mean = df.groupby('product_id')['price'].mean()
+    global_avg_price = df['price'].mean()
+    user_median_prices = df.groupby('user_id')['price'].median()
 
+    # исключаем неуверенных пользователей, у которых мало событий
     user_unique_products = df.groupby('user_id')['product_id'].nunique()
     valid_users = user_unique_products[user_unique_products > MIN_PRODUCT_FOR_USER].index
     df = df[df['user_id'].isin(valid_users)]
@@ -50,6 +59,7 @@ def calculate():
         print(json.dumps({}))
         sys.exit(1)
 
+    # расчет финальных весов событий, учитывающих вес события, количество этого события и его актуальность
     current_time_ms = datetime.now().timestamp() * 1000
     df['final_weight'] = df.apply(
         lambda row: row['weight'] *
@@ -70,6 +80,7 @@ def calculate():
     user_ids = pivot.index.values
     product_ids = pivot.columns.values
     
+    # Центрирование данных для косинусного сходства
     user_means = np.zeros(pivot_matrix.shape[0])
     for i in range(pivot_matrix.shape[0]):
         row = pivot_matrix[i]
@@ -79,60 +90,85 @@ def calculate():
     pivot_centered = pivot_matrix - user_means.reshape(-1, 1)
     pivot_centered[pivot_matrix == 0] = 0
     
+    # Расчет сходства пользователей
     user_sim = cosine_similarity(pivot_centered)
     user_sim[user_sim < MIN_SIMILARITY_THRESHOLD] = 0
     np.fill_diagonal(user_sim, 1.0)
 
+    # Нормализация матрицы сходства 
     sim_sum = user_sim.sum(axis=1, keepdims=True)
     sim_sum[sim_sum == 0] = 1
     user_sim_norm = user_sim / sim_sum
 
+    # Генерация предсказаний
     predictions_centered = user_sim_norm @ pivot_centered
     predictions = predictions_centered + user_means.reshape(-1, 1)
-    predictions[pivot_matrix > 0] = np.nan
     
+    # Формирование результатов для каждого пользователя
     results = {}
     for user_idx, user_id in enumerate(user_ids):
         user_preds = predictions[user_idx]
-        valid_mask = ~np.isnan(user_preds)
-        
+
+        # штраф к уже взаимодействованным товарам
+        user_history_weights = pivot_matrix[user_idx]
+        interaction_penaltys = np.exp(-INTERACTION_SENSITIVITY_COEFFICIENT * user_history_weights)
+        interaction_penaltys[user_history_weights == 0] = 1.0
+        user_preds *= interaction_penaltys
+
         # Проверка: есть ли кандидаты?
+        valid_mask = ~np.isnan(user_preds)
         if not np.any(valid_mask):
             results[user_id] = []
             continue
-        
+
+        candidate_product_indices = np.where(valid_mask)[0]
+        candidate_product_ids = product_ids[candidate_product_indices]
+
         raw_scores = user_preds[valid_mask]
-        product_indices = np.where(valid_mask)[0]
 
         # Проверка: информативны ли предсказания?
-        if np.std(raw_scores) < 1e-6:
+        if np.std(raw_scores) < STD_EPSILON:
             results[user_id] = []
             continue
 
-        # Проверка: достаточно ли уникальных значений?
+        # Проверка: достаточно ли уникальных рекомендаций?
         min_required = min(rec_length, 3)
-        unique_scores = len(np.unique(raw_scores))
-        if unique_scores < min_required:
-            sys.stderr.write(f"User {user_id}: skipped - only {unique_scores} unique scores (need {min_required})\n")
+        if len(np.unique(raw_scores)) < min_required:
             results[user_id] = []
             continue
-        
+
+        # Нормализация оценок 
         normalized_scores = normalize_scores(raw_scores, method='sigmoid')
 
+        # Расчет доверия оценкам
         adjusted_confidences = calculate_confidences(
             raw_scores, MIN_CONFIDENCE, ZSCORE_SIGMOID_FACTOR, DEFAULT_CONFIDENCE_LOW_DATA
         )
+
+        # Применение бонуса предпочитаемой цены
+        default_prices = product_prices_mean.reindex(product_ids, fill_value=global_avg_price)
+        candidate_prices = default_prices.loc[candidate_product_ids].values
         
-        final_scores = normalized_scores * adjusted_confidences
-        top_indices = np.argsort(final_scores)[::-1][:rec_length]
+        # Бонус для товаров в ценовом диапазоне пользователя
+        u_median = user_median_prices.get(user_id) 
+        price_bonus = np.ones_like(raw_scores)
+        if u_median is not None and not np.isnan(u_median):
+            lower_bound = u_median * (1 - PRICE_PERCENTAGE_RANGE)
+            upper_bound = u_median * (1 + PRICE_PERCENTAGE_RANGE)
+            in_price_range_mask = (candidate_prices >= lower_bound) & (candidate_prices <= upper_bound)
+            price_bonus[in_price_range_mask] = PRICE_COEFFICIENT
         
+        final_scores = normalized_scores * adjusted_confidences * price_bonus
+        top_indices_in_candidates = np.argsort(final_scores)[::-1][:rec_length]
+        top_indices = candidate_product_indices[top_indices_in_candidates]
+
         results[user_id] = [
             {
-                "sku": product_ids[product_indices[idx]], 
-                "score": float(normalized_scores[idx]),
-                "confidence": float(adjusted_confidences[idx])
+                "sku": product_ids[idx],
+                "score": float(normalized_scores[top_indices_in_candidates[i]]),
+                "confidence": float(adjusted_confidences[top_indices_in_candidates[i]])
             }
-            for idx in top_indices
+            for i, idx in enumerate(top_indices)
         ]
     
     print(json.dumps(results))

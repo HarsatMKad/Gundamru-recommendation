@@ -21,6 +21,7 @@ export class UserBasedCollabStrategy extends BaseGenerateStrategy<TPersonalStrat
           product_id: e.product_id,
           weight: e.eventType.weight,
           count: e.count,
+          price: e.product.price,
           timestamp: e.timestamp.getTime(),
           retention_days: e.eventType.retention_days,
         })),

@@ -19,7 +19,6 @@ lerna-debug.log*
 /coverage
 /.nyc_output
 
-load_test_data.py
 generate-test-data.ts
 
 # IDEs and editors

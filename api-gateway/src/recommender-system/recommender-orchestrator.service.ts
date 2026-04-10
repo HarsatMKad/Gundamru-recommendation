@@ -58,12 +58,8 @@ export class RecommenderOrchestrator {
 
     // получаем данные для валидации
     const gettingDataStart = performance.now();
-    const {
-      activeConfigs,
-      inactiveRecIds,
-      userEvents,
-      productsWithAttributes,
-    } = await this.IRecommendationDataService.getValidationData();
+    const { activeConfigs, userEvents, productsWithAttributes } =
+      await this.IRecommendationDataService.getValidationData();
     const gettingDataEnd = performance.now();
     this.logger.debug(
       `Время получения данных: ${(gettingDataEnd - gettingDataStart) / 1000} секунд`,
@@ -75,7 +71,7 @@ export class RecommenderOrchestrator {
     }
 
     // Очистка неактивных рекомендаций
-    await this.cleanupInactiveRecommendations(inactiveRecIds);
+    await this.cleanupInactiveRecommendations(activeConfigs);
 
     this.logger.log('1. Расчет методов.');
     const strategysResult =
@@ -129,11 +125,20 @@ export class RecommenderOrchestrator {
     );
   }
 
-  private async cleanupInactiveRecommendations(ids: string[]) {
-    if (ids.length === 0) return;
-    this.logger.debug(`${ELogHandler.DISABLED_SETTINGS_FOUND}: ${ids.length}`);
-    await this.writer.deleteRecommendationsBySettingIds(ids);
-    this.logger.log(ELogHandler.CLEANING_REC_COMPLETE);
+  private async cleanupInactiveRecommendations(
+    activeSettings: RecommendationSetting[],
+  ) {
+    if (activeSettings.length === 0) return;
+
+    const settingIds: string[] = activeSettings.map((item) => item.id);
+    const deleted =
+      await this.writer.deleteRecommendationsNotInSettingIds(settingIds);
+
+    if (deleted > 0) {
+      this.logger.debug(
+        `${ELogHandler.CLEANING_RECOMMENDATIONS}: ${settingIds.length}`,
+      );
+    }
   }
 
   private separateSonfigs(configs: RecommendationSetting[]) {

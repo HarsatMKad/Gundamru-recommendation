@@ -21,12 +21,24 @@ export class BatchWriter {
       .execute();
   }
 
-  async deleteRecommendationsBySettingIds(settingIds: string[]) {
-    await this.recRepo
+  async deleteRecommendationsNotInSettingIds(
+    settingIds: string[],
+  ): Promise<number> {
+    if (!settingIds || settingIds.length === 0) {
+      const result = await this.recRepo
+        .createQueryBuilder()
+        .delete()
+        .from(Recommendation)
+        .execute();
+      return result.affected || 0;
+    }
+
+    const result = await this.recRepo
       .createQueryBuilder()
       .delete()
       .from(Recommendation)
-      .where('setting_id IN (:...ids)', { ids: settingIds })
+      .where('setting_id NOT IN (:...ids)', { ids: settingIds })
       .execute();
+    return result.affected || 0;
   }
 }

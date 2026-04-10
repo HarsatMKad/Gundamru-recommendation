@@ -153,17 +153,6 @@ export class RecommendationService {
     };
   }
 
-  async getInactiveRecommendationSettingIds(): Promise<string[]> {
-    const inactiveRecommendationIds = await this.recRepo
-      .createQueryBuilder('rec')
-      .leftJoinAndSelect('rec.setting', 'setting')
-      .select('DISTINCT rec.setting_id')
-      .where('setting.isActive = false')
-      .getRawMany()
-      .then((results) => results.map((row: Recommendation) => row.setting_id));
-    return inactiveRecommendationIds;
-  }
-
   async getAllRecommendations(limit: number, userId?: string) {
     if (userId) {
       const result = await this.recRepo.find({ where: { user_id: userId } });

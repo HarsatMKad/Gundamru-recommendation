@@ -12,7 +12,6 @@ import { UsersModule } from 'src/users/users.module';
 import { ValidItemProvider } from './validItem.provider';
 import { RecommenderSystemController } from './recommender-system.controller';
 import { RecommenderSystemService } from './recommender-system.service';
-import { RecommendationsModule } from 'src/recommendation/recommendations.module';
 import { RecommendationCalculatorService } from './recommendation.calculator.service';
 import { IRecommendationDataService } from './recommendation-data.service';
 import { UserEventService } from 'src/user-events/user-events.service';
@@ -20,7 +19,6 @@ import { StrategyRegistry } from './strategy-registry';
 import { EventTypesModule } from 'src/event-types/event-types.module';
 import { GlobalPopularStrategy } from './strategy/global.strategy';
 import { ProductsModule } from 'src/products/products.module';
-import { ItemBasedCollabStrategy } from './strategy/collab.item-based.strategy';
 import { UserBasedCollabStrategy } from './strategy/collab.user-based.strategy';
 
 @Module({
@@ -34,7 +32,6 @@ import { UserBasedCollabStrategy } from './strategy/collab.user-based.strategy';
     ProductsModule,
     UsersModule,
     EventTypesModule,
-    RecommendationsModule,
   ],
   providers: [
     PipelineEngine,
@@ -47,7 +44,6 @@ import { UserBasedCollabStrategy } from './strategy/collab.user-based.strategy';
     IRecommendationDataService,
     UserEventService,
     StrategyRegistry,
-    ItemBasedCollabStrategy,
     UserBasedCollabStrategy,
     GlobalPopularStrategy,
   ],
