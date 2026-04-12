@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { EventTypesService } from 'src/event-types/event-types.service';
 import { ELogHandler } from 'src/common/enum/LogHandler.enum';
 import { ConfigService } from '@nestjs/config';
 import { ICronConfig } from 'src/common/interface/config.interface';
@@ -7,6 +6,7 @@ import { EConfigKey } from 'src/common/enum/ConfigKey.enum';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { UserEventService } from '../user-events.service';
 import { CronJob } from 'cron';
+import { UserEventType } from 'src/common/class/UserEventType.class';
 
 @Injectable()
 export class CleanupService {
@@ -15,7 +15,6 @@ export class CleanupService {
   constructor(
     private readonly configService: ConfigService,
     private readonly schedulerRegistry: SchedulerRegistry,
-    private readonly eventTypeService: EventTypesService,
     private readonly userEventService: UserEventService,
   ) {}
 
@@ -38,23 +37,23 @@ export class CleanupService {
 
   async handleCleanup() {
     this.logger.log(ELogHandler.CLEANUP_START);
-    const eventTypes = await this.eventTypeService.findAll();
+    const eventTypeList = UserEventType.getAllEvents();
 
-    for (const type of eventTypes) {
-      // удалять старые события
+    // удалять старые события
+    for (const type of eventTypeList) {
       const cutOffDate = new Date();
-      cutOffDate.setDate(cutOffDate.getDate() - type.retention_days);
+      cutOffDate.setDate(cutOffDate.getDate() - type.retentionDays);
       const timeBasedDeleted =
         await this.userEventService.deleteOldEventsForUsers(
-          type.id,
+          type.name,
           cutOffDate,
         );
 
       // удалять если событий больше допустимого максимума на пользователя
       const maxBasedDeleted =
         await this.userEventService.deleteExcessEventsForUsers(
-          type.id,
-          type.max_for_user,
+          type.name,
+          type.maxForUser,
         );
 
       this.logger.log(

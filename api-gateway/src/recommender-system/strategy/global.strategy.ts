@@ -18,7 +18,7 @@ export class GlobalPopularStrategy implements IGlobalStrategy {
 
     if (userEvents) {
       for (const event of userEvents) {
-        const eventWeight = event.eventType.weight;
+        const eventWeight = event.weight;
         productScores[event.product_id] =
           (productScores[event.product_id] || 0) + eventWeight;
       }

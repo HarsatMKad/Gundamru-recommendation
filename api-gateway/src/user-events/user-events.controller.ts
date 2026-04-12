@@ -10,7 +10,12 @@ export class UserEventsController {
 
   @Post('log')
   log(@Body() userEventDto: UserEventDto) {
-    return this.userEventService.create(userEventDto);
+    return this.userEventService.createAndUpdate(userEventDto);
+  }
+
+  @Post('log/array')
+  logArray(@Body() userEventDto: UserEventDto[]) {
+    return this.userEventService.createAndUpdateFromArray(userEventDto);
   }
 
   @Get()

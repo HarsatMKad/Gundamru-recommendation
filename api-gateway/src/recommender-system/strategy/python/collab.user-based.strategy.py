@@ -53,6 +53,7 @@ def calculate():
     # исключаем неуверенных пользователей, у которых мало событий
     user_unique_products = df.groupby('user_id')['product_id'].nunique()
     valid_users = user_unique_products[user_unique_products > MIN_PRODUCT_FOR_USER].index
+    
     df = df[df['user_id'].isin(valid_users)]
 
     if df.empty:
@@ -95,7 +96,7 @@ def calculate():
     user_sim[user_sim < MIN_SIMILARITY_THRESHOLD] = 0
     np.fill_diagonal(user_sim, 1.0)
 
-    # Нормализация матрицы сходства 
+    # Нормализация матрицы сходства
     sim_sum = user_sim.sum(axis=1, keepdims=True)
     sim_sum[sim_sum == 0] = 1
     user_sim_norm = user_sim / sim_sum

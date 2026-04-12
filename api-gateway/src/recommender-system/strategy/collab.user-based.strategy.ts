@@ -19,11 +19,11 @@ export class UserBasedCollabStrategy extends BaseGenerateStrategy<TPersonalStrat
         events: userEvents.map((e) => ({
           user_id: e.user_id,
           product_id: e.product_id,
-          weight: e.eventType.weight,
+          weight: e.weight,
           count: e.count,
           price: e.product.price,
           timestamp: e.timestamp.getTime(),
-          retention_days: e.eventType.retention_days,
+          retention_days: e.retentionDays,
         })),
         rec_length: recLength,
       };

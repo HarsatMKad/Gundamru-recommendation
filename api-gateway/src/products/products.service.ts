@@ -27,9 +27,6 @@ export class ProductService implements IProductService {
       )
       .where('product.is_published = :isPublished', { isPublished: true })
       .andWhere('product.price > :price', { price: 0 })
-      .andWhere('product.stock_quantity > :stockQuantity', {
-        stockQuantity: 0,
-      })
       .select([
         'product.id AS id',
         'product.brand_id AS brand_id',

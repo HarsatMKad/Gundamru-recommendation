@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { UserEventNames } from 'src/common/enum/UserEventName.enum';
 
 export class UserEventDto {
   @IsString()
@@ -9,7 +10,7 @@ export class UserEventDto {
   @IsNotEmpty()
   product_id!: string;
 
-  @IsString()
+  @IsEnum(UserEventNames)
   @IsNotEmpty()
-  event_type_id!: string;
+  eventName!: UserEventNames;
 }

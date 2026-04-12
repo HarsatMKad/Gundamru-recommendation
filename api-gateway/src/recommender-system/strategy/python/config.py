@@ -8,7 +8,7 @@ MIN_CONFIDENCE = 0.2
 DEFAULT_CONFIDENCE_LOW_DATA = 0.5
 
 # Если пользователь взаимодействовал с меньшим количеством товаров, то этот пользователь не учитывается
-MIN_PRODUCT_FOR_USER = 3
+MIN_PRODUCT_FOR_USER = 20
 
 # диапазон нормализации
 NORMALIZATION_MIN = 0

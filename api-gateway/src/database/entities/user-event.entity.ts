@@ -7,26 +7,27 @@ import {
   JoinColumn,
   Unique,
 } from 'typeorm';
-import { EventType } from './event-types.entity';
 import { User } from './user.entity';
 import { Product } from './product.entity';
+import { UserEventNames } from 'src/common/enum/UserEventName.enum';
+import { UserEventType } from 'src/common/class/UserEventType.class';
 
 @Entity('user_event')
-@Unique('UQ_user_product_event', ['user_id', 'product_id', 'event_type_id'])
+@Unique('UQ_user_product_event', ['user_id', 'product_id', 'event_type_name'])
 @Index('IDX_user_product_event_type_timestamp', [
   'user_id',
   'product_id',
-  'event_type_id',
+  'event_type_name',
   'timestamp',
 ])
 @Index('IDX_event_type_user_timestamp', [
-  'event_type_id',
+  'event_type_name',
   'user_id',
   'timestamp',
 ])
 @Index('IDX_user_event_type_timestamp', [
   'user_id',
-  'event_type_id',
+  'event_type_name',
   'timestamp',
 ])
 export class UserEvent {
@@ -47,16 +48,24 @@ export class UserEvent {
   @JoinColumn({ name: 'product_id' })
   product!: Product;
 
-  @Column('uuid')
-  event_type_id!: string;
-
-  @ManyToOne(() => EventType)
-  @JoinColumn({ name: 'event_type_id' })
-  eventType!: EventType;
+  @Column({ type: 'enum', enum: UserEventNames, default: UserEventNames.VIEW })
+  event_type_name!: UserEventNames;
 
   @Column({ type: 'int', default: 1 })
   count!: number;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   timestamp!: Date;
+
+  get config() {
+    return UserEventType.getConfig(this.event_type_name);
+  }
+
+  get weight(): number {
+    return this.config.weight;
+  }
+
+  get retentionDays(): number {
+    return this.config.retentionDays;
+  }
 }

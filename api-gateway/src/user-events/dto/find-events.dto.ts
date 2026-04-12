@@ -1,5 +1,6 @@
-import { IsOptional, IsInt, Min, IsUUID } from 'class-validator';
+import { IsOptional, IsInt, Min, IsUUID, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
+import { UserEventNames } from 'src/common/enum/UserEventName.enum';
 
 export class FindEventsQueryDto {
   @IsOptional()
@@ -21,6 +22,6 @@ export class FindEventsQueryDto {
   productId?: string;
 
   @IsOptional()
-  @IsUUID()
-  eventTypeId?: string;
+  @IsEnum(UserEventNames)
+  eventName?: UserEventNames;
 }

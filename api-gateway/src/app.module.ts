@@ -8,7 +8,6 @@ import { UserEventsModule } from './user-events/user-events.module';
 import { RecommendationsModule } from './recommendation/recommendations.module';
 import { RecommendationSettingsModule } from './recommendation-settings/recommendation-settings.module';
 import { RecommenderSystemModule } from './recommender-system/recommender-system.module';
-import { EventTypesModule } from './event-types/event-types.module';
 import { ConfigModule } from '@nestjs/config';
 import { ConfigService } from '@nestjs/config';
 import configLoader from './common/config/ConfigLoader';
@@ -40,7 +39,8 @@ const globalGuardProvider: Provider<ApiKeyGuard> = {
           password: dbConfig?.password,
           database: dbConfig?.name,
           autoLoadEntities: true,
-          synchronize: true, // не забыть в продакшене поставить false
+          synchronize: true, // не забыть поставить false
+          migrationsRun: false, // не забыть поставить false
         };
       },
     }),
@@ -50,7 +50,6 @@ const globalGuardProvider: Provider<ApiKeyGuard> = {
     RecommendationsModule,
     RecommendationSettingsModule,
     RecommenderSystemModule,
-    EventTypesModule,
   ],
   controllers: [AppController],
   providers: [AppService, globalGuardProvider],
