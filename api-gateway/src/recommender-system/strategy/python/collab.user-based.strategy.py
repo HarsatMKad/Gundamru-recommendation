@@ -3,15 +3,12 @@ import sys
 import pandas as pd
 import numpy as np
 from datetime import datetime
-from pydantic import BaseModel
 from typing import List
 from sklearn.metrics.pairwise import cosine_similarity
 from util import calculate_confidences, calculate_time_weight, normalize_scores, validate_payload
+from classes import Event, Product, StrategyPayload
 from config import (
     MIN_SIMILARITY_THRESHOLD,
-    MIN_CONFIDENCE,
-    ZSCORE_SIGMOID_FACTOR,
-    DEFAULT_CONFIDENCE_LOW_DATA,
     MIN_PRODUCT_FOR_USER,
     PRICE_PERCENTAGE_RANGE,
     PRICE_COEFFICIENT,
@@ -19,32 +16,21 @@ from config import (
     STD_EPSILON
     )
 
-class Event(BaseModel):
-    user_id: str
-    product_id: str
-    weight: float
-    count: int
-    price: int
-    timestamp: int
-    retention_days: int
-
-class StrategyPayload(BaseModel):
-    rec_length: int
-    events: List[Event]
-
-def calculate():
-    payload = validate_payload(StrategyPayload)
-    rec_length = payload.rec_length
-    events = payload.events
-
+def collab_user_based(rec_length: int, events: List[Event], products: List[Product]):
     events = [e for e in events if e.weight > 0]
 
-    if not events:
+    if not events or not products:
         print(json.dumps({}))
         sys.exit(0)
 
     event_of_dicts = [e.model_dump() for e in events] 
     df = pd.DataFrame(event_of_dicts)
+
+    # добавляем цену товара к событиям
+    products_df = pd.DataFrame([p.model_dump() for p in products])
+    price_map = dict(zip(products_df['id'], products_df['price']))
+    median_price = products_df['price'].median()
+    df['price'] = df['product_id'].map(price_map).fillna(median_price)
 
     product_prices_mean = df.groupby('product_id')['price'].mean()
     global_avg_price = df['price'].mean()
@@ -142,9 +128,7 @@ def calculate():
         normalized_scores = normalize_scores(raw_scores, method='sigmoid')
 
         # Расчет доверия оценкам
-        adjusted_confidences = calculate_confidences(
-            raw_scores, MIN_CONFIDENCE, ZSCORE_SIGMOID_FACTOR, DEFAULT_CONFIDENCE_LOW_DATA
-        )
+        adjusted_confidences = calculate_confidences(raw_scores)
 
         # Применение бонуса предпочитаемой цены
         default_prices = product_prices_mean.reindex(product_ids, fill_value=global_avg_price)
@@ -171,8 +155,21 @@ def calculate():
             }
             for i, idx in enumerate(top_indices)
         ]
-    
-    print(json.dumps(results))
+
+    return results
+
+def calculate():
+    payload = validate_payload(StrategyPayload)
+    rec_length = payload.rec_length
+    events = payload.events
+    products = payload.products
+
+    if not events or not products:
+        print(json.dumps({}))
+        sys.exit(0)
+
+    recommendations = collab_user_based(rec_length, events, products)
+    print(json.dumps(recommendations))
 
 if __name__ == "__main__":
     calculate()

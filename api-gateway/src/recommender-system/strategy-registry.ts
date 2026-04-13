@@ -9,6 +9,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { IStrategyDefinition } from 'src/common/interface/strategies.interface';
 import { UserBasedCollabStrategy } from './strategy/collab.user-based.strategy';
 import { Logger } from '@nestjs/common';
+import { ContentBasedStrategy } from './strategy/content-based.strategy';
 
 @Injectable()
 export class StrategyRegistry implements OnModuleInit {
@@ -18,11 +19,13 @@ export class StrategyRegistry implements OnModuleInit {
 
   constructor(
     private readonly userBasedCollabStrategy: UserBasedCollabStrategy,
+    private readonly contentBasedStrategy: ContentBasedStrategy,
     private readonly globalRecStrategy: GlobalPopularStrategy,
   ) {}
 
   onModuleInit() {
     this.registerStrategy(this.userBasedCollabStrategy);
+    this.registerStrategy(this.contentBasedStrategy);
     this.registerStrategy(this.globalRecStrategy);
   }
 

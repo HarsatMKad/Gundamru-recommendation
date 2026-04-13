@@ -7,12 +7,11 @@ import { Ipayload } from 'src/common/interface/strategies.interface';
 import { IProductWithAttributes } from 'src/common/interface/entites.interface';
 
 @Injectable()
-export class UserBasedCollabStrategy extends BaseGenerateStrategy<TPersonalStrategyResult> {
-  readonly name = 'collab_user-based';
-  readonly description =
-    'Коллаборативная фильтрация user-based. Стоит использовать, если товаров больше, чем пользователей';
+export class ContentBasedStrategy extends BaseGenerateStrategy<TPersonalStrategyResult> {
+  readonly name = 'content-based';
+  readonly description = 'Подбор на основании характеристик товаров';
   readonly scope = StrategyScope.PERSONAL;
-  protected readonly scriptName = 'collab.user-based.strategy.py';
+  protected readonly scriptName = 'content-based.strategy.py';
 
   getPayload(
     recLength: number,

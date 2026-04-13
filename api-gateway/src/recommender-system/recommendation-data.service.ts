@@ -24,11 +24,10 @@ export class IRecommendationDataService {
       (item) => item.id,
     );
 
-    const userEvents =
-      await this.userEventService.getRelevantUserEventsWithProduct(
-        validUserIds,
-        productIds,
-      );
+    const userEvents = await this.userEventService.getRelevantUserEvents(
+      validUserIds,
+      productIds,
+    );
 
     return {
       activeConfigs,

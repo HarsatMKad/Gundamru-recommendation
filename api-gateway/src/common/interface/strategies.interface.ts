@@ -48,7 +48,6 @@ export interface Ipayload {
     product_id: string;
     weight: number;
     count: number;
-    price: number;
     timestamp: number;
     retention_days: number;
   }>;
@@ -57,6 +56,7 @@ export interface Ipayload {
     brand_id: string;
     grade: string;
     scale: string;
+    price: number;
   }>;
   rec_length: number;
 }

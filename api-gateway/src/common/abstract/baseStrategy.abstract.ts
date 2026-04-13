@@ -5,6 +5,7 @@ import { TStrategyCalculateResult } from '../type/StrategyResult.type';
 import { UserEvent } from 'src/database/entities/user-event.entity';
 import { spawnSync } from 'child_process';
 import { IProductWithAttributes } from '../interface/entites.interface';
+import fs from 'fs';
 
 export abstract class BaseGenerateStrategy<
   T extends TStrategyCalculateResult,
@@ -26,7 +27,7 @@ export abstract class BaseGenerateStrategy<
     recLength: number,
     userEvents?: UserEvent[],
     products?: IProductWithAttributes[],
-  ): Ipayload;
+  ): Ipayload | undefined;
 
   calculate(
     recLength: number,
@@ -35,15 +36,16 @@ export abstract class BaseGenerateStrategy<
   ): T {
     const payload = this.getPayload(recLength, userEvents, products);
 
-    const pythonProcess = spawnSync(
-      this.pythonPath,
-      [this.getPythonScriptPath()],
-      {
-        input: JSON.stringify(payload),
-        encoding: 'utf-8',
-        maxBuffer: 1024 * 1024 * 10,
-      },
-    );
+    const scriptPath = this.getPythonScriptPath();
+    if (!fs.existsSync(scriptPath)) {
+      throw new Error('Python script not found.');
+    }
+
+    const pythonProcess = spawnSync(this.pythonPath, [scriptPath], {
+      input: JSON.stringify(payload),
+      encoding: 'utf-8',
+      maxBuffer: 1024 * 1024 * 10,
+    });
 
     if (pythonProcess.stderr) {
       console.error('Python stderr:', pythonProcess.stderr.toString());

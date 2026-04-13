@@ -1,0 +1,22 @@
+from pydantic import BaseModel, Field
+from typing import List
+
+class Event(BaseModel):
+    user_id: str
+    product_id: str
+    weight: float
+    count: int
+    timestamp: int
+    retention_days: int
+
+class Product(BaseModel):
+    id: str
+    brand_id: str
+    grade: str
+    scale: str
+    price: int = Field(default=0)
+
+class StrategyPayload(BaseModel):
+    rec_length: int
+    events: List[Event]
+    products: List[Product]

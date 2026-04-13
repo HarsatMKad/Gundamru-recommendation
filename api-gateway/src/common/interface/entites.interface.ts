@@ -23,6 +23,7 @@ export interface IProductWithAttributes {
   brand_id: string;
   grade: string;
   scale: string;
+  price: number;
 }
 
 export interface IUsersService {

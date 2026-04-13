@@ -32,6 +32,7 @@ export class ProductService implements IProductService {
         'product.brand_id AS brand_id',
         'attributes.grade AS grade',
         'attributes.scale AS scale',
+        'product.price AS price',
       ])
       .getRawMany<IProductWithAttributes>();
     return results;

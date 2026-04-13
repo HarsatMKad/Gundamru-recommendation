@@ -19,6 +19,7 @@ import { StrategyRegistry } from './strategy-registry';
 import { GlobalPopularStrategy } from './strategy/global.strategy';
 import { ProductsModule } from 'src/products/products.module';
 import { UserBasedCollabStrategy } from './strategy/collab.user-based.strategy';
+import { ContentBasedStrategy } from './strategy/content-based.strategy';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { UserBasedCollabStrategy } from './strategy/collab.user-based.strategy';
     UserEventService,
     StrategyRegistry,
     UserBasedCollabStrategy,
+    ContentBasedStrategy,
     GlobalPopularStrategy,
   ],
   exports: [RecommenderOrchestrator, StrategyRegistry],
