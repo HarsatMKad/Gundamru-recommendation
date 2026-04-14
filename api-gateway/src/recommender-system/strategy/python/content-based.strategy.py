@@ -21,148 +21,138 @@ def content_based(rec_length: int, events: List[Event], products: List[Product])
     if not products_dict:
         return {}
     
-    df_events['brand_id'] = df_events['product_id'].map(lambda pid: products_dict[pid].brand_id)
-    df_events['grade'] = df_events['product_id'].map(lambda pid: products_dict[pid].grade)
-    df_events['scale'] = df_events['product_id'].map(lambda pid: products_dict[pid].scale)
-    df_events['price'] = df_events['product_id'].map(lambda pid: products_dict[pid].price)
+    product_ids = list(products_dict.keys())
+    product_brands = np.array([products_dict[pid].brand_id for pid in product_ids])
+    product_grades = np.array([products_dict[pid].grade for pid in product_ids])
+    product_scales = np.array([products_dict[pid].scale for pid in product_ids])
+    product_prices = np.array([products_dict[pid].price for pid in product_ids])
 
-    df_events = df_events.dropna(subset=['brand_id', 'grade', 'scale', 'price'])
-    if df_events.empty:
-        return {}
+    unique_brands = list(set(product_brands))
+    unique_grades = list(set(product_grades))
+    unique_scales = list(set(product_scales))
+    
+    brand_to_idx = {b: i for i, b in enumerate(unique_brands)}
+    grade_to_idx = {g: i for i, g in enumerate(unique_grades)}
+    scale_to_idx = {s: i for i, s in enumerate(unique_scales)}
+
+    brand_indices = np.array([brand_to_idx[b] for b in product_brands])
+    grade_indices = np.array([grade_to_idx[g] for g in product_grades])
+    scale_indices = np.array([scale_to_idx[s] for s in product_scales])
     
     current_time_ms = datetime.now().timestamp() * 1000
     df_events['final_weight'] = df_events.apply(
-        lambda row: row['weight'] *
-                    row['count'] *
-                    calculate_time_weight(current_time_ms, row['timestamp'], row['retention_days']),
+        lambda row: row['weight'] * row['count'] *
+        calculate_time_weight(current_time_ms, row['timestamp'], row['retention_days']),
         axis=1
     )
 
     user_product_counts = df_events.groupby('user_id')['product_id'].nunique()
     valid_users = user_product_counts[user_product_counts > MIN_PRODUCT_FOR_USER].index
     df_events = df_events[df_events['user_id'].isin(valid_users)]
+    
     if df_events.empty:
         return {}
-    
-    user_avg_price = df_events.groupby('user_id').apply(
-        lambda g: np.average(g['price'], weights=g['final_weight'])
-    ).to_dict()
 
-    # формирование профилей пользователей
-    user_profiles = {}
-    for user_id, group in df_events.groupby('user_id'):
-        profile = {
-            'brand': {},
-            'grade': {},
-            'scale': {},
-            'total_weight': 0.0
-        }
-        for _, row in group.iterrows():
-            w = row['final_weight']
-            profile['total_weight'] += w
+    user_groups = df_events.groupby('user_id')
 
-            b = row['brand_id']
-            if b:
-                profile['brand'][b] = profile['brand'].get(b, 0.0) + w
-
-            g = row['grade']
-            if g:
-                profile['grade'][g] = profile['grade'].get(g, 0.0) + w
-
-            s = row['scale']
-            if s:
-                profile['scale'][s] = profile['scale'].get(s, 0.0) + w
-
-        # нормализация весов признаков
-        tw = profile['total_weight']
-        if tw > 0:
-            for cat in ['brand', 'grade', 'scale']:
-                for val in profile[cat]:
-                    profile[cat][val] /= tw
-
-        user_profiles[user_id] = profile
-
-    user_history = {}
-    for user_id, group in df_events.groupby('user_id'):
-        user_history[user_id] = dict(zip(group['product_id'], group['final_weight']))
-
-    # Генерация рекомендаций
     results = {}
-    all_product_ids = list(products_dict.keys())
-
-    for user_id, profile in user_profiles.items():
-        raw_scores = []
-        valid_product_ids = []
-        avg_price = user_avg_price.get(user_id, 0.0)
-
-        for product_id in all_product_ids:
-            product = products_dict[product_id]
-            if not product.brand_id or not product.grade or not product.scale:
+    for user_id, group in user_groups:
+        brand_profile = np.zeros(len(unique_brands))
+        grade_profile = np.zeros(len(unique_grades))
+        scale_profile = np.zeros(len(unique_scales))
+        
+        total_weight = 0.0
+        price_sum = 0.0
+        history = {}
+        
+        for _, row in group.iterrows():
+            pid = row['product_id']
+            if pid not in products_dict:
                 continue
-
-            brand_match = profile['brand'].get(product.brand_id, 0.0)
-            grade_match = profile['grade'].get(product.grade, 0.0)
-            scale_match = profile['scale'].get(product.scale, 0.0)
-
-            if avg_price > 0 and product.price > 0:
-                price_diff = abs(product.price - avg_price) / max(avg_price, product.price)
-                price_sim = 1.0 - price_diff
+                
+            w = row['final_weight']
+            total_weight += w
             
-            score = (brand_match * CONTENT_BASED_WEIGHTS['brand'] +
-            grade_match * CONTENT_BASED_WEIGHTS['grade'] +
-            scale_match * CONTENT_BASED_WEIGHTS['scale'] +
-            price_sim * CONTENT_BASED_WEIGHTS['price'])
-
-            raw_scores.append(score)
-            valid_product_ids.append(product_id)
-
-        if not raw_scores:
-            results[user_id] = []
+            history[pid] = history.get(pid, 0) + w
+            price_sum += products_dict[pid].price * w
+            
+            brand_idx = brand_to_idx[products_dict[pid].brand_id]
+            grade_idx = grade_to_idx[products_dict[pid].grade]
+            scale_idx = scale_to_idx[products_dict[pid].scale]
+            
+            brand_profile[brand_idx] += w
+            grade_profile[grade_idx] += w
+            scale_profile[scale_idx] += w
+        
+        if total_weight == 0:
             continue
+        
+        brand_profile /= total_weight
+        grade_profile /= total_weight
+        scale_profile /= total_weight
+        avg_price = price_sum / total_weight
+        
+        product_brand_indices = brand_indices
+        product_grade_indices = grade_indices
+        product_scale_indices = scale_indices
+        
+        brand_scores = brand_profile[product_brand_indices]
+        grade_scores = grade_profile[product_grade_indices]
+        scale_scores = scale_profile[product_scale_indices]
+        
+        if avg_price > 0:
+            price_diff = np.abs(product_prices - avg_price) / np.maximum(product_prices, avg_price)
+            price_sim = 1.0 - price_diff
 
-        raw_scores = np.array(raw_scores)
-        valid_product_ids = np.array(valid_product_ids)
-
-        # штраф для уже взаимодействованных товаров
-        history = user_history.get(user_id, {})
-        penalty = np.ones_like(raw_scores)
-        for i, pid in enumerate(valid_product_ids):
-            if pid in history:
-                penalty[i] = np.exp(-INTERACTION_SENSITIVITY_COEFFICIENT * history[pid])
-        raw_scores = raw_scores * penalty
-
+        raw_scores = (brand_scores * CONTENT_BASED_WEIGHTS['brand'] + 
+                     grade_scores * CONTENT_BASED_WEIGHTS['grade'] + 
+                     scale_scores * CONTENT_BASED_WEIGHTS['scale'] +
+                     price_sim * CONTENT_BASED_WEIGHTS['price'])
+        
+        # штраф к уже взаимодействованным товарам
+        for pid, weight in history.items():
+            if pid in products_dict:
+                idx = product_ids.index(pid)
+                raw_scores[idx] *= np.exp(-INTERACTION_SENSITIVITY_COEFFICIENT * weight)
+        
+        # Проверка: есть ли кандидаты?
         valid_mask = raw_scores > 0
         if not np.any(valid_mask):
             results[user_id] = []
             continue
-
+        
         candidate_scores = raw_scores[valid_mask]
-        candidate_product_ids = valid_product_ids[valid_mask]
-
-        if np.std(candidate_scores) < STD_EPSILON:
+        candidate_indices = np.where(valid_mask)[0]
+        candidate_product_ids = [product_ids[i] for i in candidate_indices]
+        
+        # Проверка: информативны ли предсказания?
+        if len(candidate_scores) < 2 or np.std(candidate_scores) < STD_EPSILON:
             results[user_id] = []
             continue
-
+        
         min_required = min(rec_length, 3)
         if len(np.unique(candidate_scores)) < min_required:
             results[user_id] = []
             continue
-
+        
         normalized = normalize_scores(candidate_scores, method='sigmoid')
         confidences = calculate_confidences(candidate_scores)
-
+        
         final_scores = normalized * confidences
-
-        top_indices = np.argsort(final_scores)[::-1][:rec_length]
-        recommendations = []
-        for idx in top_indices:
-            recommendations.append({
+        
+        top_k = min(rec_length, len(final_scores))
+        top_indices = np.argsort(final_scores)[::-1][:top_k]
+        
+        recommendations = [
+            {
                 "sku": candidate_product_ids[idx],
                 "score": float(normalized[idx]),
                 "confidence": float(confidences[idx])
-            })
+            }
+            for idx in top_indices
+        ]
+        
         results[user_id] = recommendations
-
     return results
 
 def calculate():
@@ -180,4 +170,3 @@ def calculate():
 
 if __name__ == "__main__":
     calculate()
-
