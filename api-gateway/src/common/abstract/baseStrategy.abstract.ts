@@ -23,6 +23,10 @@ export abstract class BaseGenerateStrategy<
     return path.join(this.pythonBasePath, this.scriptName);
   }
 
+  getScope(): string {
+    return this.scope;
+  }
+
   abstract getPayload(
     recLength: number,
     userEvents?: UserEvent[],
@@ -35,6 +39,10 @@ export abstract class BaseGenerateStrategy<
     products?: IProductWithAttributes[],
   ): T {
     const payload = this.getPayload(recLength, userEvents, products);
+
+    if (payload === undefined) {
+      throw new Error('No data to generate.');
+    }
 
     const scriptPath = this.getPythonScriptPath();
     if (!fs.existsSync(scriptPath)) {

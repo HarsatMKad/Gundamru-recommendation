@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Optional
 
 class Event(BaseModel):
     user_id: str
@@ -16,7 +16,8 @@ class Product(BaseModel):
     scale: str
     price: int = Field(default=0)
 
-class StrategyPayload(BaseModel):
-    rec_length: int
+class Payload(BaseModel):
+    recLength: int
+    strategies: List[str]
     events: List[Event]
     products: List[Product]

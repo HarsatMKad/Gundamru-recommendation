@@ -16,10 +16,10 @@ import { RecommendationCalculatorService } from './recommendation.calculator.ser
 import { IRecommendationDataService } from './recommendation-data.service';
 import { UserEventService } from 'src/user-events/user-events.service';
 import { StrategyRegistry } from './strategy-registry';
-import { GlobalPopularStrategy } from './strategy/global.strategy';
+import { GlobalPopularStrategy } from './strategy/global.strategys';
 import { ProductsModule } from 'src/products/products.module';
-import { UserBasedCollabStrategy } from './strategy/collab.user-based.strategy';
-import { ContentBasedStrategy } from './strategy/content-based.strategy';
+import { UserBasedCollabStrategy } from './strategy/personal.strategys';
+import { ContentBasedStrategy } from './strategy/personal.strategys';
 
 @Module({
   imports: [

@@ -1,12 +1,10 @@
-import json
-import sys
 import pandas as pd
 import numpy as np
 from datetime import datetime
 from typing import List
 from sklearn.metrics.pairwise import cosine_similarity
-from util import calculate_confidences, calculate_time_weight, normalize_scores, validate_payload
-from classes import Event, Product, StrategyPayload
+from util import calculate_confidences, calculate_time_weight, normalize_scores
+from classes import Event, Product
 from config import (
     MIN_SIMILARITY_THRESHOLD,
     MIN_PRODUCT_FOR_USER,
@@ -20,8 +18,7 @@ def collab_user_based(rec_length: int, events: List[Event], products: List[Produ
     events = [e for e in events if e.weight > 0]
 
     if not events or not products:
-        print(json.dumps({}))
-        sys.exit(0)
+        return {}
 
     event_of_dicts = [e.model_dump() for e in events] 
     df = pd.DataFrame(event_of_dicts)
@@ -43,8 +40,7 @@ def collab_user_based(rec_length: int, events: List[Event], products: List[Produ
     df = df[df['user_id'].isin(valid_users)]
 
     if df.empty:
-        print(json.dumps({}))
-        sys.exit(1)
+        return {}
 
     # расчет финальных весов событий, учитывающих вес события, количество этого события и его актуальность
     current_time_ms = datetime.now().timestamp() * 1000
@@ -157,19 +153,3 @@ def collab_user_based(rec_length: int, events: List[Event], products: List[Produ
         ]
 
     return results
-
-def calculate():
-    payload = validate_payload(StrategyPayload)
-    rec_length = payload.rec_length
-    events = payload.events
-    products = payload.products
-
-    if not events or not products:
-        print(json.dumps({}))
-        sys.exit(0)
-
-    recommendations = collab_user_based(rec_length, events, products)
-    print(json.dumps(recommendations))
-
-if __name__ == "__main__":
-    calculate()

@@ -3,13 +3,13 @@ import {
   IGlobalStrategy,
   IBaseRectrategy,
 } from 'src/common/interface/strategies.interface';
-import { GlobalPopularStrategy } from './strategy/global.strategy';
+import { GlobalPopularStrategy } from './strategy/global.strategys';
 import { StrategyScope } from 'src/common/enum/StrategyScope.enum';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { IStrategyDefinition } from 'src/common/interface/strategies.interface';
-import { UserBasedCollabStrategy } from './strategy/collab.user-based.strategy';
+import { UserBasedCollabStrategy } from './strategy/personal.strategys';
 import { Logger } from '@nestjs/common';
-import { ContentBasedStrategy } from './strategy/content-based.strategy';
+import { ContentBasedStrategy } from './strategy/personal.strategys';
 
 @Injectable()
 export class StrategyRegistry implements OnModuleInit {
@@ -20,13 +20,13 @@ export class StrategyRegistry implements OnModuleInit {
   constructor(
     private readonly userBasedCollabStrategy: UserBasedCollabStrategy,
     private readonly contentBasedStrategy: ContentBasedStrategy,
-    private readonly globalRecStrategy: GlobalPopularStrategy,
+    private readonly globalPopularStrategy: GlobalPopularStrategy,
   ) {}
 
   onModuleInit() {
     this.registerStrategy(this.userBasedCollabStrategy);
     this.registerStrategy(this.contentBasedStrategy);
-    this.registerStrategy(this.globalRecStrategy);
+    this.registerStrategy(this.globalPopularStrategy);
   }
 
   private registerStrategy(strategy: IBaseRectrategy) {

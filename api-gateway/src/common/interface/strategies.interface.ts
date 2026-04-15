@@ -1,11 +1,4 @@
-import { UserEvent } from 'src/database/entities/user-event.entity';
-import { IRecommendationItem } from './recommendation.interface';
 import { StrategyScope } from '../enum/StrategyScope.enum';
-import {
-  TPersonalStrategyResult,
-  TStrategyCalculateResult,
-} from '../type/StrategyResult.type';
-import { IProductWithAttributes } from './entites.interface';
 
 export interface IStrategyDefinition {
   name: string;
@@ -17,29 +10,14 @@ export interface IBaseRectrategy {
   readonly name: string;
   readonly description: string;
   readonly scope: StrategyScope;
-  calculate(
-    recLength: number,
-    userEvents?: UserEvent[],
-    products?: IProductWithAttributes[],
-  ): TStrategyCalculateResult;
 }
 
 export interface IPersonalStrategy extends IBaseRectrategy {
   readonly scope: StrategyScope.PERSONAL;
-  calculate(
-    recLength: number,
-    userEvents?: UserEvent[],
-    products?: IProductWithAttributes[],
-  ): TPersonalStrategyResult;
 }
 
 export interface IGlobalStrategy extends IBaseRectrategy {
   readonly scope: StrategyScope.GLOBAL;
-  calculate(
-    recLength: number,
-    userEvents?: UserEvent[],
-    products?: IProductWithAttributes[],
-  ): IRecommendationItem[];
 }
 
 export interface Ipayload {

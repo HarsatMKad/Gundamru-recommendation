@@ -1,11 +1,9 @@
-import json
-import sys
 import pandas as pd
 import numpy as np
 from datetime import datetime
 from typing import List
-from util import calculate_confidences, calculate_time_weight, normalize_scores, validate_payload
-from classes import Event, Product, StrategyPayload
+from util import calculate_confidences, calculate_time_weight, normalize_scores
+from classes import Event, Product
 from config import (
     MIN_PRODUCT_FOR_USER,
     INTERACTION_SENSITIVITY_COEFFICIENT,
@@ -154,19 +152,3 @@ def content_based(rec_length: int, events: List[Event], products: List[Product])
         
         results[user_id] = recommendations
     return results
-
-def calculate():
-    payload = validate_payload(StrategyPayload)
-    rec_length = payload.rec_length
-    events = payload.events
-    products = payload.products
-
-    if not events or not products:
-        print(json.dumps({}))
-        sys.exit(0)
-
-    recommendations = content_based(rec_length, events, products)
-    print(json.dumps(recommendations))
-
-if __name__ == "__main__":
-    calculate()

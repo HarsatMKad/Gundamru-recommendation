@@ -3,6 +3,7 @@ import sys
 import numpy as np
 from scipy import stats
 from pydantic import BaseModel, ValidationError
+from classes import Payload
 from config import (
     MIN_CONFIDENCE,
     ZSCORE_SIGMOID_FACTOR,
@@ -18,7 +19,7 @@ from config import (
     NORMALIZATION_DEFAULT,
     )
 
-def validate_payload(model_class: BaseModel):
+def validate_payload(model_class: BaseModel) -> Payload:
     try:
         raw_data = json.load(sys.stdin)
         return model_class(**raw_data)
@@ -29,22 +30,20 @@ def validate_payload(model_class: BaseModel):
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
 
-def calculate_confidences(raw_scores, min_confidence=MIN_CONFIDENCE, 
-                          sigmoid_factor=ZSCORE_SIGMOID_FACTOR, 
-                          default_confidence=DEFAULT_CONFIDENCE_LOW_DATA):
+def calculate_confidences(raw_scores):
     if len(raw_scores) <= 2:
-        return np.full_like(raw_scores, default_confidence)
+        return np.full_like(raw_scores, DEFAULT_CONFIDENCE_LOW_DATA)
     
     if np.std(raw_scores) < STD_EPSILON:
-        return np.full_like(raw_scores, min_confidence / 2)
-    
+        return np.full_like(raw_scores, MIN_CONFIDENCE / 2)
+
     try:
         z_scores = stats.zscore(raw_scores)
         z_scores = np.clip(z_scores, Z_SCORE_CLIP_MIN, Z_SCORE_CLIP_MAX)
-        confidences = 1 / (1 + np.exp(-z_scores * sigmoid_factor))
-        return min_confidence + confidences * (1 - min_confidence)
+        confidences = 1 / (1 + np.exp(-z_scores * ZSCORE_SIGMOID_FACTOR))
+        return MIN_CONFIDENCE + confidences * (1 - MIN_CONFIDENCE)
     except Exception:
-        return np.full_like(raw_scores, default_confidence)
+        return np.full_like(raw_scores, DEFAULT_CONFIDENCE_LOW_DATA)
     
 def calculate_time_weight(current_time_ms, timestamp_ms, retention_days):    
     age_in_days = (current_time_ms - timestamp_ms) / (1000 * 60 * 60 * 24)
