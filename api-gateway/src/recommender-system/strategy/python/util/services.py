@@ -3,7 +3,7 @@ import sys
 import numpy as np
 from scipy import stats
 from pydantic import BaseModel, ValidationError
-from classes import Payload
+from util.classes import Payload
 from config import (
     MIN_CONFIDENCE,
     ZSCORE_SIGMOID_FACTOR,

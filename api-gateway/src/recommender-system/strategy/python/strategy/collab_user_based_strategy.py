@@ -3,8 +3,8 @@ import numpy as np
 from datetime import datetime
 from typing import List
 from sklearn.metrics.pairwise import cosine_similarity
-from util import calculate_confidences, calculate_time_weight, normalize_scores
-from classes import Event, Product
+from util.services import calculate_confidences, calculate_time_weight, normalize_scores
+from util.classes import Event, Product
 from config import (
     MIN_SIMILARITY_THRESHOLD,
     MIN_PRODUCT_FOR_USER,

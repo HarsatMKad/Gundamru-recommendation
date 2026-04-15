@@ -5,6 +5,9 @@ export class Product {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  created_dt!: Date;
+
   @Column()
   name!: string;
 

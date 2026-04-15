@@ -1,6 +1,6 @@
-from collab_user_based_strategy import collab_user_based
-from content_based_strategy import content_based
-from global_popular_strategy import global_popularity
+from strategy.collab_user_based_strategy import collab_user_based
+from strategy.content_based_strategy import content_based
+from strategy.global_popular_strategy import global_popularity
 
 STRATEGIES_CONFIG = {
     "collab_user_based": {

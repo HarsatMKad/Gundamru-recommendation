@@ -1,9 +1,9 @@
 import json
 import sys
 from datetime import datetime
-from classes import Payload
-from util import validate_payload
-from registry import STRATEGIES_CONFIG
+from util.classes import Payload
+from util.services import validate_payload
+from util.registry import STRATEGIES_CONFIG
 
 def main():
     start_time = datetime.now()

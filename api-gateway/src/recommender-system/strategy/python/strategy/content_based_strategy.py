@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from typing import List
-from util import calculate_confidences, calculate_time_weight, normalize_scores
-from classes import Event, Product
+from util.services import calculate_confidences, calculate_time_weight, normalize_scores
+from util.classes import Event, Product
 from config import (
     MIN_PRODUCT_FOR_USER,
     INTERACTION_SENSITIVITY_COEFFICIENT,

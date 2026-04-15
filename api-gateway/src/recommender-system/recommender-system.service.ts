@@ -27,21 +27,24 @@ export class RecommenderSystemService {
     this.isGenerating = true;
     this.logger.log(ELogHandler.GENERATION_MANUAL_INITIALIZED);
 
-    try {
-      void this.recommenderOrchestrator.handleCron().finally(() => {
+    this.recommenderOrchestrator
+      .handleCron()
+      .finally(() => {
         this.isGenerating = false;
         this.logger.log(ELogHandler.GENERATION_MANUAL_COMPLITE);
+      })
+      .catch((error) => {
+        this.logger.error(EErrRecSystem.ERROR_DURING_GENERATION, error);
+        this.isGenerating = false;
+        throw new InternalServerErrorException(
+          EErrRecSystem.ERROR_DURING_GENERATION,
+        );
       });
-      return {
-        status: ERestStatus.ACCEPTED,
-        message: ERestMessages.GENERATION_RUN_BACKGROUND,
-      };
-    } catch (error) {
-      this.logger.error(EErrRecSystem.ERROR_DURING_GENERATION, error);
-      throw new InternalServerErrorException(
-        EErrRecSystem.ERROR_DURING_GENERATION,
-      );
-    }
+
+    return {
+      status: ERestStatus.ACCEPTED,
+      message: ERestMessages.GENERATION_RUN_BACKGROUND,
+    };
   }
 
   getAllStrategys() {
