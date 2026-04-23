@@ -10,6 +10,11 @@ export class RecommenderSystemController {
     return this.service.triggerGeneration();
   }
 
+  @Get('generate/status')
+  getGenerateStatus() {
+    return this.service.getGenerationStatus();
+  }
+
   @Get('strategys')
   getAllStrategys() {
     return this.service.getAllStrategys();

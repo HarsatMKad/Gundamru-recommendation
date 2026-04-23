@@ -5,7 +5,7 @@ import { UserEventService } from 'src/user-events/user-events.service';
 import { IValidationData } from 'src/common/interface/recommendation.interface';
 
 @Injectable()
-export class IRecommendationDataService {
+export class RecommendationDataService {
   constructor(
     private readonly settingsService: RecommendationSettingsService,
     private readonly userEventService: UserEventService,

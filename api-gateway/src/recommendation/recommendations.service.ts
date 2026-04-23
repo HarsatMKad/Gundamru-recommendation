@@ -2,7 +2,10 @@ import { Injectable, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Recommendation } from 'src/database/entities/recommendations.entity';
-import { IRecommendationItem } from 'src/common/interface/recommendation.interface';
+import {
+  IRecommendationInput,
+  IRecommendationItem,
+} from 'src/common/interface/recommendation.interface';
 import { RecommendationSetting } from 'src/database/entities/recommendation-settings.entity';
 import { ERestMessages } from 'src/common/enum/Rest.enum';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -168,5 +171,36 @@ export class RecommendationService {
         recommendations: result,
       };
     }
+  }
+
+  async saveBatch(data: IRecommendationInput[]) {
+    return await this.recRepo
+      .createQueryBuilder()
+      .insert()
+      .into(Recommendation)
+      .values(data)
+      .orUpdate(['recommended_skus', 'generated_at'], ['user_id', 'setting_id'])
+      .execute();
+  }
+
+  async deleteRecommendationsNotInSettingIds(
+    settingIds: string[],
+  ): Promise<number> {
+    if (!settingIds || settingIds.length === 0) {
+      const result = await this.recRepo
+        .createQueryBuilder()
+        .delete()
+        .from(Recommendation)
+        .execute();
+      return result.affected || 0;
+    }
+
+    const result = await this.recRepo
+      .createQueryBuilder()
+      .delete()
+      .from(Recommendation)
+      .where('setting_id NOT IN (:...ids)', { ids: settingIds })
+      .execute();
+    return result.affected || 0;
   }
 }

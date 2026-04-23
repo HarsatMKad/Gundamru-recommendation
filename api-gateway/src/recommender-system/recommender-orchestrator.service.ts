@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { BatchWriter } from './batch-writer.service';
 import {
   IAggregateFallback,
   IRecommendationInput,
@@ -8,29 +7,30 @@ import { RecommendationSettingsService } from 'src/recommendation-settings/recom
 import { PipelineEngine } from './pipeline-engine.service';
 import { ELogHandler } from 'src/common/enum/LogHandler.enum';
 import { ConfigService } from '@nestjs/config';
-import { SchedulerRegistry } from '@nestjs/schedule';
 import { RecommendationSetting } from 'src/database/entities/recommendation-settings.entity';
-import { IRecommendationDataService } from './recommendation-data.service';
+import { RecommendationDataService } from './recommendation-data.service';
 import { RecommendationCalculatorService } from './recommendation.calculator.service';
-import { CronJob } from 'cron';
 import {
   ICronConfig,
   IGenerationConfig,
 } from 'src/common/interface/config.interface';
 import { EConfigKey } from 'src/common/enum/ConfigKey.enum';
+import { RecommendationService } from 'src/recommendation/recommendations.service';
+import { CronJob } from 'node_modules/cron/dist';
+import { SchedulerRegistry } from 'node_modules/@nestjs/schedule';
 
 @Injectable()
 export class RecommenderOrchestrator {
   private readonly logger = new Logger(RecommenderOrchestrator.name);
   private readonly recLength: number;
   constructor(
-    private configService: ConfigService,
-    private readonly writer: BatchWriter,
-    private schedulerRegistry: SchedulerRegistry,
+    private readonly configService: ConfigService,
     private readonly pipelineEngine: PipelineEngine,
     private readonly settingsService: RecommendationSettingsService,
     private readonly recommendationCalculatorService: RecommendationCalculatorService,
-    private readonly IRecommendationDataService: IRecommendationDataService,
+    private readonly recommendationDataService: RecommendationDataService,
+    private readonly recommendationService: RecommendationService,
+    private readonly schedulerRegistry: SchedulerRegistry,
   ) {
     this.recLength =
       this.configService.get<IGenerationConfig>(EConfigKey.generation)
@@ -41,9 +41,10 @@ export class RecommenderOrchestrator {
     const cronTime =
       this.configService.get<ICronConfig>(EConfigKey.cron)?.generationTime ??
       '0 4 * * *';
+
     const job = new CronJob(
       cronTime,
-      () => this.handleCron(),
+      () => this.runGeneration(),
       null,
       false,
       'Europe/Moscow',
@@ -52,14 +53,14 @@ export class RecommenderOrchestrator {
     job.start();
   }
 
-  async handleCron() {
+  async runGeneration() {
     this.logger.log(ELogHandler.REC_GENERATION_START);
     const generateStart = performance.now();
 
     // получаем данные для валидации
     const gettingDataStart = performance.now();
     const { activeConfigs, userEvents, productsWithAttributes } =
-      await this.IRecommendationDataService.getValidationData();
+      await this.recommendationDataService.getValidationData();
     const gettingDataEnd = performance.now();
     this.logger.debug(
       `Время получения данных: ${(gettingDataEnd - gettingDataStart) / 1000} секунд`,
@@ -132,7 +133,9 @@ export class RecommenderOrchestrator {
 
     const settingIds: string[] = activeSettings.map((item) => item.id);
     const deleted =
-      await this.writer.deleteRecommendationsNotInSettingIds(settingIds);
+      await this.recommendationService.deleteRecommendationsNotInSettingIds(
+        settingIds,
+      );
 
     if (deleted > 0) {
       this.logger.debug(
@@ -153,7 +156,7 @@ export class RecommenderOrchestrator {
     batchData: IRecommendationInput[],
   ): Promise<void> {
     if (batchData.length > 0) {
-      await this.writer.saveBatch(batchData);
+      await this.recommendationService.saveBatch(batchData);
     }
   }
 

@@ -28,7 +28,7 @@ export class RecommenderSystemService {
     this.logger.log(ELogHandler.GENERATION_MANUAL_INITIALIZED);
 
     this.recommenderOrchestrator
-      .handleCron()
+      .runGeneration()
       .finally(() => {
         this.isGenerating = false;
         this.logger.log(ELogHandler.GENERATION_MANUAL_COMPLITE);
@@ -45,6 +45,14 @@ export class RecommenderSystemService {
       status: ERestStatus.ACCEPTED,
       message: ERestMessages.GENERATION_RUN_BACKGROUND,
     };
+  }
+
+  getGenerationStatus() {
+    if (this.isGenerating) {
+      return { message: 'Метод в процессе' };
+    } else {
+      return { message: 'Метод завершен' };
+    }
   }
 
   getAllStrategys() {

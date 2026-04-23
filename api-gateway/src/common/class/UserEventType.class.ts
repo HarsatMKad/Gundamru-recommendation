@@ -1,5 +1,5 @@
 import { UserEventNames } from '../enum/UserEventName.enum';
-import { IUserEventType } from '../interface/IUserEventType.interface';
+import { IUserEventType } from '../interface/userEventType.interface';
 
 export class UserEventType {
   private static eventsMap = new Map<UserEventNames, IUserEventType>([
