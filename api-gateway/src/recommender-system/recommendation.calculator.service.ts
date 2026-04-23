@@ -12,7 +12,7 @@ import { IProductWithAttributes } from 'src/common/interface/entites.interface';
 import { RecommendationSetting } from 'src/database/entities/recommendation-settings.entity';
 import { IBaseRectrategy } from 'src/common/interface/strategies.interface';
 import path from 'path';
-import { spawnSync } from 'child_process';
+import { spawn } from 'child_process';
 import { IStrategyResultItem } from 'src/common/interface/recommendation.interface';
 import { pythonConfig } from 'src/common/config/GenerateParams';
 
@@ -21,15 +21,15 @@ export class RecommendationCalculatorService {
   private readonly logger = new Logger(RecommendationCalculatorService.name);
   constructor(private readonly strategyRegistry: StrategyRegistry) {}
 
-  calculateRecommendationsStrategys(
+  async calculateRecommendationsStrategys(
     recLength: number,
     strategys: RecommendationSetting[],
     userEvents: UserEvent[],
     products: IProductWithAttributes[],
-  ): {
+  ): Promise<{
     personalResults: TPersonalResults | undefined;
     globalResults: TGlobalResults | undefined;
-  } {
+  }> {
     const personalStrategyNames = new Set<string>();
     const globalStrategyNames = new Set<string>();
 
@@ -52,7 +52,7 @@ export class RecommendationCalculatorService {
         ...globalStrategyNames,
       ]);
 
-    const allResults = this.callPythonEngine(
+    const allResults = await this.callPythonEngine(
       recLength,
       [...activePersonalStrategies, ...activeGlobalStrategies],
       userEvents,
@@ -86,12 +86,50 @@ export class RecommendationCalculatorService {
     };
   }
 
-  private callPythonEngine(
+  private async spawnAsync(
+    command: string,
+    args: string[],
+    payload: string,
+  ): Promise<{ stdout: string; stderr: string }> {
+    return new Promise((resolve, reject) => {
+      const child = spawn(command, args);
+
+      let stdout = '';
+      let stderr = '';
+
+      child.stdout.on('data', (data: Buffer) => {
+        stdout += data.toString();
+      });
+
+      child.stderr.on('data', (data: Buffer) => {
+        stderr += data.toString();
+      });
+
+      child.stdin.write(payload);
+      child.stdin.end();
+
+      child.on('close', (code) => {
+        if (code !== 0) {
+          reject(
+            new Error(`Python process exited with code ${code}: ${stderr}`),
+          );
+        } else {
+          resolve({ stdout, stderr });
+        }
+      });
+
+      child.on('error', (error) => {
+        reject(error);
+      });
+    });
+  }
+
+  private async callPythonEngine(
     recLength: number,
     strategies: IBaseRectrategy[],
     userEvents: UserEvent[],
     products: IProductWithAttributes[],
-  ): TPythonResponse {
+  ): Promise<TPythonResponse> {
     const startTime = performance.now();
 
     const payload = {
@@ -124,21 +162,17 @@ export class RecommendationCalculatorService {
         pythonConfig.PYTHON_GATEWAY_NAME,
       );
 
-      const pythonProcess = spawnSync(pythonConfig.PYTHON_PATH, [scriptPath], {
-        input: JSON.stringify(payload),
-        encoding: 'utf-8',
-        maxBuffer: 1024 * 1024 * 50,
-      });
+      const { stdout, stderr } = await this.spawnAsync(
+        pythonConfig.PYTHON_PATH,
+        [scriptPath],
+        JSON.stringify(payload),
+      );
 
-      if (pythonProcess.stderr) {
-        this.logger.debug('Python stderr:', pythonProcess.stderr.toString());
+      if (stderr) {
+        this.logger.debug('Python stderr:', stderr);
       }
 
-      if (pythonProcess.error) {
-        throw new Error(`Python error: ${pythonProcess.error.message}`);
-      }
-
-      const result = JSON.parse(pythonProcess.stdout) as TPythonResponse;
+      const result = JSON.parse(stdout) as TPythonResponse;
       const endTime = performance.now();
 
       this.logger.debug(

@@ -7,7 +7,6 @@ from util.registry import STRATEGIES_CONFIG
 
 def main():
     start_time = datetime.now()
-    
     payload = validate_payload(Payload)
     rec_length = payload.recLength
     strategy_names = payload.strategies

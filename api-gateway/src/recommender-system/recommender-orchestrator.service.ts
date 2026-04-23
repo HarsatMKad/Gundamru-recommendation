@@ -76,7 +76,7 @@ export class RecommenderOrchestrator {
 
     this.logger.log('1. Расчет методов.');
     const strategysResult =
-      this.recommendationCalculatorService.calculateRecommendationsStrategys(
+      await this.recommendationCalculatorService.calculateRecommendationsStrategys(
         this.recLength,
         activeConfigs,
         userEvents,
