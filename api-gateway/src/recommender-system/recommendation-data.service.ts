@@ -13,21 +13,17 @@ export class RecommendationDataService {
   ) {}
 
   async getValidationData(): Promise<IValidationData> {
-    const [activeConfigs, validUserIds, validIProductWithAttributes] =
-      await Promise.all([
-        this.settingsService.getActiveConfigs(),
-        this.validItemProvider.getValidUserIds(),
-        this.validItemProvider.getValidProductsWithAttributes(),
-      ]);
+    const [activeConfigs, validIProductWithAttributes] = await Promise.all([
+      this.settingsService.getActiveConfigs(),
+      this.validItemProvider.getValidProductsWithAttributes(),
+    ]);
 
     const productIds: string[] = validIProductWithAttributes.map(
       (item) => item.id,
     );
 
-    const userEvents = await this.userEventService.getRelevantUserEvents(
-      validUserIds,
-      productIds,
-    );
+    const userEvents =
+      await this.userEventService.getRelevantUserEvents(productIds);
 
     return {
       activeConfigs,

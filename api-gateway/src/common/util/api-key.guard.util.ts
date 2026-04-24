@@ -6,7 +6,7 @@ import {
   Global,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { API_KEY_VALID_ERROR } from '../enum/ErrHandler.enum';
+import { EErrorHandler } from '../enum/ErrHandler.enum';
 import { API_KEY_HEADER } from '../const/ConstHandler.const';
 import { ConfigService } from '@nestjs/config';
 import { IServerConfig } from '../interface/config.interface';
@@ -26,7 +26,7 @@ export class ApiKeyGuard implements CanActivate {
     )?.internalApiKey;
 
     if (!expectedKey || apiKey !== expectedKey) {
-      throw new UnauthorizedException(API_KEY_VALID_ERROR);
+      throw new UnauthorizedException(EErrorHandler.API_KEY_VALID_ERROR);
     }
     return true;
   }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, Repository } from 'typeorm';
+import { FindManyOptions, Repository, In } from 'typeorm';
 import { FindEventsQueryDto } from './dto/find-events.dto';
 import { UserEvent } from 'src/database/entities/user-event.entity';
 import { UserEventDto } from './dto/user-event.dto';
@@ -116,20 +116,16 @@ export class UserEventService {
     };
   }
 
-  async getRelevantUserEvents(
-    userIds: string[],
-    productIds: string[],
-  ): Promise<UserEvent[]> {
-    const queryBuilder = this.eventsRepository.createQueryBuilder('ue');
-    if (userIds.length > 0) {
-      queryBuilder.andWhere('ue.user_id IN (:...userIds)', { userIds });
+  async getRelevantUserEvents(productIds: string[]): Promise<UserEvent[]> {
+    if (productIds.length === 0) {
+      return [];
     }
-    if (productIds.length > 0) {
-      queryBuilder.andWhere('ue.product_id IN (:...productIds)', {
-        productIds,
-      });
-    }
-    return await queryBuilder.getMany();
+
+    return this.eventsRepository.find({
+      where: {
+        product_id: In(productIds),
+      },
+    });
   }
 
   async deleteOldEventsForUsers(

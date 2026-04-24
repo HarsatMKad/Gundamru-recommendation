@@ -1,14 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  Index,
-  ManyToOne,
-  JoinColumn,
-  Unique,
-} from 'typeorm';
-import { User } from './user.entity';
-import { Product } from './product.entity';
+import { Entity, PrimaryGeneratedColumn, Column, Index, Unique } from 'typeorm';
 import { UserEventNames } from 'src/common/enum/UserEventName.enum';
 import { UserEventType } from 'src/common/class/UserEventType.class';
 
@@ -37,16 +27,8 @@ export class UserEvent {
   @Column('uuid')
   user_id!: string;
 
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'user_id' })
-  user!: User;
-
   @Column('uuid')
   product_id!: string;
-
-  @ManyToOne(() => Product)
-  @JoinColumn({ name: 'product_id' })
-  product!: Product;
 
   @Column({ type: 'enum', enum: UserEventNames, default: UserEventNames.VIEW })
   event_type_name!: UserEventNames;

@@ -4,7 +4,7 @@ import { Logger } from '@nestjs/common';
 import { InternalServerErrorException } from '@nestjs/common';
 import { ELogHandler } from 'src/common/enum/LogHandler.enum';
 import { EWarnRecSystem } from 'src/common/enum/WarnHandler.enum';
-import { EErrRecSystem } from 'src/common/enum/ErrHandler.enum';
+import { EErrorHandler } from 'src/common/enum/ErrHandler.enum';
 import { ERestMessages, ERestStatus } from 'src/common/enum/Rest.enum';
 import { StrategyRegistry } from './strategy-registry';
 
@@ -34,10 +34,10 @@ export class RecommenderSystemService {
         this.logger.log(ELogHandler.GENERATION_MANUAL_COMPLITE);
       })
       .catch((error) => {
-        this.logger.error(EErrRecSystem.ERROR_DURING_GENERATION, error);
+        this.logger.error(EErrorHandler.ERROR_DURING_GENERATION, error);
         this.isGenerating = false;
         throw new InternalServerErrorException(
-          EErrRecSystem.ERROR_DURING_GENERATION,
+          EErrorHandler.ERROR_DURING_GENERATION,
         );
       });
 

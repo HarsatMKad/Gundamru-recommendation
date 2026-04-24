@@ -2,8 +2,6 @@ import { Module, Provider } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ProductsModule } from './products/products.module';
-import { UsersModule } from './users/users.module';
 import { UserEventsModule } from './user-events/user-events.module';
 import { RecommendationsModule } from './recommendation/recommendations.module';
 import { RecommendationSettingsModule } from './recommendation-settings/recommendation-settings.module';
@@ -44,8 +42,6 @@ const globalGuardProvider: Provider<ApiKeyGuard> = {
         };
       },
     }),
-    ProductsModule,
-    UsersModule,
     UserEventsModule,
     RecommendationsModule,
     RecommendationSettingsModule,

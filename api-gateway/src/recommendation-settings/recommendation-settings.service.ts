@@ -6,7 +6,7 @@ import { UpdateRecommendationSettingDto } from './dto/update-recommendation-sett
 import { CreateRecommendationSettingDto } from './dto/create-recommendation-settings.dto';
 import { IRecommendationItem } from 'src/common/interface/recommendation.interface';
 import { NotFoundException, ConflictException } from '@nestjs/common';
-import { EErrRecSetting } from 'src/common/enum/ErrHandler.enum';
+import { EErrorHandler } from 'src/common/enum/ErrHandler.enum';
 
 @Injectable()
 export class RecommendationSettingsService {
@@ -41,7 +41,7 @@ export class RecommendationSettingsService {
 
     if (!setting) {
       throw new NotFoundException(
-        `${EErrRecSetting.SETTINGS_NOT_FOUND}. For context: ${name}`,
+        `${EErrorHandler.SETTINGS_NOT_FOUND}. For context: ${name}`,
       );
     }
 
@@ -54,7 +54,7 @@ export class RecommendationSettingsService {
       where: { name: createDto.name },
     });
     if (existing) {
-      throw new ConflictException(EErrRecSetting.SETTINGS_EXIST);
+      throw new ConflictException(EErrorHandler.SETTINGS_EXIST);
     }
 
     const newSettings = this.settingsRepo.create(createDto);
@@ -67,7 +67,7 @@ export class RecommendationSettingsService {
     });
 
     if (!existing) {
-      throw new NotFoundException(EErrRecSetting.SETTINGS_NOT_FOUND);
+      throw new NotFoundException(EErrorHandler.SETTINGS_NOT_FOUND);
     }
 
     await this.settingsRepo.delete({ name });
@@ -91,7 +91,7 @@ export class RecommendationSettingsService {
 
     if (!setting) {
       throw new NotFoundException(
-        `${EErrRecSetting.SETTINGS_NOT_FOUND} ID: ${id}`,
+        `${EErrorHandler.SETTINGS_NOT_FOUND} ID: ${id}`,
       );
     }
 
