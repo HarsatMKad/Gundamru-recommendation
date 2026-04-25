@@ -6,11 +6,6 @@ import { RecQueryDto } from './dto/query-recommendation.dto';
 export class RecommendationController {
   constructor(private readonly service: RecommendationService) {}
 
-  @Get(`fallback/:context`)
-  async getFallback(@Param('context') context: string) {
-    return await this.service.getFallback(context);
-  }
-
   @Get(`:settingId/:mode/:userId`)
   async getRecommendations(
     @Param('setting') settingId: string, // Из каких настроек

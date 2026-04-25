@@ -4,7 +4,7 @@ import { UserEventDto } from './dto/user-event.dto';
 import { FindEventsQueryDto } from './dto/find-events.dto';
 import { ResponseMessage } from 'src/common/const/ResponseMessage.const';
 
-@Controller('user-events')
+@Controller('api/user-events')
 export class UserEventsController {
   constructor(private readonly userEventService: UserEventService) {}
 

@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { ICronConfig } from 'src/common/interface/config.interface';
 import { EConfigKey } from 'src/common/enum/ConfigKey.enum';
 import { SchedulerRegistry } from '@nestjs/schedule';
-import { UserEventService } from '../user-events.service';
+import { UserEventService } from './user-events.service';
 import { CronJob } from 'cron';
 import { UserEventType } from 'src/common/class/UserEventType.class';
 

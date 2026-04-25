@@ -20,15 +20,11 @@ export class RecommendationSettingsService {
   }
 
   async getById(id: string) {
-    return await this.settingsRepo.findOne({
-      where: { id },
-    });
+    return await this.settingsRepo.findOneBy({ id });
   }
 
   async getByContext(name: string) {
-    return await this.settingsRepo.findOne({
-      where: { name },
-    });
+    return await this.settingsRepo.findOneBy({ name });
   }
 
   async updateSettingsById(
