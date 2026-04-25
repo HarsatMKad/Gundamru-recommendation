@@ -19,7 +19,6 @@ async function bootstrap() {
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
   const configService = app.get(ConfigService);
-
   const port =
     configService.get<IServerConfig>(EConfigKey.server)?.port ?? 4333;
 

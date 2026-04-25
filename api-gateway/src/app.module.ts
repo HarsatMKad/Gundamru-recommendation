@@ -1,6 +1,4 @@
 import { Module, Provider } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEventsModule } from './user-events/user-events.module';
 import { RecommendationsModule } from './recommendation/recommendations.module';
@@ -47,7 +45,6 @@ const globalGuardProvider: Provider<ApiKeyGuard> = {
     RecommendationSettingsModule,
     RecommenderSystemModule,
   ],
-  controllers: [AppController],
-  providers: [AppService, globalGuardProvider],
+  providers: [globalGuardProvider],
 })
 export class AppModule {}

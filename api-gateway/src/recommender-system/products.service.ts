@@ -1,10 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import {
   IProductService,
   IProductWithAttributes,
 } from 'src/common/interface/entites.interface';
 import axios from 'axios';
 import { EErrorHandler } from 'src/common/enum/ErrHandler.enum';
+import { IServerConfig } from 'src/common/interface/config.interface';
+import { ConfigService } from 'node_modules/@nestjs/config';
+import { EConfigKey } from 'src/common/enum/ConfigKey.enum';
 
 interface ApiResponse {
   data: {
@@ -22,20 +25,38 @@ interface ApiResponse {
 
 @Injectable()
 export class ProductService implements IProductService {
+  private readonly mainServerUrl?: string;
+  private readonly productApiKey?: string;
+
+  constructor(private configService: ConfigService) {
+    this.mainServerUrl = this.configService.get<IServerConfig>(
+      EConfigKey.server,
+    )?.mainServerUrl;
+
+    this.productApiKey = this.configService.get<IServerConfig>(
+      EConfigKey.server,
+    )?.productApiKey;
+  }
+
   async getPublishedProductsWithAttributes(): Promise<
     IProductWithAttributes[]
   > {
-    const apiKey = 'FNuVEMDhPId7BiU2vHIf5aB3m9o3UW2EKF70GPJGiXTOGwBxZ6';
-    const baseUrl = 'https://gundam.ru/api/v1/catalog/products';
+    if (!this.mainServerUrl || !this.productApiKey) {
+      throw new InternalServerErrorException(
+        'main_server_url or product_api_key is not defined',
+      );
+    }
+
+    const catalogProductRequest = `${this.mainServerUrl}/api/v1/catalog/products`;
 
     try {
-      const response = await axios.get<ApiResponse>(baseUrl, {
+      const response = await axios.get<ApiResponse>(catalogProductRequest, {
         params: {
           limit: 20000,
           offset: 0,
         },
         headers: {
-          'x-api-key': apiKey,
+          'x-api-key': this.productApiKey,
         },
       });
 

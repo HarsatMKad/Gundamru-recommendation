@@ -18,7 +18,9 @@ export interface ICronConfig {
 
 export interface IServerConfig {
   port: number;
-  internalApiKey: string;
+  apiKey: string;
+  mainServerUrl: string;
+  productApiKey: string;
 }
 
 export interface IGenerationConfig {

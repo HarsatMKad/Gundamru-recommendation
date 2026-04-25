@@ -9,7 +9,7 @@ export class UserEventType {
         name: UserEventNames.VIEW,
         weight: 1,
         retentionDays: 30,
-        maxForUser: 100,
+        maxForUser: 200,
       },
     ],
     [
@@ -18,7 +18,7 @@ export class UserEventType {
         name: UserEventNames.WISHLIST,
         weight: 10,
         retentionDays: 30,
-        maxForUser: 50,
+        maxForUser: 60,
       },
     ],
     [

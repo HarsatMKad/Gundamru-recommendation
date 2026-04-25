@@ -19,7 +19,6 @@ export class CleanupService {
   ) {}
 
   onModuleInit() {
-    // запуск каждый день по расписанию cleanupTime или в 3ч ночи по мск
     const cronTime =
       this.configService.get<ICronConfig>(EConfigKey.cron)?.cleanupTime ??
       '0 3 * * *';
@@ -39,7 +38,7 @@ export class CleanupService {
     this.logger.log(ELogHandler.CLEANUP_START);
     const eventTypeList = UserEventType.getAllEvents();
 
-    // удалять старые события
+    // удалять, если не актуально
     for (const type of eventTypeList) {
       const cutOffDate = new Date();
       cutOffDate.setDate(cutOffDate.getDate() - type.retentionDays);
@@ -49,7 +48,7 @@ export class CleanupService {
           cutOffDate,
         );
 
-      // удалять если событий больше допустимого максимума на пользователя
+      // удалять, если событий больше допустимого максимума на пользователя
       const maxBasedDeleted =
         await this.userEventService.deleteExcessEventsForUsers(
           type.name,

@@ -1,5 +1,5 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { RecommenderOrchestrator } from './recommender-orchestrator.service';
+import { RecommenderOrchestrator } from './orchestrator.service';
 import { Logger } from '@nestjs/common';
 import { InternalServerErrorException } from '@nestjs/common';
 import { ELogHandler } from 'src/common/enum/LogHandler.enum';

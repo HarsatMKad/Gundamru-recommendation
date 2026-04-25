@@ -4,11 +4,11 @@ import {
   IRecommendationInput,
 } from '../common/interface/recommendation.interface';
 import { RecommendationSettingsService } from 'src/recommendation-settings/recommendation-settings.service';
-import { PipelineEngine } from './pipeline-engine.service';
+import { AggregatorEngine } from './aggreagatorEngine.service';
 import { ELogHandler } from 'src/common/enum/LogHandler.enum';
 import { ConfigService } from '@nestjs/config';
 import { RecommendationSetting } from 'src/database/entities/recommendation-settings.entity';
-import { RecommendationDataService } from './recommendation-data.service';
+import { DataService } from './data.service';
 import { RecommendationCalculatorService } from './recommendation.calculator.service';
 import {
   ICronConfig,
@@ -25,10 +25,10 @@ export class RecommenderOrchestrator {
   private readonly recLength: number;
   constructor(
     private readonly configService: ConfigService,
-    private readonly pipelineEngine: PipelineEngine,
+    private readonly aggregatorEngine: AggregatorEngine,
     private readonly settingsService: RecommendationSettingsService,
     private readonly recommendationCalculatorService: RecommendationCalculatorService,
-    private readonly recommendationDataService: RecommendationDataService,
+    private readonly dataService: DataService,
     private readonly recommendationService: RecommendationService,
     private readonly schedulerRegistry: SchedulerRegistry,
   ) {
@@ -60,7 +60,7 @@ export class RecommenderOrchestrator {
     // получаем данные для валидации
     const gettingDataStart = performance.now();
     const { activeConfigs, userEvents, productsWithAttributes } =
-      await this.recommendationDataService.getValidationData();
+      await this.dataService.getValidationData();
     const gettingDataEnd = performance.now();
     this.logger.debug(
       `Время получения данных: ${(gettingDataEnd - gettingDataStart) / 1000} секунд`,
@@ -90,13 +90,13 @@ export class RecommenderOrchestrator {
     this.logger.log('2. Агрегация методов.');
     const aggregateStart = performance.now();
     const aggregatedPersonalRecs =
-      this.pipelineEngine.aggregatePersonalStrategys(
+      this.aggregatorEngine.aggregatePersonalStrategys(
         this.recLength,
         personalConfigs,
         strategysResult.personalResults,
       );
 
-    const aggregateGlobalRecs = this.pipelineEngine.aggregateFallbacks(
+    const aggregateGlobalRecs = this.aggregatorEngine.aggregateFallbacks(
       this.recLength,
       fallbackConfigs,
       strategysResult.globalResults,

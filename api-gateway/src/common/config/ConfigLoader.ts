@@ -1,7 +1,11 @@
 export default () => ({
   server: {
     port: process.env.PORT ? parseInt(process.env.PORT, 10) : 3000,
-    internalApiKey: process.env.INTERNAL_API_KEY ?? 'secret_api_key',
+    apiKey: process.env.API_KEY ?? 'secret_api_key',
+    mainServerUrl: process.env.MAIN_SERVER_URL ?? 'https://gundam.ru',
+    productApiKey:
+      process.env.PRODUCT_API_KEY ??
+      'FNuVEMDhPId7BiU2vHIf5aB3m9o3UW2EKF70GPJGiXTOGwBxZ6',
   },
   database: {
     host: process.env.DB_HOST ?? '',

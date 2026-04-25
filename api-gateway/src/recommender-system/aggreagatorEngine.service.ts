@@ -14,9 +14,9 @@ import {
 import { agregationConfig } from 'src/common/config/GenerateParams';
 
 @Injectable()
-export class PipelineEngine {
+export class AggregatorEngine {
   private readonly ALPHA = agregationConfig.SMOOTHING_ALPHA;
-  private readonly logger = new Logger(PipelineEngine.name);
+  private readonly logger = new Logger(AggregatorEngine.name);
 
   aggregatePersonalStrategys(
     recLength: number,

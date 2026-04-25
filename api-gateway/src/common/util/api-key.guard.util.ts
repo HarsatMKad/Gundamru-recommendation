@@ -15,17 +15,19 @@ import { EConfigKey } from '../enum/ConfigKey.enum';
 @Global()
 @Injectable()
 export class ApiKeyGuard implements CanActivate {
-  constructor(private configService: ConfigService) {}
+  private readonly expectedKey?: string;
+
+  constructor(private configService: ConfigService) {
+    this.expectedKey = this.configService.get<IServerConfig>(
+      EConfigKey.server,
+    )?.apiKey;
+  }
 
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
     const apiKey = request.headers[API_KEY_HEADER];
 
-    const expectedKey = this.configService.get<IServerConfig>(
-      EConfigKey.server,
-    )?.internalApiKey;
-
-    if (!expectedKey || apiKey !== expectedKey) {
+    if (!this.expectedKey || apiKey !== this.expectedKey) {
       throw new UnauthorizedException(EErrorHandler.API_KEY_VALID_ERROR);
     }
     return true;
