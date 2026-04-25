@@ -3,7 +3,7 @@ import {
   IAggregateFallback,
   IRecommendationInput,
 } from '../common/interface/recommendation.interface';
-import { RecommendationSettingsService } from 'src/recommendation-settings/recommendation-settings.service';
+import { RecommendationSettingsService } from 'src/recommendation/recommendation-settings.service';
 import { AggregatorEngine } from './aggreagatorEngine.service';
 import { ELogHandler } from 'src/common/enum/LogHandler.enum';
 import { ConfigService } from '@nestjs/config';
@@ -15,9 +15,9 @@ import {
   IGenerationConfig,
 } from 'src/common/interface/config.interface';
 import { EConfigKey } from 'src/common/enum/ConfigKey.enum';
-import { RecommendationService } from 'src/recommendation/recommendations.service';
 import { CronJob } from 'node_modules/cron/dist';
 import { SchedulerRegistry } from 'node_modules/@nestjs/schedule';
+import { BatchWriter } from './batch-writer.service';
 
 @Injectable()
 export class RecommenderOrchestrator {
@@ -28,8 +28,8 @@ export class RecommenderOrchestrator {
     private readonly aggregatorEngine: AggregatorEngine,
     private readonly settingsService: RecommendationSettingsService,
     private readonly recommendationCalculatorService: RecommendationCalculatorService,
+    private readonly writer: BatchWriter,
     private readonly dataService: DataService,
-    private readonly recommendationService: RecommendationService,
     private readonly schedulerRegistry: SchedulerRegistry,
   ) {
     this.recLength =
@@ -133,9 +133,7 @@ export class RecommenderOrchestrator {
 
     const settingIds: string[] = activeSettings.map((item) => item.id);
     const deleted =
-      await this.recommendationService.deleteRecommendationsNotInSettingIds(
-        settingIds,
-      );
+      await this.writer.deleteRecommendationsNotInSettingIds(settingIds);
 
     if (deleted > 0) {
       this.logger.debug(
@@ -156,7 +154,7 @@ export class RecommenderOrchestrator {
     batchData: IRecommendationInput[],
   ): Promise<void> {
     if (batchData.length > 0) {
-      await this.recommendationService.saveBatch(batchData);
+      await this.writer.saveBatch(batchData);
     }
   }
 

@@ -5,7 +5,7 @@ import {
 } from 'class-validator';
 import { StrategyScope } from 'src/common/enum/StrategyScope.enum';
 import { Injectable } from '@nestjs/common';
-import { StrategyRegistry } from 'src/recommender-system/strategy-registry';
+import { StrategyRegistry } from 'src/generation-system/strategy-registry';
 
 @Injectable()
 @ValidatorConstraint({ name: 'isStrategyForScope', async: false })

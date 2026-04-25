@@ -2,10 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Recommendation } from 'src/database/entities/recommendations.entity';
-import {
-  IRecommendationInput,
-  IRecommendationItem,
-} from 'src/common/interface/recommendation.interface';
+import { IRecommendationItem } from 'src/common/interface/recommendation.interface';
 import { RecommendationSetting } from 'src/database/entities/recommendation-settings.entity';
 import { ERestMessages } from 'src/common/enum/Rest.enum';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -29,20 +26,18 @@ export class RecommendationService {
   /** 1. Только пользовательские */
   async getPurePersonal(
     userId: string,
-    context: string,
+    settingId: string,
     minScore?: number,
   ): Promise<IRecommendationItem[]> {
     let minscoreCacheKey = '';
     if (minScore) {
       minscoreCacheKey = `_${minScore}`;
     }
-    const cacheKey = `${CACH_CONST.CACHEKEY_PERSONAL}_${userId}_${context}${minscoreCacheKey}`;
+    const cacheKey = `${CACH_CONST.CACHEKEY_PERSONAL}_${userId}_${settingId}${minscoreCacheKey}`;
     const cached = await this.cacheManager.get<IRecommendationItem[]>(cacheKey);
     if (cached) return cached;
 
-    const setting = await this.settingRepo.findOne({
-      where: { name: context },
-    });
+    const setting = await this.settingRepo.findOneBy({ id: settingId });
     if (!setting) return [];
 
     const personal = await this.recRepo.findOne({
@@ -61,20 +56,18 @@ export class RecommendationService {
 
   /** 2. Только стандартные */
   async getFallback(
-    context: string,
+    settingId: string,
     minScore?: number,
   ): Promise<IRecommendationItem[]> {
     let minscoreCacheKey = '';
     if (minScore) {
       minscoreCacheKey = `_${minScore}`;
     }
-    const cacheKey = `${CACH_CONST.CACHEKEY_FALLBACK}_${context}${minscoreCacheKey}`;
+    const cacheKey = `${CACH_CONST.CACHEKEY_FALLBACK}_${settingId}${minscoreCacheKey}`;
     const cached = await this.cacheManager.get(cacheKey);
     if (cached) return cached as IRecommendationItem[];
 
-    const setting = await this.settingRepo.findOne({
-      where: { name: context },
-    });
+    const setting = await this.settingRepo.findOneBy({ id: settingId });
 
     const data = setting?.fallback_skus || [];
     let dataFiltred = data;
@@ -106,7 +99,7 @@ export class RecommendationService {
 
   async getRecommendations(
     userId: string,
-    context: string,
+    settingId: string,
     mode: string,
     limit: number,
     minScore?: number,
@@ -115,23 +108,23 @@ export class RecommendationService {
 
     switch (mode) {
       case RECOMMENDATION_MODS.PERSONAL:
-        result = await this.getPurePersonal(userId, context, minScore);
+        result = await this.getPurePersonal(userId, settingId, minScore);
         break;
       case RECOMMENDATION_MODS.FALLBACK:
-        result = await this.getFallback(context, minScore);
+        result = await this.getFallback(settingId, minScore);
         break;
       case RECOMMENDATION_MODS.MIXED: {
         const [personal, fallback] = await Promise.all([
-          this.getPurePersonal(userId, context, minScore),
-          this.getFallback(context, minScore),
+          this.getPurePersonal(userId, settingId, minScore),
+          this.getFallback(settingId, minScore),
         ]);
         result = this.mergeAndFill(personal, fallback);
         break;
       }
       case RECOMMENDATION_MODS.MIXED_FULLFALLBACK: {
         const [personal, fallback] = await Promise.all([
-          this.getPurePersonal(userId, context, minScore),
-          this.getFallback(context),
+          this.getPurePersonal(userId, settingId, minScore),
+          this.getFallback(settingId),
         ]);
         result = this.mergeAndFill(personal, fallback);
         break;
@@ -148,7 +141,7 @@ export class RecommendationService {
 
     return {
       mode,
-      context,
+      settingId,
       limit,
       minScore,
       length: sortedResults.length,
@@ -171,36 +164,5 @@ export class RecommendationService {
         recommendations: result,
       };
     }
-  }
-
-  async saveBatch(data: IRecommendationInput[]) {
-    return await this.recRepo
-      .createQueryBuilder()
-      .insert()
-      .into(Recommendation)
-      .values(data)
-      .orUpdate(['recommended_skus', 'generated_at'], ['user_id', 'setting_id'])
-      .execute();
-  }
-
-  async deleteRecommendationsNotInSettingIds(
-    settingIds: string[],
-  ): Promise<number> {
-    if (!settingIds || settingIds.length === 0) {
-      const result = await this.recRepo
-        .createQueryBuilder()
-        .delete()
-        .from(Recommendation)
-        .execute();
-      return result.affected || 0;
-    }
-
-    const result = await this.recRepo
-      .createQueryBuilder()
-      .delete()
-      .from(Recommendation)
-      .where('setting_id NOT IN (:...ids)', { ids: settingIds })
-      .execute();
-    return result.affected || 0;
   }
 }

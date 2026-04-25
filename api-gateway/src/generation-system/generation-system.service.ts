@@ -49,9 +49,12 @@ export class RecommenderSystemService {
 
   getGenerationStatus() {
     if (this.isGenerating) {
-      return { message: 'Метод в процессе' };
+      return { generation_ready: false, message: 'Процесс генерации занят' };
     } else {
-      return { message: 'Метод завершен' };
+      return {
+        generation_ready: true,
+        message: 'Процесс генерации свободен',
+      };
     }
   }
 

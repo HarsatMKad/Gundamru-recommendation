@@ -2,7 +2,7 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { RecommendationService } from './recommendations.service';
 import { RecQueryDto } from './dto/query-recommendation.dto';
 
-@Controller('recommendation')
+@Controller('api/recommendation')
 export class RecommendationController {
   constructor(private readonly service: RecommendationService) {}
 
@@ -11,16 +11,16 @@ export class RecommendationController {
     return await this.service.getFallback(context);
   }
 
-  @Get(`:context/:mode/:userId`)
+  @Get(`:settingId/:mode/:userId`)
   async getRecommendations(
-    @Param('context') context: string, // Где
+    @Param('setting') settingId: string, // Из каких настроек
     @Param('mode') mode: string, // Как
     @Param('userId') userId: string, // Кому
     @Query() query: RecQueryDto,
   ) {
     return await this.service.getRecommendations(
       userId,
-      context,
+      settingId,
       mode,
       query.limit,
       query.minScore,

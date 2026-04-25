@@ -15,9 +15,9 @@ RUN python3 -m venv /opt/venv
 
 ENV PATH="/opt/venv/bin:$PATH"
 
-COPY ./src/recommender-system/strategy/python/requirements.txt ./src/recommender-system/strategy/python/requirements.txt
+COPY ./src/generation-system/strategy/python/requirements.txt ./src/generation-system/strategy/python/requirements.txt
 
-RUN pip install --no-cache-dir -r ./src/recommender-system/strategy/python/requirements.txt
+RUN pip install --no-cache-dir -r ./src/generation-system/strategy/python/requirements.txt
 
 COPY . .
 

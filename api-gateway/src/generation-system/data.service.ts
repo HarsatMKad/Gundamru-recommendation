@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ValidItemProvider } from './validItem.provider';
-import { RecommendationSettingsService } from 'src/recommendation-settings/recommendation-settings.service';
+import { RecommendationSettingsService } from 'src/recommendation/recommendation-settings.service';
 import { UserEventService } from 'src/user-events/user-events.service';
 import { IValidationData } from 'src/common/interface/recommendation.interface';
 

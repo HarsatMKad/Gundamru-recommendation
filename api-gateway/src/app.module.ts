@@ -2,8 +2,7 @@ import { Module, Provider } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEventsModule } from './user-events/user-events.module';
 import { RecommendationsModule } from './recommendation/recommendations.module';
-import { RecommendationSettingsModule } from './recommendation-settings/recommendation-settings.module';
-import { RecommenderSystemModule } from './recommender-system/recommender-system.module';
+import { RecommenderSystemModule } from './generation-system/generation-system.module';
 import { ConfigModule } from '@nestjs/config';
 import { ConfigService } from '@nestjs/config';
 import configLoader from './common/config/ConfigLoader';
@@ -42,7 +41,6 @@ const globalGuardProvider: Provider<ApiKeyGuard> = {
     }),
     UserEventsModule,
     RecommendationsModule,
-    RecommendationSettingsModule,
     RecommenderSystemModule,
   ],
   providers: [globalGuardProvider],

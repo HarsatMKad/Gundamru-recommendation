@@ -31,17 +31,15 @@ export class RecommendationSettingsService {
     });
   }
 
-  async updateSettings(
-    name: string,
+  async updateSettingsById(
+    id: string,
     updateDto: UpdateRecommendationSettingDto,
   ) {
-    const setting = await this.settingsRepo.findOne({
-      where: { name },
-    });
+    const setting = await this.settingsRepo.findOneBy({ id });
 
     if (!setting) {
       throw new NotFoundException(
-        `${EErrorHandler.SETTINGS_NOT_FOUND}. For context: ${name}`,
+        `${EErrorHandler.SETTINGS_NOT_FOUND}. For context: ${id}`,
       );
     }
 
@@ -61,24 +59,19 @@ export class RecommendationSettingsService {
     return await this.settingsRepo.save(newSettings);
   }
 
-  async softDeleteSettingsByContext(name: string) {
-    const existing = await this.settingsRepo.findOne({
-      where: { name },
-    });
+  async softDeleteSettingsById(id: string) {
+    const existing = await this.settingsRepo.findOneBy({ id });
 
     if (!existing) {
       throw new NotFoundException(EErrorHandler.SETTINGS_NOT_FOUND);
     }
 
-    await this.settingsRepo.delete({ name });
+    await this.settingsRepo.delete({ id });
 
     existing.isActive = false;
     await this.settingsRepo.save(existing);
 
-    return {
-      deactivated: true,
-      name,
-    };
+    return existing;
   }
 
   async updateFallback(

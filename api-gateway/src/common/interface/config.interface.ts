@@ -7,7 +7,7 @@ export interface IDatabaseConfig {
 }
 
 export interface ICacheConfig {
-  ttl: string;
+  ttl: number;
   max: number;
 }
 

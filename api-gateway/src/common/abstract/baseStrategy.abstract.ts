@@ -17,7 +17,7 @@ export abstract class BaseGenerateStrategy<
 
   private readonly pythonPath = '/opt/venv/bin/python';
   private readonly pythonBasePath =
-    '/app/src/recommender-system/strategy/python';
+    '/app/src/generation-system/strategy/python';
 
   protected getPythonScriptPath(): string {
     return path.join(this.pythonBasePath, this.scriptName);

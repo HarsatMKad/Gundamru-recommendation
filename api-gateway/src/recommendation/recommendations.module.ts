@@ -7,21 +7,33 @@ import { RecommendationSetting } from 'src/database/entities/recommendation-sett
 import { CacheModule } from '@nestjs/cache-manager';
 import { ConfigModule } from '@nestjs/config';
 import { ConfigService } from '@nestjs/config';
+import { ICacheConfig } from 'src/common/interface/config.interface';
+import { EConfigKey } from 'src/common/enum/ConfigKey.enum';
+import { RecommenderSystemModule } from 'src/generation-system/generation-system.module';
+import { RecommendationSettingsService } from './recommendation-settings.service';
+import { IsStrategyForScope } from './scope-validator.util';
+import { RecommendationSettingsController } from './recommendation-settings.controller';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Recommendation, RecommendationSetting]),
+    RecommenderSystemModule,
     CacheModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        ttl: parseInt(configService.get<string>('CACHE_TTL', '600'), 10) * 1000, // хранить кэш CACHE_TTL(10) минут
-        max: parseInt(configService.get<string>('CACHE_MAX', '2000'), 10), // максимум CACHE_MAX(2000) записей в кэше
+        ttl:
+          configService.get<ICacheConfig>(EConfigKey.cache)?.ttl ?? 600 * 1000, // как долго хранить кэш. В конфиге указаны секунды
+        max: configService.get<ICacheConfig>(EConfigKey.cache)?.max ?? 2000, // максимум CACHE_MAX(2000) записей в кэше
       }),
     }),
   ],
-  providers: [RecommendationService],
-  controllers: [RecommendationController],
-  exports: [RecommendationService],
+  providers: [
+    RecommendationService,
+    RecommendationSettingsService,
+    IsStrategyForScope,
+  ],
+  controllers: [RecommendationController, RecommendationSettingsController],
+  exports: [RecommendationService, RecommendationSettingsService],
 })
 export class RecommendationsModule {}

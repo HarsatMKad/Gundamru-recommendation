@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
-import { RecommenderSystemService } from './recommender-system.service';
+import { RecommenderSystemService } from './generation-system.service';
 
-@Controller('recommendation-system')
+@Controller('api/recommendation-system')
 export class RecommenderSystemController {
   constructor(private readonly service: RecommenderSystemService) {}
 
