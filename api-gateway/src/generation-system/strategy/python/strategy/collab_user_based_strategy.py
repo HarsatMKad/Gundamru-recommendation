@@ -5,14 +5,7 @@ from typing import List
 from sklearn.metrics.pairwise import cosine_similarity
 from util.services import calculate_confidences, calculate_time_weight, normalize_scores
 from util.classes import Event, Product
-from config import (
-    MIN_SIMILARITY_THRESHOLD,
-    MIN_PRODUCT_FOR_USER,
-    PRICE_PERCENTAGE_RANGE,
-    PRICE_COEFFICIENT,
-    INTERACTION_SENSITIVITY_COEFFICIENT,
-    STD_EPSILON
-    )
+from config import Config
 
 def collab_user_based(rec_length: int, events: List[Event], products: List[Product]):
     events = [e for e in events if e.weight > 0]
@@ -35,7 +28,7 @@ def collab_user_based(rec_length: int, events: List[Event], products: List[Produ
 
     # исключаем неуверенных пользователей, у которых мало событий
     user_unique_products = df.groupby('user_id')['product_id'].nunique()
-    valid_users = user_unique_products[user_unique_products > MIN_PRODUCT_FOR_USER].index
+    valid_users = user_unique_products[user_unique_products > Config.MIN_PRODUCT_FOR_USER].index
     
     df = df[df['user_id'].isin(valid_users)]
 
@@ -75,7 +68,7 @@ def collab_user_based(rec_length: int, events: List[Event], products: List[Produ
     
     # Расчет сходства пользователей
     user_sim = cosine_similarity(pivot_centered)
-    user_sim[user_sim < MIN_SIMILARITY_THRESHOLD] = 0
+    user_sim[user_sim < Config.MIN_SIMILARITY_THRESHOLD] = 0
     np.fill_diagonal(user_sim, 1.0)
 
     # Нормализация матрицы сходства
@@ -94,7 +87,7 @@ def collab_user_based(rec_length: int, events: List[Event], products: List[Produ
 
         # штраф к уже взаимодействованным товарам
         user_history_weights = pivot_matrix[user_idx]
-        interaction_penaltys = np.exp(-INTERACTION_SENSITIVITY_COEFFICIENT * user_history_weights)
+        interaction_penaltys = np.exp(-Config.INTERACTION_SENSITIVITY_COEFFICIENT * user_history_weights)
         interaction_penaltys[user_history_weights == 0] = 1.0
         user_preds *= interaction_penaltys
 
@@ -110,7 +103,7 @@ def collab_user_based(rec_length: int, events: List[Event], products: List[Produ
         raw_scores = user_preds[valid_mask]
 
         # Проверка: информативны ли предсказания?
-        if np.std(raw_scores) < STD_EPSILON:
+        if np.std(raw_scores) < Config.STD_EPSILON:
             results[user_id] = []
             continue
 
@@ -134,10 +127,10 @@ def collab_user_based(rec_length: int, events: List[Event], products: List[Produ
         u_median = user_median_prices.get(user_id) 
         price_bonus = np.ones_like(raw_scores)
         if u_median is not None and not np.isnan(u_median):
-            lower_bound = u_median * (1 - PRICE_PERCENTAGE_RANGE)
-            upper_bound = u_median * (1 + PRICE_PERCENTAGE_RANGE)
+            lower_bound = u_median * (1 - Config.PRICE_PERCENTAGE_RANGE)
+            upper_bound = u_median * (1 + Config.PRICE_PERCENTAGE_RANGE)
             in_price_range_mask = (candidate_prices >= lower_bound) & (candidate_prices <= upper_bound)
-            price_bonus[in_price_range_mask] = PRICE_COEFFICIENT
+            price_bonus[in_price_range_mask] = Config.PRICE_COEFFICIENT
         
         final_scores = normalized_scores * adjusted_confidences * price_bonus
         top_indices_in_candidates = np.argsort(final_scores)[::-1][:rec_length]

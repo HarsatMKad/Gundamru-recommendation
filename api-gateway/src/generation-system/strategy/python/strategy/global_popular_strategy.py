@@ -4,10 +4,7 @@ from datetime import datetime
 from typing import List
 from util.services import calculate_confidences, calculate_time_weight, normalize_scores
 from util.classes import Event
-from config import (
-    MIN_PRODUCT_FOR_USER,
-    STD_EPSILON
-)
+from config import Config
 
 def global_popularity(rec_length: int, events: List[Event]):
     events = [e for e in events if e.weight > 0]
@@ -29,7 +26,7 @@ def global_popularity(rec_length: int, events: List[Event]):
     product_popularity.columns = ['product_id', 'raw_score']
 
     user_product_counts = df.groupby('user_id')['product_id'].nunique()
-    valid_users = user_product_counts[user_product_counts > MIN_PRODUCT_FOR_USER].index
+    valid_users = user_product_counts[user_product_counts > Config.MIN_PRODUCT_FOR_USER].index
     df_valid_users = df[df['user_id'].isin(valid_users)]
 
     if not df_valid_users.empty:
@@ -42,7 +39,7 @@ def global_popularity(rec_length: int, events: List[Event]):
 
     raw_scores = product_popularity['raw_score'].values
 
-    if len(raw_scores) == 0 or np.std(raw_scores) < STD_EPSILON:
+    if len(raw_scores) == 0 or np.std(raw_scores) < Config.STD_EPSILON:
         return []
     
     normalized_scores = normalize_scores(raw_scores, method='sigmoid')

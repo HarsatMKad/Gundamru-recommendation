@@ -16,8 +16,26 @@ class Product(BaseModel):
     scale: str
     price: int = Field(default=0)
 
+class WeightCharacteristics(BaseModel):
+    brand: float
+    grade: float
+    scale: float
+    price: float
+
+class PythonConfig(BaseModel):
+    minProductForUser: int
+    minSumularityThreshold: float
+    pricePercentageRande: float
+    priceCoefficient: float
+    interactionSensitivityCoefficient: float
+    maxDateWeight: float
+    minDateWeight: float
+    relevanceDays: int
+    weightCharacteristics: WeightCharacteristics
+
 class Payload(BaseModel):
     recLength: int
     strategies: List[str]
     events: List[Event]
     products: List[Product]
+    config: PythonConfig

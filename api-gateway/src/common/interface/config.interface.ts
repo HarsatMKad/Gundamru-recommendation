@@ -23,8 +23,26 @@ export interface IServerConfig {
   productApiKey: string;
 }
 
+interface IPythonConfig {
+  minProductForUser: number;
+  minSumularityThreshold: number;
+  pricePercentageRande: number;
+  priceCoefficient: number;
+  interactionSensitivityCoefficient: number;
+  maxDateWeight: number;
+  minDateWeight: number;
+  relevanceDays: number;
+  weightCharacteristics: {
+    brand: number;
+    grade: number;
+    scale: number;
+    price: number;
+  };
+}
+
 export interface IGenerationConfig {
   length: number;
+  pythonConfig: IPythonConfig;
 }
 
 export interface IConfig {

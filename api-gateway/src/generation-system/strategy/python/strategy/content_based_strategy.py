@@ -4,12 +4,7 @@ from datetime import datetime
 from typing import List
 from util.services import calculate_confidences, calculate_time_weight, normalize_scores
 from util.classes import Event, Product
-from config import (
-    MIN_PRODUCT_FOR_USER,
-    INTERACTION_SENSITIVITY_COEFFICIENT,
-    STD_EPSILON,
-    CONTENT_BASED_WEIGHTS
-)
+from config import Config
 
 def content_based(rec_length: int, events: List[Event], products: List[Product]):
     events_data = [e.model_dump() for e in events]
@@ -45,7 +40,7 @@ def content_based(rec_length: int, events: List[Event], products: List[Product])
     )
 
     user_product_counts = df_events.groupby('user_id')['product_id'].nunique()
-    valid_users = user_product_counts[user_product_counts > MIN_PRODUCT_FOR_USER].index
+    valid_users = user_product_counts[user_product_counts > Config.MIN_PRODUCT_FOR_USER].index
     df_events = df_events[df_events['user_id'].isin(valid_users)]
     
     if df_events.empty:
@@ -102,16 +97,16 @@ def content_based(rec_length: int, events: List[Event], products: List[Product])
             price_diff = np.abs(product_prices - avg_price) / np.maximum(product_prices, avg_price)
             price_sim = 1.0 - price_diff
 
-        raw_scores = (brand_scores * CONTENT_BASED_WEIGHTS['brand'] + 
-                     grade_scores * CONTENT_BASED_WEIGHTS['grade'] + 
-                     scale_scores * CONTENT_BASED_WEIGHTS['scale'] +
-                     price_sim * CONTENT_BASED_WEIGHTS['price'])
+        raw_scores = (brand_scores * Config.CONTENT_BASED_WEIGHTS['brand'] + 
+                     grade_scores * Config.CONTENT_BASED_WEIGHTS['grade'] + 
+                     scale_scores * Config.CONTENT_BASED_WEIGHTS['scale'] +
+                     price_sim * Config.CONTENT_BASED_WEIGHTS['price'])
         
         # штраф к уже взаимодействованным товарам
         for pid, weight in history.items():
             if pid in products_dict:
                 idx = product_ids.index(pid)
-                raw_scores[idx] *= np.exp(-INTERACTION_SENSITIVITY_COEFFICIENT * weight)
+                raw_scores[idx] *= np.exp(-Config.INTERACTION_SENSITIVITY_COEFFICIENT * weight)
         
         # Проверка: есть ли кандидаты?
         valid_mask = raw_scores > 0
@@ -124,7 +119,7 @@ def content_based(rec_length: int, events: List[Event], products: List[Product])
         candidate_product_ids = [product_ids[i] for i in candidate_indices]
         
         # Проверка: информативны ли предсказания?
-        if len(candidate_scores) < 2 or np.std(candidate_scores) < STD_EPSILON:
+        if len(candidate_scores) < 2 or np.std(candidate_scores) < Config.STD_EPSILON:
             results[user_id] = []
             continue
         

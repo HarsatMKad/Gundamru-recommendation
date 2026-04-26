@@ -63,7 +63,7 @@ export class RecommenderOrchestrator {
       await this.dataService.getValidationData();
     const gettingDataEnd = performance.now();
     this.logger.debug(
-      `Время получения данных: ${(gettingDataEnd - gettingDataStart) / 1000} секунд`,
+      `Getting data time: ${((gettingDataEnd - gettingDataStart) / 1000).toFixed(3)} sec`,
     );
 
     if (activeConfigs.length === 0 || userEvents.length === 0) {
@@ -74,7 +74,7 @@ export class RecommenderOrchestrator {
     // Очистка неактивных рекомендаций
     await this.cleanupInactiveRecommendations(activeConfigs);
 
-    this.logger.log('1. Расчет методов.');
+    this.logger.log('1. Calculation methods.');
     const strategysResult =
       await this.recommendationCalculatorService.calculateRecommendationsStrategys(
         this.recLength,
@@ -87,7 +87,7 @@ export class RecommenderOrchestrator {
     const { personalConfigs, fallbackConfigs } =
       this.separateSonfigs(activeConfigs);
 
-    this.logger.log('2. Агрегация методов.');
+    this.logger.log('2. Aggregation methods.');
     const aggregateStart = performance.now();
     const aggregatedPersonalRecs =
       this.aggregatorEngine.aggregatePersonalStrategys(
@@ -103,10 +103,10 @@ export class RecommenderOrchestrator {
     );
     const aggregateEnd = performance.now();
     this.logger.debug(
-      `Время агрегации: ${(aggregateEnd - aggregateStart) / 1000} секунд`,
+      `Aggregation time: ${((aggregateEnd - aggregateStart) / 1000).toFixed(3)} sec`,
     );
 
-    this.logger.log('3. Сохранение.');
+    this.logger.log('3. Saving.');
     const saveStart = performance.now();
     await Promise.all([
       this.savePersonalRecs(aggregatedPersonalRecs),
@@ -115,14 +115,14 @@ export class RecommenderOrchestrator {
     const saveEnd = performance.now();
 
     this.logger.debug(
-      `Время сохранения: ${(saveEnd - saveStart) / 1000} секунд`,
+      `Save time: ${((saveEnd - saveStart) / 1000).toFixed(3)} sec`,
     );
 
     this.logger.log(ELogHandler.REC_GENERATION_STOP);
 
     const generateEnd = performance.now();
     this.logger.debug(
-      `Общее время генерации: ${(generateEnd - generateStart) / 1000} секунд`,
+      `Total generation time: ${((generateEnd - generateStart) / 1000).toFixed(3)} sec`,
     );
   }
 

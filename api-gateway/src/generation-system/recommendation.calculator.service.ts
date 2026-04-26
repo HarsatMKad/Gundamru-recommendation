@@ -15,11 +15,17 @@ import path from 'path';
 import { spawn } from 'child_process';
 import { IStrategyResultItem } from 'src/common/interface/recommendation.interface';
 import { pythonConfig } from 'src/common/config/GenerateParams';
+import { ConfigService } from 'node_modules/@nestjs/config';
+import { IGenerationConfig } from 'src/common/interface/config.interface';
+import { EConfigKey } from 'src/common/enum/ConfigKey.enum';
 
 @Injectable()
 export class RecommendationCalculatorService {
   private readonly logger = new Logger(RecommendationCalculatorService.name);
-  constructor(private readonly strategyRegistry: StrategyRegistry) {}
+  constructor(
+    private readonly strategyRegistry: StrategyRegistry,
+    private readonly configService: ConfigService,
+  ) {}
 
   async calculateRecommendationsStrategys(
     recLength: number,
@@ -150,10 +156,12 @@ export class RecommendationCalculatorService {
         scale: p.scale,
         price: p.price,
       })),
+      config: this.configService.get<IGenerationConfig>(EConfigKey.generation)
+        ?.pythonConfig,
     };
 
     this.logger.debug(
-      `Начат расчет стратегий: ${strategies.map((s) => s.name).join(', ')}`,
+      `Strategy calculation started for: ${strategies.map((s) => s.name).join(', ')}`,
     );
 
     try {
@@ -176,12 +184,12 @@ export class RecommendationCalculatorService {
       const endTime = performance.now();
 
       this.logger.debug(
-        `Вызов расчета стратегий выполнился за ${(endTime - startTime) / 1000} секунд`,
+        `All strategys calculation time: ${((endTime - startTime) / 1000).toFixed(3)} sec`,
       );
 
       return result;
     } catch (error) {
-      this.logger.error('Ошибка при вызове Python engine:', error);
+      this.logger.error('Error calling Python engine:', error);
       return {};
     }
   }
