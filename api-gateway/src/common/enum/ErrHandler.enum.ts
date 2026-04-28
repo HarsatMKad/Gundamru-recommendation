@@ -6,4 +6,5 @@ export enum EErrorHandler {
   INVALID_SCOPE = 'Invalid scope parameter',
   SETTINGS_NOT_FOUND = 'Setting not found',
   SETTINGS_EXIST = 'Settings already exist',
+  START_AND_END_DATE_ORDER = 'Start date must be before end date',
 }

@@ -5,10 +5,11 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { CleanupService } from './cleanup.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEvent } from 'src/database/entities/user-event.entity';
+import { AnalyticsService } from './analytics.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([UserEvent]), ScheduleModule.forRoot()],
-  providers: [UserEventService, CleanupService],
+  providers: [UserEventService, AnalyticsService, CleanupService],
   controllers: [UserEventsController],
   exports: [UserEventService],
 })

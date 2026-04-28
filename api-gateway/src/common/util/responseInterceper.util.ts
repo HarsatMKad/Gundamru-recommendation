@@ -8,9 +8,7 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
-import { RESPONSE_MESSAGE_METADATA } from '../const/ResponseMessage.const';
 import { ERestStatus } from '../enum/Rest.enum';
 import { map } from 'rxjs/operators';
 import { Response } from 'express';
@@ -21,8 +19,6 @@ export class ResponseInterceptor<T> implements NestInterceptor<
   T,
   IApiSuccessResponse<T>
 > {
-  constructor(private readonly reflector: Reflector) {}
-
   intercept(
     context: ExecutionContext,
     next: CallHandler,
@@ -32,12 +28,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<
         const ctx = context.switchToHttp();
         const response = ctx.getResponse<Response>();
         const request = ctx.getRequest<Request>();
-
-        const message =
-          this.reflector.get<string>(
-            RESPONSE_MESSAGE_METADATA,
-            context.getHandler(),
-          ) || 'Запрос успешно выполнен';
+        const message = 'Запрос успешно выполнен';
 
         return {
           status: ERestStatus.SUCCESS,

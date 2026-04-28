@@ -19,6 +19,7 @@ interface ApiResponse {
         grade: string;
         scale: string;
       };
+      isRecomended: boolean;
     }>;
   };
 }
@@ -67,6 +68,7 @@ export class ProductService implements IProductService {
           grade: item.attributes.grade,
           scale: item.attributes.scale,
           price: item.price,
+          isRecomended: item.isRecomended,
         }),
       );
 

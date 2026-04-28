@@ -29,7 +29,7 @@ export class RecommendationCalculatorService {
 
   async calculateRecommendationsStrategys(
     recLength: number,
-    strategys: RecommendationSetting[],
+    settings: RecommendationSetting[],
     userEvents: UserEvent[],
     products: IProductWithAttributes[],
   ): Promise<{
@@ -39,7 +39,7 @@ export class RecommendationCalculatorService {
     const personalStrategyNames = new Set<string>();
     const globalStrategyNames = new Set<string>();
 
-    for (const strategy of strategys) {
+    for (const strategy of settings) {
       strategy.personal_methods.forEach((method) =>
         personalStrategyNames.add(method.strategy),
       );

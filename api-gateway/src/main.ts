@@ -7,13 +7,12 @@ import { EConfigKey } from './common/enum/ConfigKey.enum';
 import { ResponseInterceptor } from './common/util/responseInterceper.util';
 import { AllExceptionsFilter } from './common/util/responseInterceper.util';
 import { useContainer } from 'class-validator';
-import { Reflector } from '@nestjs/core';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalPipes(new ValidationPipe());
-  app.useGlobalInterceptors(new ResponseInterceptor(new Reflector()));
+  app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new AllExceptionsFilter());
 
   useContainer(app.select(AppModule), { fallbackOnErrors: true });

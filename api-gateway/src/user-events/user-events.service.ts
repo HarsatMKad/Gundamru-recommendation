@@ -13,36 +13,13 @@ export class UserEventService {
     private eventsRepository: Repository<UserEvent>,
   ) {}
 
-  async createAndUpdate(dto: UserEventDto) {
-    const existingEvent = await this.eventsRepository.findOneBy({
-      user_id: dto.user_id,
-      product_id: dto.product_id,
-      event_type_name: dto.eventName,
-    });
-
-    if (existingEvent) {
-      existingEvent.count = existingEvent.count + 1;
-      existingEvent.timestamp = new Date();
-      return await this.eventsRepository.save(existingEvent);
-    } else {
-      const newEvent = this.eventsRepository.create({
-        user_id: dto.user_id,
-        product_id: dto.product_id,
-        event_type_name: dto.eventName,
-        count: 1,
-        timestamp: new Date(),
-      });
-      return await this.eventsRepository.save(newEvent);
-    }
-  }
-
-  async createAndUpdateFromArray(batchDto: UserEventDto[]) {
-    if (!batchDto.length) {
+  async createAndUpdateFromArray(batchEvent: UserEventDto[]) {
+    if (!batchEvent.length) {
       return [];
     }
 
     const eventCountMap = new Map<string, number>();
-    for (const dto of batchDto) {
+    for (const dto of batchEvent) {
       const key = `${dto.user_id}|${dto.product_id}|${dto.eventName}`;
 
       const existingEvent = await this.eventsRepository.findOneBy({
@@ -105,7 +82,7 @@ export class UserEventService {
     };
 
     if (dto.limit) {
-      queryOptions.take = dto.limit;
+      queryOptions.take = Number(dto.limit);
     }
 
     const result = await this.eventsRepository.find(queryOptions);

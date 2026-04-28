@@ -21,7 +21,7 @@ export class StrategyWeightDto {
   strategy!: string;
 
   @IsNumber()
-  @Min(0.1)
+  @Min(0)
   weight!: number;
 }
 

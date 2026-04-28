@@ -4,22 +4,8 @@ import { UserEventType } from 'src/common/class/UserEventType.class';
 
 @Entity('user_event')
 @Unique('UQ_user_product_event', ['user_id', 'product_id', 'event_type_name'])
-@Index('IDX_user_product_event_type_timestamp', [
-  'user_id',
-  'product_id',
-  'event_type_name',
-  'timestamp',
-])
-@Index('IDX_event_type_user_timestamp', [
-  'event_type_name',
-  'user_id',
-  'timestamp',
-])
-@Index('IDX_user_event_type_timestamp', [
-  'user_id',
-  'event_type_name',
-  'timestamp',
-])
+@Index('IDX_user_product_event', ['user_id', 'product_id', 'event_type_name']) // Для поиска уникальных записей при создании
+@Index('IDX_event_timestamp', ['event_type_name', 'timestamp']) // Для удаления старых записей
 export class UserEvent {
   @PrimaryGeneratedColumn('uuid')
   id!: string;

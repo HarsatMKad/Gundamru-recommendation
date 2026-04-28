@@ -1,32 +1,20 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { RecommendationService } from './recommendations.service';
-import { RecQueryDto } from './dto/query-recommendation.dto';
+import {
+  RecommendationParamsDto,
+  RecommendationQueryDto,
+} from './dto/query-recommendation.dto';
+import { IRecommendationResponseSchema } from 'src/common/interface/recommendation.interface';
 
 @Controller('api/recommendation')
 export class RecommendationController {
   constructor(private readonly service: RecommendationService) {}
 
-  @Get(`:settingId/:mode/:userId`)
+  @Get(`:settingId/:userId/:mode`)
   async getRecommendations(
-    @Param('setting') settingId: string, // Из каких настроек
-    @Param('mode') mode: string, // Как
-    @Param('userId') userId: string, // Кому
-    @Query() query: RecQueryDto,
-  ) {
-    return await this.service.getRecommendations(
-      userId,
-      settingId,
-      mode,
-      query.limit,
-      query.minScore,
-    );
-  }
-
-  @Get(`/all`)
-  async getAllRecommendations(
-    @Query('limit') limit: number = 100,
-    @Query('userId') userId?: string,
-  ) {
-    return await this.service.getAllRecommendations(limit, userId);
+    @Param() param: RecommendationParamsDto,
+    @Query() query: RecommendationQueryDto,
+  ): Promise<IRecommendationResponseSchema> {
+    return await this.service.getRecommendations(param, query);
   }
 }

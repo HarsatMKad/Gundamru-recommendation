@@ -23,7 +23,8 @@ import { RecommendationSettingsController } from './recommendation-settings.cont
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         ttl:
-          configService.get<ICacheConfig>(EConfigKey.cache)?.ttl ?? 600 * 1000, // как долго хранить кэш. В конфиге указаны секунды
+          (configService.get<ICacheConfig>(EConfigKey.cache)?.ttl ?? 600) *
+          1000, // как долго хранить кэш. В конфиге указаны секунды
         max: configService.get<ICacheConfig>(EConfigKey.cache)?.max ?? 2000, // максимум CACHE_MAX(2000) записей в кэше
       }),
     }),

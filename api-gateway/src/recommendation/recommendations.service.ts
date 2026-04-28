@@ -9,31 +9,36 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { BadRequestException } from '@nestjs/common';
 import {
-  CACH_CONST,
   RECOMMENDATION_MODS,
-} from 'src/common/const/ConstHandler.const';
+  RecommendationParamsDto,
+  RecommendationQueryDto,
+} from './dto/query-recommendation.dto';
+import { ValidItemProvider } from 'src/generation-system/validItem.provider';
+import { IRecommendationResponseSchema } from 'src/common/interface/recommendation.interface';
 
 @Injectable()
 export class RecommendationService {
+  private readonly isRecommendedProductsCacheKey: string =
+    'is_recommended_products';
+  private readonly cacheKeyPersonal = 'rec-personal';
+  private readonly cachKeyFallback = 'rec-fallback';
+
   constructor(
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     @InjectRepository(Recommendation)
     private readonly recRepo: Repository<Recommendation>,
     @InjectRepository(RecommendationSetting)
     private readonly settingRepo: Repository<RecommendationSetting>,
+    private readonly validItemProvider: ValidItemProvider,
   ) {}
 
-  /** 1. Только пользовательские */
+  /* 1. Только пользовательские */
   async getPurePersonal(
     userId: string,
     settingId: string,
-    minScore?: number,
+    minScore: number,
   ): Promise<IRecommendationItem[]> {
-    let minscoreCacheKey = '';
-    if (minScore) {
-      minscoreCacheKey = `_${minScore}`;
-    }
-    const cacheKey = `${CACH_CONST.CACHEKEY_PERSONAL}_${userId}_${settingId}${minscoreCacheKey}`;
+    const cacheKey = `${this.cacheKeyPersonal}_${userId}_${settingId}_${minScore}`;
     const cached = await this.cacheManager.get<IRecommendationItem[]>(cacheKey);
     if (cached) return cached;
 
@@ -54,7 +59,7 @@ export class RecommendationService {
     return dataFiltred;
   }
 
-  /** 2. Только стандартные */
+  /* 2. Только стандартные */
   async getFallback(
     settingId: string,
     minScore?: number,
@@ -63,7 +68,7 @@ export class RecommendationService {
     if (minScore) {
       minscoreCacheKey = `_${minScore}`;
     }
-    const cacheKey = `${CACH_CONST.CACHEKEY_FALLBACK}_${settingId}${minscoreCacheKey}`;
+    const cacheKey = `${this.cachKeyFallback}_${settingId}${minscoreCacheKey}`;
     const cached = await this.cacheManager.get(cacheKey);
     if (cached) return cached as IRecommendationItem[];
 
@@ -78,7 +83,7 @@ export class RecommendationService {
     return dataFiltred;
   }
 
-  //** Смешенные данные, если не хватает до нужного количества - дополняются из стандартных
+  //* Смешенные данные, если не хватает до нужного количества - дополняются из стандартных
   // если передан minScore -  пользовательские товары отсеивается, если их уверенность меньше */
   private mergeAndFill(
     personal: IRecommendationItem[],
@@ -97,35 +102,104 @@ export class RecommendationService {
     return result;
   }
 
+  private insertRecommendedRandomly(
+    originalProducts: IRecommendationItem[],
+    recommendedProducts: IRecommendationItem[],
+  ): IRecommendationItem[] {
+    if (recommendedProducts.length === 0) {
+      return [...originalProducts];
+    }
+
+    const result = [...originalProducts];
+    for (const recommendedProduct of recommendedProducts) {
+      const randomIndex = Math.floor(Math.random() * (result.length + 1));
+      result.splice(randomIndex, 0, recommendedProduct);
+    }
+    return result;
+  }
+
+  private async addRecommendedProducts(
+    products: IRecommendationItem[],
+  ): Promise<IRecommendationItem[]> {
+    const cacheKey = this.isRecommendedProductsCacheKey;
+
+    const cached = await this.cacheManager.get<IRecommendationItem[]>(cacheKey);
+    if (cached) return this.insertRecommendedRandomly(products, cached);
+
+    const allProducts =
+      await this.validItemProvider.getValidProductsWithAttributes();
+
+    const recommendedProducts = allProducts.filter(
+      (p) => p.isRecomended === true,
+    );
+
+    if (recommendedProducts.length === 0) {
+      return products;
+    }
+
+    const recommendedItems: IRecommendationItem[] = recommendedProducts.map(
+      (product) => ({
+        sku: product.id,
+        score: 10,
+      }),
+    );
+
+    // Хранить список товаров, которые is_recommended=true дольше обычного кэша (3 часа)
+    await this.cacheManager.set(cacheKey, recommendedItems, 3600 * 1000 * 3);
+    return this.insertRecommendedRandomly(products, recommendedItems);
+  }
+
   async getRecommendations(
-    userId: string,
-    settingId: string,
-    mode: string,
-    limit: number,
-    minScore?: number,
-  ) {
+    param: RecommendationParamsDto,
+    query: RecommendationQueryDto,
+  ): Promise<IRecommendationResponseSchema> {
+    const { settingId, userId, mode = RECOMMENDATION_MODS.MIXED } = param;
+    const { addRecommendedProducts = false, minScore } = query;
+    const limit = Number(query.limit) || 10;
+
+    const cacheKey = `${userId}_${settingId}_${mode}_${limit}_${minScore}_${addRecommendedProducts}`;
+
+    const cacheResponse =
+      await this.cacheManager.get<IRecommendationResponseSchema>(cacheKey);
+
+    if (cacheResponse) {
+      return cacheResponse;
+    }
+
     let result: IRecommendationItem[] = [];
+    let personalLength: number = 0;
+    let fallbackLength: number = 0;
 
     switch (mode) {
+      // Только персональные
       case RECOMMENDATION_MODS.PERSONAL:
         result = await this.getPurePersonal(userId, settingId, minScore);
+        personalLength = result.length;
         break;
+      // Только стандартные
       case RECOMMENDATION_MODS.FALLBACK:
         result = await this.getFallback(settingId, minScore);
+        fallbackLength = result.length;
         break;
+      // Дополняет персональные стандартными
       case RECOMMENDATION_MODS.MIXED: {
         const [personal, fallback] = await Promise.all([
           this.getPurePersonal(userId, settingId, minScore),
           this.getFallback(settingId, minScore),
         ]);
+        personalLength = personal.length;
+        fallbackLength = fallback.length;
         result = this.mergeAndFill(personal, fallback);
         break;
       }
+      // Тоже самое, что MIXED, но отбор минимальной оценке не действует на стандартные товары
       case RECOMMENDATION_MODS.MIXED_FULLFALLBACK: {
         const [personal, fallback] = await Promise.all([
           this.getPurePersonal(userId, settingId, minScore),
           this.getFallback(settingId),
         ]);
+        personalLength = personal.length;
+        fallbackLength = fallback.length;
         result = this.mergeAndFill(personal, fallback);
         break;
       }
@@ -135,34 +209,26 @@ export class RecommendationService {
         );
     }
 
-    const sortedResults = result
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit);
+    result = result.sort((a, b) => b.score - a.score).slice(0, limit);
 
-    return {
+    if (addRecommendedProducts) {
+      result = await this.addRecommendedProducts(result);
+    }
+
+    const response: IRecommendationResponseSchema = {
       mode,
+      userId,
       settingId,
       limit,
       minScore,
-      length: sortedResults.length,
-      recommendations: sortedResults,
+      isAddRecommendedProducts: addRecommendedProducts,
+      recommendations: result,
+      length: result.length,
+      personalLength,
+      fallbackLength,
     };
-  }
 
-  async getAllRecommendations(limit: number, userId?: string) {
-    if (userId) {
-      const result = await this.recRepo.find({ where: { user_id: userId } });
-      return {
-        length: result.length,
-        recommendations: result,
-      };
-    } else {
-      const result = await this.recRepo.find({ take: limit });
-      return {
-        limit,
-        length: result.length,
-        recommendations: result,
-      };
-    }
+    await this.cacheManager.set(cacheKey, response);
+    return response;
   }
 }

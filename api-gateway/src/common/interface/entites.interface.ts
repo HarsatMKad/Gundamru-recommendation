@@ -7,6 +7,7 @@ export interface IProductWithAttributes {
   grade: string;
   scale: string;
   price: number;
+  isRecomended: boolean;
 }
 
 export interface IProductService {

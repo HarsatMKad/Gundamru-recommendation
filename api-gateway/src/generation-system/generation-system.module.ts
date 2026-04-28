@@ -47,7 +47,7 @@ import { BatchWriter } from './batch-writer.service';
       useClass: ProductService,
     },
   ],
-  exports: [StrategyRegistry],
+  exports: [StrategyRegistry, ValidItemProvider],
   controllers: [RecommenderSystemController],
 })
 export class RecommenderSystemModule {}

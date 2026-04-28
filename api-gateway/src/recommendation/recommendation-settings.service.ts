@@ -23,10 +23,6 @@ export class RecommendationSettingsService {
     return await this.settingsRepo.findOneBy({ id });
   }
 
-  async getByContext(name: string) {
-    return await this.settingsRepo.findOneBy({ name });
-  }
-
   async updateSettingsById(
     id: string,
     updateDto: UpdateRecommendationSettingDto,
