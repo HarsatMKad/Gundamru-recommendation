@@ -26,7 +26,7 @@ export default () => ({
     length: process.env.REC_GENERATION_LENTGH
       ? parseInt(process.env.REC_GENERATION_LENTGH)
       : 10,
-
+    pythonPath: process.env.PYTHON_PATH ?? '/opt/venv/bin/python',
     pythonConfig: {
       minProductForUser: process.env.MIN_PRODUCT_FOR_USER
         ? parseInt(process.env.MIN_PRODUCT_FOR_USER)

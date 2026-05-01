@@ -18,11 +18,11 @@ export class UserEventArrayDto {
 export class UserEventDto {
   @IsUUID()
   @IsNotEmpty()
-  user_id!: string;
+  userId!: string;
 
   @IsUUID()
   @IsNotEmpty()
-  product_id!: string;
+  productId!: string;
 
   @IsEnum(UserEventNames)
   @IsNotEmpty()

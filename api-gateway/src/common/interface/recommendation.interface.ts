@@ -19,10 +19,10 @@ export interface IRecommendationMethod {
 }
 
 export interface IRecommendationInput {
-  user_id: string;
-  recommended_skus: IRecommendationItem[];
-  setting_id: string;
-  generated_at?: Date;
+  userId: string;
+  recommendedSkus: IRecommendationItem[];
+  settingId: string;
+  generatedAt?: Date;
 }
 
 export interface IValidationData {

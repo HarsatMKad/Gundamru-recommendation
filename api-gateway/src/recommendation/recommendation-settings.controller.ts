@@ -6,12 +6,15 @@ import {
   Param,
   UsePipes,
   Delete,
-  Patch,
+  Put,
 } from '@nestjs/common';
 import { RecommendationSettingsService } from './recommendation-settings.service';
 import { CreateRecommendationSettingDto } from './dto/create-recommendation-settings.dto';
 import { UpdateRecommendationSettingDto } from './dto/update-recommendation-settings.dto';
-import { RecSettingByIdDto } from './dto/query-recommendation.dto';
+import {
+  RecSettingFindByIdDto,
+  RecSettingFindByNameDto,
+} from './dto/query-recommendation.dto';
 
 @Controller('api/recommendation/settings')
 export class RecommendationSettingsController {
@@ -25,8 +28,13 @@ export class RecommendationSettingsController {
   }
 
   @Get(':id')
-  findById(@Param() idDto: RecSettingByIdDto) {
-    return this.recSettingsService.getById(idDto.id);
+  findById(@Param() dto: RecSettingFindByIdDto) {
+    return this.recSettingsService.getById(dto.id);
+  }
+
+  @Get('byName/:name')
+  findByName(@Param() dto: RecSettingFindByNameDto) {
+    return this.recSettingsService.getByName(dto.name);
   }
 
   @Post()
@@ -35,9 +43,9 @@ export class RecommendationSettingsController {
     return await this.recSettingsService.createSettings(createDto);
   }
 
-  @Patch(`:id`)
+  @Put(`:id`)
   async update(
-    @Param() idDto: RecSettingByIdDto,
+    @Param() idDto: RecSettingFindByIdDto,
     @Body() updateDto: UpdateRecommendationSettingDto,
   ) {
     return await this.recSettingsService.updateSettingsById(
@@ -47,7 +55,7 @@ export class RecommendationSettingsController {
   }
 
   @Delete(':id')
-  async delete(@Param() idDto: RecSettingByIdDto) {
-    return await this.recSettingsService.softDeleteSettingsById(idDto.id);
+  async delete(@Param() idDto: RecSettingFindByIdDto) {
+    return await this.recSettingsService.deleteSettingsById(idDto.id);
   }
 }

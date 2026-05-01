@@ -42,6 +42,7 @@ interface IPythonConfig {
 
 export interface IGenerationConfig {
   length: number;
+  pythonPath: string;
   pythonConfig: IPythonConfig;
 }
 

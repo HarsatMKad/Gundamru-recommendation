@@ -1,31 +1,5 @@
 services:
-  db:
-    image: postgres:15-alpine
-    container_name: rec_system_db
-    restart: always
-    environment:
-      POSTGRES_USER: harsat
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: gundamru-recommendation
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql
-    networks:
-      - app-network
-
   app:
     build: ./api-gateway
     ports:
-      - "3000:3000"
-    depends_on:
-      - db
-    networks:
-      - app-network
-
-networks:
-  app-network:
-    driver: bridge
-
-volumes:
-  postgres_data:
+      - "3002:3002"

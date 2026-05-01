@@ -46,11 +46,11 @@ export class RecommendationService {
     if (!setting) return [];
 
     const personal = await this.recRepo.findOne({
-      where: { user_id: userId, setting_id: setting.id },
+      where: { userId: userId, settingId: setting.id },
     });
     if (!personal) return [];
 
-    const data = personal?.recommended_skus || [];
+    const data = personal?.recommendedSkus || [];
     let dataFiltred = data;
     if (minScore && minScore > 0 && dataFiltred.length > 0) {
       dataFiltred = dataFiltred.filter((i) => i.score >= minScore);
@@ -74,7 +74,7 @@ export class RecommendationService {
 
     const setting = await this.settingRepo.findOneBy({ id: settingId });
 
-    const data = setting?.fallback_skus || [];
+    const data = setting?.fallbackSkus || [];
     let dataFiltred = data;
     if (minScore && minScore > 0 && dataFiltred.length > 0) {
       dataFiltred = dataFiltred.filter((i) => i.score >= minScore);

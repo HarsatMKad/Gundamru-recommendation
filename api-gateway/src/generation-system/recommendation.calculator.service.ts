@@ -40,11 +40,11 @@ export class RecommendationCalculatorService {
     const globalStrategyNames = new Set<string>();
 
     for (const strategy of settings) {
-      strategy.personal_methods.forEach((method) =>
+      strategy.personalMethods.forEach((method) =>
         personalStrategyNames.add(method.strategy),
       );
-      if (strategy.fallback_strategy) {
-        globalStrategyNames.add(strategy.fallback_strategy);
+      if (strategy.fallbackStrategy) {
+        globalStrategyNames.add(strategy.fallbackStrategy);
       }
     }
 
@@ -137,31 +137,40 @@ export class RecommendationCalculatorService {
     products: IProductWithAttributes[],
   ): Promise<TPythonResponse> {
     const startTime = performance.now();
+    const strategySlugs = strategies.map((s) => s.slug);
+
+    const config = this.configService.get<IGenerationConfig>(
+      EConfigKey.generation,
+    );
+
+    if (!config?.pythonPath) {
+      this.logger.error('Path to python missing');
+      return {};
+    }
 
     const payload = {
       recLength: recLength,
-      strategies: strategies.map((s) => s.name),
+      strategies: strategySlugs,
       events: userEvents.map((e) => ({
-        user_id: e.user_id,
-        product_id: e.product_id,
+        userId: e.userId,
+        productId: e.productId,
         weight: e.weight,
         count: e.count,
         timestamp: e.timestamp.getTime(),
-        retention_days: e.retentionDays,
+        retentionDays: e.retentionDays,
       })),
       products: products.map((p) => ({
         id: p.id,
-        brand_id: p.brand_id,
+        brandId: p.brandId,
         grade: p.grade,
         scale: p.scale,
         price: p.price,
       })),
-      config: this.configService.get<IGenerationConfig>(EConfigKey.generation)
-        ?.pythonConfig,
+      config: config?.pythonConfig,
     };
 
     this.logger.debug(
-      `Strategy calculation started for: ${strategies.map((s) => s.name).join(', ')}`,
+      `Strategy calculation started for: ${strategySlugs.join(', ')}`,
     );
 
     try {
@@ -171,7 +180,7 @@ export class RecommendationCalculatorService {
       );
 
       const { stdout, stderr } = await this.spawnAsync(
-        pythonConfig.PYTHON_PATH,
+        config.pythonPath,
         [scriptPath],
         JSON.stringify(payload),
       );

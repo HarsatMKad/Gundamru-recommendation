@@ -7,9 +7,10 @@ import { spawnSync } from 'child_process';
 import { IProductWithAttributes } from '../interface/entites.interface';
 import fs from 'fs';
 
-export abstract class BaseGenerateStrategy<
-  T extends TStrategyCalculateResult,
-> implements IBaseRectrategy {
+export abstract class BaseGenerateStrategy<T extends TStrategyCalculateResult>
+  implements IBaseRectrategy
+{
+  abstract readonly slug: string;
   abstract readonly name: string;
   abstract readonly description: string;
   abstract readonly scope: StrategyScope;

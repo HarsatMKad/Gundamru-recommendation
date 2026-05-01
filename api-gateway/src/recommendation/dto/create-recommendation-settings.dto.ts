@@ -28,26 +28,26 @@ export class StrategyWeightDto {
 export class CreateRecommendationSettingDto {
   @IsString()
   @IsNotEmpty()
-  name?: string;
+  name!: string;
 
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => StrategyWeightDto)
-  personal_methods?: StrategyWeightDto[];
+  personalMethods?: StrategyWeightDto[];
+
+  @ValidateIf((o: CreateRecommendationSettingDto) => !!o.fallbackWeight)
+  @IsString()
+  @IsOptional()
+  @Validate(IsStrategyForScope, [StrategyScope.GLOBAL])
+  fallbackStrategy?: string;
+
+  @ValidateIf((o: CreateRecommendationSettingDto) => !!o.fallbackStrategy)
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  fallbackWeight?: number;
 
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
-
-  @ValidateIf((o: CreateRecommendationSettingDto) => !!o.fallback_weight)
-  @IsString()
-  @IsOptional()
-  @Validate(IsStrategyForScope, [StrategyScope.GLOBAL])
-  fallback_strategy?: string;
-
-  @ValidateIf((o: CreateRecommendationSettingDto) => !!o.fallback_strategy)
-  @IsNumber()
-  @IsOptional()
-  @Min(0.1)
-  fallback_weight?: number;
 }

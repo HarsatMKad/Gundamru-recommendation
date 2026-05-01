@@ -14,23 +14,25 @@ import { StrategyScope } from 'src/common/enum/StrategyScope.enum';
 import { IsStrategyForScope } from '../scope-validator.util';
 
 export class UpdateRecommendationSettingDto {
+  @IsString()
+  name!: string;
+
   @IsArray()
   @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => StrategyWeightDto)
-  personal_methods?: StrategyWeightDto[];
+  personalMethods?: StrategyWeightDto[];
 
   @IsBoolean()
-  @IsOptional()
-  isActive?: boolean;
+  isActive!: boolean;
 
   @IsString()
   @IsOptional()
   @Validate(IsStrategyForScope, [StrategyScope.GLOBAL])
-  fallback_strategy?: string;
+  fallbackStrategy?: string;
 
   @IsNumber()
   @IsOptional()
-  @ValidateIf((o: UpdateRecommendationSettingDto) => !!o.fallback_strategy)
-  fallback_weight?: number;
+  @ValidateIf((o: UpdateRecommendationSettingDto) => !!o.fallbackStrategy)
+  fallbackWeight?: number;
 }

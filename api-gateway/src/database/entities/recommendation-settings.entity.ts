@@ -10,20 +10,23 @@ export class RecommendationSetting {
   name!: string;
 
   @Column({ type: 'jsonb' })
-  personal_methods!: { strategy: string; weight: number }[];
+  personalMethods!: { strategy: string; weight: number }[];
 
   @Column({ default: true, nullable: false })
   isActive!: boolean;
 
   @Column({ nullable: true })
-  fallback_strategy?: string;
+  fallbackStrategy?: string;
 
   @Column({ type: 'float', default: 1 })
-  fallback_weight!: number;
+  fallbackWeight!: number;
 
   @Column({ type: 'jsonb', nullable: true })
-  fallback_skus?: IRecommendationItem[];
+  fallbackSkus?: IRecommendationItem[];
 
   @Column({ type: 'timestamp', nullable: true })
-  fallback_updated_at?: Date;
+  fallbackUpdatedAt?: Date;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt!: Date;
 }

@@ -2,12 +2,14 @@ import { StrategyScope } from '../enum/StrategyScope.enum';
 
 export interface IStrategyDefinition {
   name: string;
+  slug: string;
   description: string;
   scope: StrategyScope;
 }
 
 export interface IBaseRectrategy {
   readonly name: string;
+  readonly slug: string;
   readonly description: string;
   readonly scope: StrategyScope;
 }

@@ -31,9 +31,9 @@ export class StrategyRegistry implements OnModuleInit {
 
   private registerStrategy(strategy: IBaseRectrategy) {
     if (strategy.scope === StrategyScope.PERSONAL) {
-      this.personalStrategies.set(strategy.name, strategy as IPersonalStrategy);
+      this.personalStrategies.set(strategy.slug, strategy as IPersonalStrategy);
     } else if (strategy.scope === StrategyScope.GLOBAL) {
-      this.globalStrategies.set(strategy.name, strategy as IGlobalStrategy);
+      this.globalStrategies.set(strategy.slug, strategy as IGlobalStrategy);
     }
   }
 
@@ -48,6 +48,7 @@ export class StrategyRegistry implements OnModuleInit {
   getAllPersonalStrategies(): IStrategyDefinition[] {
     return Array.from(this.personalStrategies.values()).map((s) => ({
       name: s.name,
+      slug: s.slug,
       description: s.description,
       scope: s.scope,
     }));
@@ -56,6 +57,7 @@ export class StrategyRegistry implements OnModuleInit {
   getAllGlobalStrategies(): IStrategyDefinition[] {
     return Array.from(this.globalStrategies.values()).map((s) => ({
       name: s.name,
+      slug: s.slug,
       description: s.description,
       scope: s.scope,
     }));

@@ -16,11 +16,31 @@ export class RecommendationSettingsService {
   ) {}
 
   async getAll() {
-    return await this.settingsRepo.find();
+    const items = await this.settingsRepo.find({
+      order: {
+        isActive: 'DESC',
+        createdAt: 'DESC',
+      },
+    });
+
+    const itemsResponse = items.map((item) => ({
+      id: item.id,
+      name: item.name,
+      fallbackStrategy: item.fallbackStrategy,
+      fallbackWeight: item.fallbackWeight,
+      personalMethods: item.personalMethods,
+      isActive: item.isActive,
+      createdAt: item.createdAt,
+    }));
+    return { items: itemsResponse, total: items.length };
   }
 
   async getById(id: string) {
     return await this.settingsRepo.findOneBy({ id });
+  }
+
+  async getByName(name: string) {
+    return await this.settingsRepo.findOneBy({ name });
   }
 
   async updateSettingsById(
@@ -51,7 +71,7 @@ export class RecommendationSettingsService {
     return await this.settingsRepo.save(newSettings);
   }
 
-  async softDeleteSettingsById(id: string) {
+  async deleteSettingsById(id: string) {
     const existing = await this.settingsRepo.findOneBy({ id });
 
     if (!existing) {
@@ -59,16 +79,12 @@ export class RecommendationSettingsService {
     }
 
     await this.settingsRepo.delete({ id });
-
-    existing.isActive = false;
-    await this.settingsRepo.save(existing);
-
     return existing;
   }
 
   async updateFallback(
     id: string,
-    data: { fallback_skus: IRecommendationItem[]; fallback_updated_at: Date },
+    data: { fallbackSkus: IRecommendationItem[]; fallbackUpdatedAt: Date },
   ) {
     const setting = await this.settingsRepo.findOne({
       where: { id },
@@ -81,8 +97,8 @@ export class RecommendationSettingsService {
     }
 
     await this.settingsRepo.update(id, {
-      fallback_skus: data.fallback_skus,
-      fallback_updated_at: data.fallback_updated_at,
+      fallbackSkus: data.fallbackSkus,
+      fallbackUpdatedAt: data.fallbackUpdatedAt,
     });
 
     return await this.settingsRepo.findOne({

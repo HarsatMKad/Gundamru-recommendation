@@ -10,7 +10,7 @@ import { IRecommendationResponseSchema } from 'src/common/interface/recommendati
 export class RecommendationController {
   constructor(private readonly service: RecommendationService) {}
 
-  @Get(`:settingId/:userId/:mode`)
+  @Get(`forUser/:settingId/:userId/:mode`)
   async getRecommendations(
     @Param() param: RecommendationParamsDto,
     @Query() query: RecommendationQueryDto,

@@ -144,9 +144,9 @@ export class RecommenderOrchestrator {
 
   private separateSonfigs(configs: RecommendationSetting[]) {
     const personalConfigs = configs.filter(
-      (c) => c.personal_methods?.length > 0,
+      (c) => c.personalMethods?.length > 0,
     );
-    const fallbackConfigs = configs.filter((c) => c.fallback_strategy);
+    const fallbackConfigs = configs.filter((c) => c.fallbackStrategy);
     return { personalConfigs, fallbackConfigs };
   }
 
@@ -162,8 +162,8 @@ export class RecommenderOrchestrator {
     await Promise.all(
       batchData.map(async ({ configId, fallbacks }) => {
         await this.settingsService.updateFallback(configId, {
-          fallback_skus: fallbacks,
-          fallback_updated_at: new Date(),
+          fallbackSkus: fallbacks,
+          fallbackUpdatedAt: new Date(),
         });
       }),
     );

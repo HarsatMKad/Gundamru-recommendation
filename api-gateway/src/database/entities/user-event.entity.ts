@@ -1,23 +1,21 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index, Unique } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, Unique } from 'typeorm';
 import { UserEventNames } from 'src/common/enum/UserEventName.enum';
 import { UserEventType } from 'src/common/class/UserEventType.class';
 
 @Entity('user_event')
-@Unique('UQ_user_product_event', ['user_id', 'product_id', 'event_type_name'])
-@Index('IDX_user_product_event', ['user_id', 'product_id', 'event_type_name']) // Для поиска уникальных записей при создании
-@Index('IDX_event_timestamp', ['event_type_name', 'timestamp']) // Для удаления старых записей
+@Unique('UQ_user_product_event', ['userId', 'productId', 'eventTypeName'])
 export class UserEvent {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
   @Column('uuid')
-  user_id!: string;
+  userId!: string;
 
   @Column('uuid')
-  product_id!: string;
+  productId!: string;
 
   @Column({ type: 'enum', enum: UserEventNames, default: UserEventNames.VIEW })
-  event_type_name!: UserEventNames;
+  eventTypeName!: UserEventNames;
 
   @Column({ type: 'int', default: 1 })
   count!: number;
@@ -26,7 +24,7 @@ export class UserEvent {
   timestamp!: Date;
 
   get config() {
-    return UserEventType.getConfig(this.event_type_name);
+    return UserEventType.getConfig(this.eventTypeName);
   }
 
   get weight(): number {

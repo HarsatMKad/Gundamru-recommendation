@@ -10,6 +10,8 @@ import { IDatabaseConfig } from './common/interface/config.interface';
 import { EConfigKey } from './common/enum/ConfigKey.enum';
 import { ApiKeyGuard } from './common/util/api-key.guard.util';
 import { APP_GUARD } from '@nestjs/core';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
+import type { NamingStrategyInterface } from 'typeorm';
 
 const globalGuardProvider: Provider<ApiKeyGuard> = {
   provide: APP_GUARD,
@@ -36,6 +38,8 @@ const globalGuardProvider: Provider<ApiKeyGuard> = {
           autoLoadEntities: true,
           synchronize: true, // не забыть поставить false
           migrationsRun: false, // не забыть поставить false
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+          namingStrategy: new SnakeNamingStrategy() as NamingStrategyInterface,
         };
       },
     }),

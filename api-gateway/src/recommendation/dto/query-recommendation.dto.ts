@@ -6,6 +6,7 @@ import {
   IsUUID,
   IsString,
   IsNotEmpty,
+  IsOptional,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -29,6 +30,10 @@ export class RecommendationQueryDto {
   @IsNumber()
   @Type(() => Number)
   minScore: number = 0;
+
+  @IsBoolean()
+  @IsOptional()
+  byName?: boolean;
 }
 
 export class RecommendationParamsDto {
@@ -45,7 +50,12 @@ export class RecommendationParamsDto {
   mode!: string;
 }
 
-export class RecSettingByIdDto {
+export class RecSettingFindByIdDto {
   @IsUUID()
   id!: string;
+}
+
+export class RecSettingFindByNameDto {
+  @IsString()
+  name!: string;
 }

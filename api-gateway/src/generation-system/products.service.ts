@@ -64,7 +64,7 @@ export class ProductService implements IProductService {
       const products: IProductWithAttributes[] = response.data.data.items.map(
         (item) => ({
           id: item.id,
-          brand_id: item.brand.id,
+          brandId: item.brand.id,
           grade: item.attributes.grade,
           scale: item.attributes.scale,
           price: item.price,

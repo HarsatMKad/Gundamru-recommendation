@@ -23,6 +23,6 @@ export class IsStrategyForScope implements ValidatorConstraintInterface {
   }
 
   defaultMessage(args: ValidationArguments) {
-    return `Стратегия ${args.value} не найдена в активных ${args.constraints[0]} стратегиях.`;
+    return `Стратегия ${args.value} не найдена в ${args.constraints[0]} стратегиях.`;
   }
 }

@@ -44,15 +44,15 @@ export class AggregatorEngine {
     for (const config of configs) {
       for (const userId of uniqueUserIds) {
         batchData.push({
-          user_id: userId,
-          setting_id: config.id,
-          recommended_skus: this.processedPersonal(
+          userId: userId,
+          settingId: config.id,
+          recommendedSkus: this.processedPersonal(
             recLength,
             config,
             userId,
             personalData,
           ),
-          generated_at: new Date(),
+          generatedAt: new Date(),
         });
       }
     }
@@ -75,11 +75,11 @@ export class AggregatorEngine {
         continue;
       }
 
-      if (config.fallback_strategy && config.fallback_weight) {
+      if (config.fallbackStrategy && config.fallbackWeight) {
         const processedRecs = this.processedGlobal(
           recLength,
-          config.fallback_strategy,
-          config.fallback_weight,
+          config.fallbackStrategy,
+          config.fallbackWeight,
           globalData,
         );
         aggregatedResults.push({
@@ -108,9 +108,9 @@ export class AggregatorEngine {
     const denominator: Record<string, number> = {}; // Σ(weight)
     const methodCount: Record<string, number> = {}; // количество методов, в которых есть товар
 
-    const totalMethods = config.personal_methods.length;
+    const totalMethods = config.personalMethods.length;
 
-    for (const method of config.personal_methods) {
+    for (const method of config.personalMethods) {
       const strategyMap = strategyData[method.strategy];
       const strategyResults = strategyMap?.[userId] || [];
 

@@ -20,12 +20,12 @@ export class UserEventService {
 
     const eventCountMap = new Map<string, number>();
     for (const dto of batchEvent) {
-      const key = `${dto.user_id}|${dto.product_id}|${dto.eventName}`;
+      const key = `${dto.userId}|${dto.productId}|${dto.eventName}`;
 
       const existingEvent = await this.eventsRepository.findOneBy({
-        user_id: dto.user_id,
-        product_id: dto.product_id,
-        event_type_name: dto.eventName,
+        userId: dto.userId,
+        productId: dto.productId,
+        eventTypeName: dto.eventName,
       });
 
       const count =
@@ -36,12 +36,12 @@ export class UserEventService {
 
     const eventsToUpsert = Array.from(eventCountMap.entries())
       .map(([key, count]) => {
-        const [user_id, product_id, event_type_name] = key.split('|');
-        if (UserEventType.isValidEvent(event_type_name)) {
+        const [userId, productId, eventTypeName] = key.split('|');
+        if (UserEventType.isValidEvent(eventTypeName)) {
           return this.eventsRepository.create({
-            user_id,
-            product_id,
-            event_type_name,
+            userId,
+            productId,
+            eventTypeName,
             count,
             timestamp: new Date(),
           });
@@ -100,7 +100,7 @@ export class UserEventService {
 
     return this.eventsRepository.find({
       where: {
-        product_id: In(productIds),
+        productId: In(productIds),
       },
     });
   }

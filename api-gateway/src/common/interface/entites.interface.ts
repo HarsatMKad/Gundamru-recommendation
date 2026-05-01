@@ -3,7 +3,7 @@ export const I_PRODUCTS_SERVICE = 'I_PRODUCTS_SERVICE';
 
 export interface IProductWithAttributes {
   id: string;
-  brand_id: string;
+  brandId: string;
   grade: string;
   scale: string;
   price: number;
