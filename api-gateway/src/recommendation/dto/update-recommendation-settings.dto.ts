@@ -15,7 +15,12 @@ import { IsStrategyForScope } from '../scope-validator.util';
 
 export class UpdateRecommendationSettingDto {
   @IsString()
+  @IsOptional()
   name!: string;
+
+  @IsString()
+  @IsOptional()
+  type!: string;
 
   @IsArray()
   @IsOptional()

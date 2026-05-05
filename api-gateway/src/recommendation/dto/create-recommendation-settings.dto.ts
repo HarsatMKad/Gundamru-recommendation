@@ -30,6 +30,10 @@ export class CreateRecommendationSettingDto {
   @IsNotEmpty()
   name!: string;
 
+  @IsString()
+  @IsNotEmpty()
+  type!: string;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => StrategyWeightDto)

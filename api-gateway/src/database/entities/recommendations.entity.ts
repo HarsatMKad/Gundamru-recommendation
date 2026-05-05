@@ -4,11 +4,13 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  Unique,
 } from 'typeorm';
 import { RecommendationSetting } from 'src/database/entities/recommendation-settings.entity';
 import { IRecommendationItem } from 'src/common/interface/recommendation.interface';
 
 @Entity('user_recommendation')
+@Unique(['userId', 'settingId'])
 export class Recommendation {
   @PrimaryGeneratedColumn('uuid')
   id!: string;

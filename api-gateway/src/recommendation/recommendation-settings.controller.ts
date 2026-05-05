@@ -32,9 +32,9 @@ export class RecommendationSettingsController {
     return this.recSettingsService.getById(dto.id);
   }
 
-  @Get('byName/:name')
-  findByName(@Param() dto: RecSettingFindByNameDto) {
-    return this.recSettingsService.getByName(dto.name);
+  @Get('byType/:type')
+  findByType(@Param() dto: RecSettingFindByNameDto) {
+    return this.recSettingsService.getByType(dto.type);
   }
 
   @Post()

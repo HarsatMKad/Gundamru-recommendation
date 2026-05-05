@@ -11,7 +11,6 @@ export enum ERestStatus {
 }
 
 export enum ERestMessages {
-  INVALID_MOD = 'Invalid mode parameter',
   GENERATION_RUN_BACKGROUND = 'Generation is running in the background',
   GENERATION_STILL_PROGRESS = 'Generation is still in progress',
 }

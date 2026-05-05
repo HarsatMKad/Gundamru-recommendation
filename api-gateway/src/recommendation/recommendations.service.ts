@@ -4,25 +4,18 @@ import { Repository } from 'typeorm';
 import { Recommendation } from 'src/database/entities/recommendations.entity';
 import { IRecommendationItem } from 'src/common/interface/recommendation.interface';
 import { RecommendationSetting } from 'src/database/entities/recommendation-settings.entity';
-import { ERestMessages } from 'src/common/enum/Rest.enum';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
-import { BadRequestException } from '@nestjs/common';
 import {
-  RECOMMENDATION_MODS,
   RecommendationParamsDto,
   RecommendationQueryDto,
 } from './dto/query-recommendation.dto';
 import { ValidItemProvider } from 'src/generation-system/validItem.provider';
-import { IRecommendationResponseSchema } from 'src/common/interface/recommendation.interface';
 
 @Injectable()
 export class RecommendationService {
   private readonly isRecommendedProductsCacheKey: string =
     'is_recommended_products';
-  private readonly cacheKeyPersonal = 'rec-personal';
-  private readonly cachKeyFallback = 'rec-fallback';
-
   constructor(
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     @InjectRepository(Recommendation)
@@ -32,73 +25,88 @@ export class RecommendationService {
     private readonly validItemProvider: ValidItemProvider,
   ) {}
 
-  /* 1. Только пользовательские */
-  async getPurePersonal(
-    userId: string,
-    settingId: string,
-    minScore: number,
-  ): Promise<IRecommendationItem[]> {
-    const cacheKey = `${this.cacheKeyPersonal}_${userId}_${settingId}_${minScore}`;
-    const cached = await this.cacheManager.get<IRecommendationItem[]>(cacheKey);
-    if (cached) return cached;
+  async getRecommendations2(
+    param: RecommendationParamsDto,
+    query: RecommendationQueryDto,
+  ): Promise<Record<string, IRecommendationItem[]>> {
+    const userId = param.userId;
+    const { addRecommendedProducts = false, minScore } = query;
+    const limit = Number(query.limit) || 20;
 
-    const setting = await this.settingRepo.findOneBy({ id: settingId });
-    if (!setting) return [];
+    const cacheKey = `${userId}_${limit}_${minScore}_${addRecommendedProducts}`;
 
-    const personal = await this.recRepo.findOne({
-      where: { userId: userId, settingId: setting.id },
+    const cacheResponse =
+      await this.cacheManager.get<Record<string, IRecommendationItem[]>>(
+        cacheKey,
+      );
+
+    if (cacheResponse) {
+      return cacheResponse;
+    }
+
+    const settings = await this.settingRepo.find();
+    const recommendations = await this.recRepo.find({
+      where: { userId },
     });
-    if (!personal) return [];
 
-    const data = personal?.recommendedSkus || [];
-    let dataFiltred = data;
-    if (minScore && minScore > 0 && dataFiltred.length > 0) {
-      dataFiltred = dataFiltred.filter((i) => i.score >= minScore);
-    }
-    await this.cacheManager.set(cacheKey, dataFiltred);
-    return dataFiltred;
-  }
+    const personal: Record<string, IRecommendationItem[]> = {};
+    const result: Record<string, IRecommendationItem[]> = {};
 
-  /* 2. Только стандартные */
-  async getFallback(
-    settingId: string,
-    minScore?: number,
-  ): Promise<IRecommendationItem[]> {
-    let minscoreCacheKey = '';
-    if (minScore) {
-      minscoreCacheKey = `_${minScore}`;
-    }
-    const cacheKey = `${this.cachKeyFallback}_${settingId}${minscoreCacheKey}`;
-    const cached = await this.cacheManager.get(cacheKey);
-    if (cached) return cached as IRecommendationItem[];
+    recommendations.forEach((r) => {
+      personal[r.settingId] = r.recommendedSkus;
+    });
 
-    const setting = await this.settingRepo.findOneBy({ id: settingId });
+    for (const s of settings) {
+      if (s.fallbackSkus) {
+        let resultProducts = this.mergeAndFill(
+          limit,
+          s.fallbackSkus,
+          personal[s.id],
+        );
 
-    const data = setting?.fallbackSkus || [];
-    let dataFiltred = data;
-    if (minScore && minScore > 0 && dataFiltred.length > 0) {
-      dataFiltred = dataFiltred.filter((i) => i.score >= minScore);
-    }
-    await this.cacheManager.set(cacheKey, dataFiltred);
-    return dataFiltred;
-  }
+        if (minScore && minScore > 0 && resultProducts.length > 0) {
+          resultProducts = resultProducts.filter((i) => i.score >= minScore);
+        }
 
-  //* Смешенные данные, если не хватает до нужного количества - дополняются из стандартных
-  // если передан minScore -  пользовательские товары отсеивается, если их уверенность меньше */
-  private mergeAndFill(
-    personal: IRecommendationItem[],
-    fallback: IRecommendationItem[],
-  ): IRecommendationItem[] {
-    const seen = new Set(personal.map((i) => i.sku));
-    const result = [...personal];
+        if (addRecommendedProducts) {
+          resultProducts = await this.addRecommendedProducts(resultProducts);
+        }
 
-    for (const item of fallback) {
-      if (!seen.has(item.sku)) {
-        result.push(item);
-        seen.add(item.sku);
+        result[s.type] = resultProducts;
+      } else {
+        result[s.type] = [];
       }
     }
 
+    await this.cacheManager.set(cacheKey, result);
+    return result;
+  }
+
+  // Смешенные данные, если не хватает до нужного количества
+  private mergeAndFill(
+    limit: number,
+    fallback: IRecommendationItem[],
+    personal?: IRecommendationItem[],
+  ): IRecommendationItem[] {
+    const personalSkus = new Set<string>();
+
+    if (!personal) {
+      return fallback;
+    }
+    personal.forEach((p) => {
+      personalSkus.add(p.sku);
+    });
+
+    const result = [...personal];
+
+    for (const item of fallback) {
+      if (result.length < limit && !personalSkus.has(item.sku)) {
+        result.push(item);
+        personalSkus.add(item.sku);
+      }
+    }
+
+    result.sort((a, b) => b.score - a.score).slice(0, limit);
     return result;
   }
 
@@ -118,6 +126,7 @@ export class RecommendationService {
     return result;
   }
 
+  // Получить товары, которые имеют is_recommended=true
   private async addRecommendedProducts(
     products: IRecommendationItem[],
   ): Promise<IRecommendationItem[]> {
@@ -144,91 +153,8 @@ export class RecommendationService {
       }),
     );
 
-    // Хранить список товаров, которые is_recommended=true дольше обычного кэша (3 часа)
+    // Хранить дольше обычного кэша (3 часа) т.к. редко меняются
     await this.cacheManager.set(cacheKey, recommendedItems, 3600 * 1000 * 3);
     return this.insertRecommendedRandomly(products, recommendedItems);
-  }
-
-  async getRecommendations(
-    param: RecommendationParamsDto,
-    query: RecommendationQueryDto,
-  ): Promise<IRecommendationResponseSchema> {
-    const { settingId, userId, mode = RECOMMENDATION_MODS.MIXED } = param;
-    const { addRecommendedProducts = false, minScore } = query;
-    const limit = Number(query.limit) || 10;
-
-    const cacheKey = `${userId}_${settingId}_${mode}_${limit}_${minScore}_${addRecommendedProducts}`;
-
-    const cacheResponse =
-      await this.cacheManager.get<IRecommendationResponseSchema>(cacheKey);
-
-    if (cacheResponse) {
-      return cacheResponse;
-    }
-
-    let result: IRecommendationItem[] = [];
-    let personalLength: number = 0;
-    let fallbackLength: number = 0;
-
-    switch (mode) {
-      // Только персональные
-      case RECOMMENDATION_MODS.PERSONAL:
-        result = await this.getPurePersonal(userId, settingId, minScore);
-        personalLength = result.length;
-        break;
-      // Только стандартные
-      case RECOMMENDATION_MODS.FALLBACK:
-        result = await this.getFallback(settingId, minScore);
-        fallbackLength = result.length;
-        break;
-      // Дополняет персональные стандартными
-      case RECOMMENDATION_MODS.MIXED: {
-        const [personal, fallback] = await Promise.all([
-          this.getPurePersonal(userId, settingId, minScore),
-          this.getFallback(settingId, minScore),
-        ]);
-        personalLength = personal.length;
-        fallbackLength = fallback.length;
-        result = this.mergeAndFill(personal, fallback);
-        break;
-      }
-      // Тоже самое, что MIXED, но отбор минимальной оценке не действует на стандартные товары
-      case RECOMMENDATION_MODS.MIXED_FULLFALLBACK: {
-        const [personal, fallback] = await Promise.all([
-          this.getPurePersonal(userId, settingId, minScore),
-          this.getFallback(settingId),
-        ]);
-        personalLength = personal.length;
-        fallbackLength = fallback.length;
-        result = this.mergeAndFill(personal, fallback);
-        break;
-      }
-      default:
-        throw new BadRequestException(
-          `${ERestMessages.INVALID_MOD}: ${mode}. Available modes: ${Object.values(RECOMMENDATION_MODS).join(', ')}`,
-        );
-    }
-
-    result = result.sort((a, b) => b.score - a.score).slice(0, limit);
-
-    if (addRecommendedProducts) {
-      result = await this.addRecommendedProducts(result);
-    }
-
-    const response: IRecommendationResponseSchema = {
-      mode,
-      userId,
-      settingId,
-      limit,
-      minScore,
-      isAddRecommendedProducts: addRecommendedProducts,
-      recommendations: result,
-      length: result.length,
-      personalLength,
-      fallbackLength,
-    };
-
-    await this.cacheManager.set(cacheKey, response);
-    return response;
   }
 }

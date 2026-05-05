@@ -71,9 +71,9 @@ export class UserEventService {
     const where = Object.fromEntries(
       Object.entries({
         id: dto.id,
-        user_id: dto.userId,
-        product_id: dto.productId,
-        event_type_name: dto.eventName,
+        userId: dto.userId,
+        productId: dto.productId,
+        eventTypeName: dto.eventName,
       }).filter(([value]) => value !== undefined),
     );
 

@@ -69,16 +69,16 @@ export class RecommendationCalculatorService {
     const globalResults: TGlobalResults = {};
 
     for (const strategy of activePersonalStrategies) {
-      const result = allResults[strategy.name];
+      const result = allResults[strategy.slug];
       if (result) {
-        personalResults[strategy.name] = result as TPersonalStrategyResult;
+        personalResults[strategy.slug] = result as TPersonalStrategyResult;
       }
     }
 
     for (const strategy of activeGlobalStrategies) {
-      const result = allResults[strategy.name];
+      const result = allResults[strategy.slug];
       if (result) {
-        globalResults[strategy.name] = result as IStrategyResultItem[];
+        globalResults[strategy.slug] = result as IStrategyResultItem[];
       }
     }
 

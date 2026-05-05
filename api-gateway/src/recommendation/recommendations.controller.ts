@@ -4,17 +4,16 @@ import {
   RecommendationParamsDto,
   RecommendationQueryDto,
 } from './dto/query-recommendation.dto';
-import { IRecommendationResponseSchema } from 'src/common/interface/recommendation.interface';
 
 @Controller('api/recommendation')
 export class RecommendationController {
   constructor(private readonly service: RecommendationService) {}
 
-  @Get(`forUser/:settingId/:userId/:mode`)
+  @Get(`forUser/:userId`)
   async getRecommendations(
     @Param() param: RecommendationParamsDto,
     @Query() query: RecommendationQueryDto,
-  ): Promise<IRecommendationResponseSchema> {
-    return await this.service.getRecommendations(param, query);
+  ) {
+    return await this.service.getRecommendations2(param, query);
   }
 }

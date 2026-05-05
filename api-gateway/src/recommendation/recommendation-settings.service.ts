@@ -26,6 +26,7 @@ export class RecommendationSettingsService {
     const itemsResponse = items.map((item) => ({
       id: item.id,
       name: item.name,
+      type: item.type,
       fallbackStrategy: item.fallbackStrategy,
       fallbackWeight: item.fallbackWeight,
       personalMethods: item.personalMethods,
@@ -39,8 +40,8 @@ export class RecommendationSettingsService {
     return await this.settingsRepo.findOneBy({ id });
   }
 
-  async getByName(name: string) {
-    return await this.settingsRepo.findOneBy({ name });
+  async getByType(type: string) {
+    return await this.settingsRepo.findOneBy({ type });
   }
 
   async updateSettingsById(
@@ -61,7 +62,7 @@ export class RecommendationSettingsService {
 
   async createSettings(createDto: CreateRecommendationSettingDto) {
     const existing = await this.settingsRepo.findOne({
-      where: { name: createDto.name },
+      where: { type: createDto.type },
     });
     if (existing) {
       throw new ConflictException(EErrorHandler.SETTINGS_EXIST);

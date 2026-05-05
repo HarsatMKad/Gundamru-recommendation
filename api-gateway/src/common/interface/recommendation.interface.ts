@@ -35,16 +35,3 @@ export interface IAggregateFallback {
   configId: string;
   fallbacks: IRecommendationItem[];
 }
-
-export type IRecommendationResponseSchema = {
-  mode: string;
-  userId: string;
-  settingId: string;
-  limit: number;
-  minScore: number;
-  isAddRecommendedProducts: boolean;
-  recommendations: IRecommendationItem[];
-  length: number;
-  personalLength: number;
-  fallbackLength: number;
-};

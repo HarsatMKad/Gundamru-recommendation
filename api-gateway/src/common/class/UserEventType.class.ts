@@ -22,6 +22,15 @@ export class UserEventType {
       },
     ],
     [
+      UserEventNames.CART,
+      {
+        name: UserEventNames.CART,
+        weight: 15,
+        retentionDays: 30,
+        maxForUser: 60,
+      },
+    ],
+    [
       UserEventNames.BOUGHT,
       {
         name: UserEventNames.BOUGHT,

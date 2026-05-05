@@ -6,8 +6,11 @@ export class RecommendationSetting {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ unique: true, nullable: false })
+  @Column({ nullable: false })
   name!: string;
+
+  @Column({ unique: true, nullable: false })
+  type!: string;
 
   @Column({ type: 'jsonb' })
   personalMethods!: { strategy: string; weight: number }[];

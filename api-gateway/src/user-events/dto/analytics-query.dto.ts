@@ -1,4 +1,11 @@
-import { IsDateString, IsEnum, IsInt, IsOptional, Min } from 'class-validator';
+import {
+  IsDateString,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export enum SortField {
@@ -10,12 +17,6 @@ export enum SortField {
 export enum SortOrder {
   ASC = 'ASC',
   DESC = 'DESC',
-}
-
-export enum TrendDirection {
-  UP = 'up',
-  DOWN = 'down',
-  STABLE = 'stable',
 }
 
 export class StatisticsRequestDto {
@@ -46,15 +47,39 @@ export class StatisticsRequestDto {
   @IsOptional()
   @IsEnum(SortOrder)
   sortOrder?: SortOrder = SortOrder.DESC;
+
+  @IsOptional()
+  @IsString()
+  brandSlug?: string;
+
+  @IsOptional()
+  @IsString()
+  productName?: string;
 }
 
 export class ProductTrendDto {
-  product_id?: string;
-  current_period_count?: number;
-  previous_period_count?: number;
+  productId?: string;
+  name?: string;
+  brand?: string;
+  attributes?: {
+    grade?: string;
+    scale?: string;
+  };
+  isRecomended?: boolean;
+  currentPeriodCount?: number;
+  previousPeriodCount?: number;
   trend?: number;
-  trend_percentage?: number;
-  trend_direction?: TrendDirection;
+  trendPercentage?: number;
+}
+
+export interface ProductStatsRaw {
+  productId: string;
+  totalCount: number;
+  productName: string;
+  isRecomended: boolean;
+  brandName: string;
+  grade: string;
+  scale: string;
 }
 
 export class StatisticsResponseDto {
@@ -69,11 +94,10 @@ export class StatisticsResponseDto {
     };
   };
   summary?: {
-    total_products_with_events: number;
-    total_current_events: number;
-    total_previous_events: number;
-    total_trend: number;
-    total_trend_percentage: number;
+    currentEvents: number;
+    previousEvents: number;
+    totalTrend: number;
+    totalTrendPercentage: number;
   };
   items?: ProductTrendDto[];
   total?: number;
