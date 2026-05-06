@@ -14,6 +14,6 @@ export class RecommendationController {
     @Param() param: RecommendationParamsDto,
     @Query() query: RecommendationQueryDto,
   ) {
-    return await this.service.getRecommendations2(param, query);
+    return await this.service.getRecommendations(param, query);
   }
 }
