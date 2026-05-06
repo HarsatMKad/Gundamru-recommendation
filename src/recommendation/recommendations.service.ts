@@ -25,7 +25,7 @@ export class RecommendationService {
     private readonly validItemProvider: ValidItemProvider,
   ) {}
 
-  async getRecommendations2(
+  async getRecommendations(
     param: RecommendationParamsDto,
     query: RecommendationQueryDto,
   ): Promise<Record<string, IRecommendationItem[]>> {
