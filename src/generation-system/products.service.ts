@@ -75,7 +75,7 @@ export class ProductService implements IProductService {
       return products;
     } catch (error) {
       console.error(`${EErrorHandler.ERROR_FETCHING}: ${error}`);
-      throw error;
+      return [];
     }
   }
 }

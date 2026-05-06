@@ -1,5 +1,0 @@
-services:
-  app:
-    build: ./api-gateway
-    ports:
-      - "3002:3002"
