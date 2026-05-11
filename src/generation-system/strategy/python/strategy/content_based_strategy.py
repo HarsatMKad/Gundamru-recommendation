@@ -55,7 +55,7 @@ def content_based(rec_length: int, events: List[Event], products: List[Product])
         scale_profile = np.zeros(len(unique_scales))
         
         total_weight = 0.0
-        price_sum = 0.0
+        weighted_prices = []
         history = {}
         
         for _, row in group.iterrows():
@@ -67,7 +67,7 @@ def content_based(rec_length: int, events: List[Event], products: List[Product])
             total_weight += w
             
             history[pid] = history.get(pid, 0) + w
-            price_sum += products_dict[pid].price * w
+            weighted_prices.extend([products_dict[pid].price] * int(w * 1000))
             
             brand_idx = brand_to_idx[products_dict[pid].brand_id]
             grade_idx = grade_to_idx[products_dict[pid].grade]
@@ -83,7 +83,13 @@ def content_based(rec_length: int, events: List[Event], products: List[Product])
         brand_profile /= total_weight
         grade_profile /= total_weight
         scale_profile /= total_weight
-        avg_price = price_sum / total_weight
+        
+        if weighted_prices:
+            weighted_prices.sort()
+            median_idx = len(weighted_prices) // 2
+            median_price = weighted_prices[median_idx]
+        else:
+            median_price = 0
         
         product_brand_indices = brand_indices
         product_grade_indices = grade_indices
@@ -93,9 +99,11 @@ def content_based(rec_length: int, events: List[Event], products: List[Product])
         grade_scores = grade_profile[product_grade_indices]
         scale_scores = scale_profile[product_scale_indices]
         
-        if avg_price > 0:
-            price_diff = np.abs(product_prices - avg_price) / np.maximum(product_prices, avg_price)
+        if median_price > 0:
+            price_diff = np.abs(product_prices - median_price) / np.maximum(product_prices, median_price)
             price_sim = 1.0 - price_diff
+        else:
+            price_sim = np.zeros_like(product_prices)
 
         raw_scores = (brand_scores * Config.CONTENT_BASED_WEIGHTS['brand'] + 
                      grade_scores * Config.CONTENT_BASED_WEIGHTS['grade'] + 
